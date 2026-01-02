@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.af.tourism.mapper.AttractionMapper">
+
+    <!-- 景点列表查询，遵循接口文档：仅返回 status=1 的可见数据 -->
+    <select id="selectAttractions" resultType="com.af.tourism.pojo.entity.Attraction">
+        SELECT
+            id, name, description, location, image_url, gallery, rating, tags, view_count, price_level, status, created_at, updated_at
+        FROM attractions
+        <where>
+            status = 1
+            <if test="q != null and q != ''">
+                AND (
+                    name LIKE CONCAT('%', #{q}, '%')
+                    OR location LIKE CONCAT('%', #{q}, '%')
+                    OR tags LIKE CONCAT('%', #{q}, '%')
+                )
+            </if>
+            <if test="location != null and location != ''">
+                AND location = #{location}
+            </if>
+            <if test="priceLevel != null">
+                AND price_level = #{priceLevel}
+            </if>
+            <if test="tags != null and tags.size() > 0">
+                <foreach collection="tags" item="tag">
+                    AND tags LIKE CONCAT('%', #{tag}, '%')
+                </foreach>
+            </if>
+        </where>
+        ORDER BY ${sortColumn} ${sortOrder}
+    </select>
+
+</mapper>

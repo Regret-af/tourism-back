@@ -2,12 +2,12 @@ package com.af.tourism.controller;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.ErrorCode;
-import com.af.tourism.pojo.entity.User;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.exception.UnauthorizedException;
+import com.af.tourism.pojo.entity.User;
+import com.af.tourism.pojo.vo.UserVO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.UserService;
-import com.af.tourism.pojo.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

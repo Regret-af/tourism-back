@@ -1,0 +1,42 @@
+﻿spring:
+  application:
+    name: tourism-back
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/tourism?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: root
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    database: 0
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+server:
+  port: 8080
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+
+app:
+  jwt:
+    secret: change-me-please-32-bytes-min
+    expire-seconds: 86400
+
+logging:
+  level:
+    com.af.tourism: INFO

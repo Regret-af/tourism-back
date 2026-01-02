@@ -1,0 +1,2252 @@
+openapi: 3.0.3
+info:
+  title: 高端旅游推荐平台 API
+  version: "1.2.0"
+  description: |
+    高端旅游推荐平台（SpringBoot + MySQL + Redis）RESTful 接口（中文增强版）。
+    关键约束与注意事项：
+    - 不使用外键：所有写接口必须校验目标对象是否存在、且状态可操作
+    - 点赞/收藏必须幂等：使用唯一键 + status 实现，重复操作不应导致计数错误
+    - view_count / like_count 高频计数：建议 Redis 计数器 + 定时回写 MySQL
+    - 推荐算法预留：列表统一支持 algo/scene，当前默认 time_desc（创建时间倒序）
+servers:
+  - url: /api/v1
+    description: 前台 API（用户端）
+
+tags:
+  - name: 认证(Auth)
+  - name: 用户(Users)
+  - name: 景点(Attractions)
+  - name: 日记(Diaries)
+  - name: 评论(Comments)
+  - name: 收藏(Favorites)
+  - name: 行为埋点(Events)
+  - name: 推荐流(Feed)
+  - name: 管理端-用户(Admin-Users)
+  - name: 管理端-RBAC(Admin-RBAC)
+  - name: 管理端-景点(Admin-Attractions)
+  - name: 管理端-日记(Admin-Diaries)
+  - name: 管理端-评论(Admin-Comments)
+  - name: 管理端-看板(Admin-Dashboard)
+
+security:
+  - bearerAuth: []
+
+paths:
+  # =========================
+  # Auth
+  # =========================
+  /auth/register:
+    post:
+      tags: [认证(Auth)]
+      summary: 用户注册
+      description: |
+        用户注册（公开接口）。
+        注意事项：
+        - username、email 必须唯一（数据库唯一索引）
+        - password 建议强度校验（如最少 8 位，字母数字组合）
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+            example:
+              username: jack
+              email: jack@xx.com
+              password: Passw0rd!
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseRegister' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /auth/login:
+    post:
+      tags: [认证(Auth)]
+      summary: 用户登录
+      description: |
+        用户登录（公开接口）。
+        注意事项：
+        - account 支持 username 或 email
+        - 若 users.status=0（禁用），建议返回 40302 USER_DISABLED
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseLogin' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # =========================
+  # Users
+  # =========================
+  /users/me:
+    get:
+      tags: [用户(Users)]
+      summary: 获取当前登录用户信息
+      description: |
+        需要登录（Bearer Token）。
+        注意事项：
+        - 若用户被禁用（status=0），建议返回 40302 USER_DISABLED
+      operationId: getMe
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseUserMe' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [用户(Users)]
+      summary: 更新当前登录用户资料
+      description: |
+        需要登录（Bearer Token）。
+        注意事项：
+        - 不建议在此接口修改 username/email（如需请另设接口并做二次验证）
+      operationId: updateMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateMeRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /users/{id}:
+    get:
+      tags: [用户(Users)]
+      summary: 获取用户公开信息（作者卡片/主页）
+      description: |
+        公开接口。
+        注意事项：
+        - 不返回敏感字段（email/password）
+      operationId: getUserById
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseUserPublic' }
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # =========================
+  # Attractions
+  # =========================
+  /attractions:
+    get:
+      tags: [景点(Attractions)]
+      summary: 景点列表（伪推荐/筛选/排序）
+      description: |
+        公开接口。
+        注意事项：
+        - 默认仅返回 status=1 的景点
+        - sort 默认 -createdAt（创建时间倒序）
+        - algo 预留：当前 time_desc
+        - tags 外部建议数组，内部可序列化存储
+      operationId: listAttractions
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: q
+          in: query
+          schema: { type: string }
+          description: 关键词（name/location/tags 模糊）
+        - name: location
+          in: query
+          schema: { type: string }
+          description: 地点筛选
+        - name: priceLevel
+          in: query
+          schema: { type: integer, format: int32, enum: [1,2,3] }
+          description: 消费等级
+        - name: tags
+          in: query
+          schema: { type: string }
+          description: 多标签（逗号分隔，如 摄影,徒步）
+        - $ref: '#/components/parameters/SortAttraction'
+        - $ref: '#/components/parameters/Algo'
+        - $ref: '#/components/parameters/Scene'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseAttractionPage' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /attractions/{id}:
+    get:
+      tags: [景点(Attractions)]
+      summary: 景点详情
+      description: |
+        公开接口。
+        注意事项：
+        - 默认仅允许访问 status=1 的景点
+        - gallery 数据库存 JSON，API 对外数组
+      operationId: getAttractionDetail
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseAttractionDetail' }
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /attractions/{id}/view:
+    post:
+      tags: [景点(Attractions)]
+      summary: 景点浏览 +1（可选）
+      description: |
+        公开接口。
+        注意事项：
+        - 高频写：建议 Redis 自增 + 定时回写 MySQL
+        - 可同步写 user_events(view)
+      operationId: viewAttraction
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ViewRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /attractions/{id}/likes:
+    post:
+      tags: [景点(Attractions)]
+      summary: 点赞景点（幂等）
+      description: |
+        需要登录。
+        注意事项：
+        - 使用 attraction_likes 唯一键 uk_attr_user 保证幂等
+        - 重复点赞应返回 liked=true（不应重复加计数）
+      operationId: likeAttraction
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkLikeState'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [景点(Attractions)]
+      summary: 取消点赞景点
+      description: |
+        需要登录。
+        注意事项：
+        - 建议 attraction_likes.status=0（取消）而非删除
+      operationId: unlikeAttraction
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkLikeState'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /attractions/{id}/likes/me:
+    get:
+      tags: [景点(Attractions)]
+      summary: 我是否点赞该景点
+      description: |
+        需要登录。
+        注意事项：
+        - 根据 attraction_likes(attraction_id,user_id,status) 判断
+      operationId: getAttractionLikedMe
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkLikedOnly'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # =========================
+  # Diaries
+  # =========================
+  /diaries:
+    get:
+      tags: [日记(Diaries)]
+      summary: 日记列表流（精选/作者页/排序/推荐预留）
+      description: |
+        公开接口。
+        注意事项：
+        - 默认仅返回 status=1
+        - sort 默认 -createdAt（伪推荐）
+        - featured=1 获取精选
+      operationId: listDiaries
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: userId
+          in: query
+          schema: { type: integer, format: int64 }
+          description: 作者ID
+        - name: featured
+          in: query
+          schema: { type: integer, format: int32, enum: [0,1] }
+          description: 是否精选
+        - name: q
+          in: query
+          schema: { type: string }
+          description: 关键词（title/summary 模糊）
+        - $ref: '#/components/parameters/SortDiary'
+        - $ref: '#/components/parameters/Algo'
+        - $ref: '#/components/parameters/Scene'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseDiaryPage' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [日记(Diaries)]
+      summary: 发布日记
+      description: |
+        需要登录。
+        注意事项：
+        - content 为富文本，建议 XSS 清洗/白名单
+        - 若启用审核，可默认写 status=2
+      operationId: createDiary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateDiaryRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkId'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /diaries/{id}:
+    get:
+      tags: [日记(Diaries)]
+      summary: 日记详情
+      description: |
+        公开接口。
+        注意事项：
+        - 默认仅允许访问 status=1 的日记（作者/管理员可另行放开）
+      operationId: getDiaryDetail
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseDiaryDetail' }
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [日记(Diaries)]
+      summary: 编辑日记（作者）
+      description: |
+        需要登录，且为作者本人。
+        注意事项：
+        - 无外键：必须校验 travel_diaries.user_id == 当前用户 id
+        - 若启用审核：编辑后可 status=2 重新待审
+      operationId: updateDiary
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateDiaryRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [日记(Diaries)]
+      summary: 删除日记（作者/管理员）
+      description: |
+        需要登录。
+        注意事项：
+        - 推荐软删：travel_diaries.status=0
+      operationId: deleteDiary
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /diaries/{id}/view:
+    post:
+      tags: [日记(Diaries)]
+      summary: 日记浏览 +1（可选）
+      description: |
+        公开接口。
+        注意事项：
+        - 高频写：建议 Redis 自增 + 定时回写 MySQL
+        - 可同步写 user_events(view)
+      operationId: viewDiary
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ViewRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /diaries/{id}/likes:
+    post:
+      tags: [日记(Diaries)]
+      summary: 点赞日记（幂等）
+      description: |
+        需要登录。
+        注意事项：
+        - diary_likes 唯一键 uk_diary_user 保证幂等
+        - 重复点赞不应增加计数
+      operationId: likeDiary
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkLikeState'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [日记(Diaries)]
+      summary: 取消点赞日记
+      description: |
+        需要登录。
+        注意事项：
+        - 建议 diary_likes.status=0，而非删除
+      operationId: unlikeDiary
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkLikeState'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /diaries/{id}/likes/me:
+    get:
+      tags: [日记(Diaries)]
+      summary: 我是否点赞该日记
+      operationId: getDiaryLikedMe
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkLikedOnly'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # =========================
+  # Comments
+  # =========================
+  /comments:
+    get:
+      tags: [评论(Comments)]
+      summary: 评论列表（按对象）
+      description: |
+        公开接口。
+        注意事项：
+        - 默认仅返回 status=1 的评论
+        - 强依赖索引：(comment_type, target_id, created_at)
+      operationId: listComments
+      security: []
+      parameters:
+        - name: commentType
+          in: query
+          required: true
+          schema: { type: string, enum: [attraction, diary] }
+          description: 评论对象类型
+        - name: targetId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+          description: 对象ID
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/SortComment'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseCommentPage' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [评论(Comments)]
+      summary: 发表评论
+      description: |
+        需要登录。
+        注意事项：
+        - 无外键：必须校验 target 是否存在且 status=1
+        - starRating 范围 1~5
+        - 建议内容风控/敏感词，必要时置 status=2 待审（如未来扩展）
+      operationId: createComment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCommentRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkId'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /comments/{id}:
+    delete:
+      tags: [评论(Comments)]
+      summary: 删除评论（作者/管理员）
+      description: |
+        需要登录。
+        注意事项：
+        - 推荐软删：comments.status=0
+        - 权限：作者本人或管理员/拥有 comment:moderate
+      operationId: deleteComment
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # =========================
+  # Favorites
+  # =========================
+  /favorites:
+    get:
+      tags: [收藏(Favorites)]
+      summary: 我的收藏列表
+      description: |
+        需要登录。
+        注意事项：
+        - favorites 为多态（fav_type + target_id）
+        - target 返回最小卡片字段（按类型拼装）
+      operationId: listFavorites
+      parameters:
+        - name: favType
+          in: query
+          required: false
+          schema: { type: string, enum: [attraction, diary] }
+          description: 可按类型筛选
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseFavoritePage' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [收藏(Favorites)]
+      summary: 收藏（幂等）
+      description: |
+        需要登录，幂等。
+        注意事项：
+        - 唯一键 uk_user_type_target 保证幂等
+        - 推荐通过 status=1/0 表示收藏/取消
+      operationId: favorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FavoriteRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkFavoritedOnly'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [收藏(Favorites)]
+      summary: 取消收藏
+      description: |
+        需要登录。
+        注意事项：
+        - 推荐 favorites.status=0（取消）而非删除
+      operationId: unfavorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FavoriteRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkFavoritedOnly'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /favorites/me:
+    get:
+      tags: [收藏(Favorites)]
+      summary: 我是否收藏某对象
+      description: |
+        需要登录。
+      operationId: favoriteMe
+      parameters:
+        - name: favType
+          in: query
+          required: true
+          schema: { type: string, enum: [attraction, diary] }
+        - name: targetId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkFavoritedOnly'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # =========================
+  # Events
+  # =========================
+  /events:
+    post:
+      tags: [行为埋点(Events)]
+      summary: 行为事件上报（通用）
+      description: |
+        公开接口，允许未登录。
+        注意事项：
+        - 建议业务接口内部自动写入（view/like/fav/comment），该接口用于补充曝光/点击等
+        - meta 支持任意 JSON：scene、algo、position、keyword、duration 等
+      operationId: reportEvent
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # =========================
+  # Feed
+  # =========================
+  /feed:
+    get:
+      tags: [推荐流(Feed)]
+      summary: 统一推荐流入口（预留未来算法）
+      description: |
+        公开接口。
+        注意事项：
+        - 当前默认按创建时间倒序（time_desc）
+        - mix 返回 itemType + item，前端按类型渲染
+      operationId: feed
+      security: []
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema: { type: string, enum: [attraction, diary, mix] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Algo'
+        - $ref: '#/components/parameters/Scene'
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseFeedPage' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # ============================================================
+  # Admin（拆分 server：/api/v1/admin）
+  # 注意：下面这些 path 是相对 /api/v1/admin 的
+  # ============================================================
+
+  /admin/users:
+    get:
+      tags: [管理端-用户(Admin-Users)]
+      summary: （管理端）用户列表
+      description: |
+        管理端用户列表。
+        注意事项：
+        - 需要管理员权限（RBAC）
+        - q 支持 username/email 模糊
+      operationId: adminListUsers
+      servers:
+        - url: /api/v1
+          description: 管理端 API（后台）
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: integer, format: int32, enum: [0,1] }
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseAdminUserPage' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/users/{id}/status:
+    put:
+      tags: [管理端-用户(Admin-Users)]
+      summary: （管理端）启用/禁用用户
+      description: |
+        修改 users.status。
+        注意事项：
+        - 禁用后建议所有鉴权接口返回 40302 USER_DISABLED
+      operationId: adminSetUserStatus
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetStatusRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/roles:
+    get:
+      tags: [管理端-RBAC(Admin-RBAC)]
+      summary: （管理端）角色列表
+      operationId: adminListRoles
+      servers:
+        - url: /api/v1
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseRoleList' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [管理端-RBAC(Admin-RBAC)]
+      summary: （管理端）创建角色
+      description: |
+        创建角色（roles）。
+        注意事项：
+        - name 唯一
+      operationId: adminCreateRole
+      servers:
+        - url: /api/v1/admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRoleRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkId'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/permissions:
+    get:
+      tags: [管理端-RBAC(Admin-RBAC)]
+      summary: （管理端）权限列表
+      operationId: adminListPermissions
+      servers:
+        - url: /api/v1
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponsePermissionList' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [管理端-RBAC(Admin-RBAC)]
+      summary: （管理端）创建权限
+      description: |
+        创建权限（permissions）。
+        注意事项：
+        - name 建议采用 资源:动作，例如 diary:delete、comment:moderate
+        - name 唯一
+      operationId: adminCreatePermission
+      servers:
+        - url: /api/v1/admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePermissionRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkId'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/roles/{roleId}/permissions:
+    put:
+      tags: [管理端-RBAC(Admin-RBAC)]
+      summary: （管理端）设置角色权限（覆盖式）
+      description: |
+        覆盖式设置：先清空 role_permissions，再插入 permissionIds。
+        注意事项：
+        - role_permissions 为联合主键，天然去重
+      operationId: adminSetRolePermissions
+      servers:
+        - url: /api/v1
+      parameters:
+        - name: roleId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+          description: 角色ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetRolePermissionsRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/users/{userId}/roles:
+    put:
+      tags: [管理端-RBAC(Admin-RBAC)]
+      summary: （管理端）设置用户角色（覆盖式）
+      description: |
+        覆盖式设置：先清空 user_roles，再插入 roleIds。
+      operationId: adminSetUserRoles
+      servers:
+        - url: /api/v1
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+          description: 用户ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetUserRolesRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    get:
+      tags: [管理端-RBAC(Admin-RBAC)]
+      summary: （管理端）查询用户角色
+      operationId: adminGetUserRoles
+      servers:
+        - url: /api/v1/admin
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+          description: 用户ID
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseRoleList' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/attractions:
+    get:
+      tags: [管理端-景点(Admin-Attractions)]
+      summary: （管理端）景点列表（含 status）
+      operationId: adminListAttractions
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: integer, format: int32, enum: [0,1,2,3] }
+          description: 0删 1正常 2待审 3屏蔽
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseAttractionAdminPage' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [管理端-景点(Admin-Attractions)]
+      summary: （管理端）新增景点
+      description: |
+        注意事项：
+        - gallery/tags 推荐数组输入，服务端负责序列化落库
+      operationId: adminCreateAttraction
+      servers:
+        - url: /api/v1/admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpsertAttractionRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkId'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/attractions/{id}:
+    put:
+      tags: [管理端-景点(Admin-Attractions)]
+      summary: （管理端）编辑景点
+      operationId: adminUpdateAttraction
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpsertAttractionRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [管理端-景点(Admin-Attractions)]
+      summary: （管理端）删除景点（建议软删）
+      description: |
+        注意事项：
+        - 推荐：status=0 软删，不建议物理删除
+      operationId: adminDeleteAttraction
+      servers:
+        - url: /api/v1/admin
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/attractions/{id}/status:
+    put:
+      tags: [管理端-景点(Admin-Attractions)]
+      summary: （管理端）修改景点状态（审核/屏蔽/删除）
+      description: |
+        状态含义：
+        - 1=正常，2=待审核，3=屏蔽，0=删除（软删）
+      operationId: adminSetAttractionStatus
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetStatusRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/diaries:
+    get:
+      tags: [管理端-日记(Admin-Diaries)]
+      summary: （管理端）日记列表（含 status）
+      operationId: adminListDiaries
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: integer, format: int32, enum: [0,1,2,3] }
+        - name: featured
+          in: query
+          schema: { type: integer, format: int32, enum: [0,1] }
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseDiaryAdminPage' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/diaries/{id}/status:
+    put:
+      tags: [管理端-日记(Admin-Diaries)]
+      summary: （管理端）修改日记状态
+      description: |
+        状态含义：
+        - 1=正常，2=待审核，3=屏蔽，0=删除（软删）
+      operationId: adminSetDiaryStatus
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetStatusRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/diaries/{id}/featured:
+    put:
+      tags: [管理端-日记(Admin-Diaries)]
+      summary: （管理端）设置日记精选
+      operationId: adminSetDiaryFeatured
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetFeaturedRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/diaries/{id}:
+    delete:
+      tags: [管理端-日记(Admin-Diaries)]
+      summary: （管理端）删除日记（建议软删）
+      operationId: adminDeleteDiary
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/comments:
+    get:
+      tags: [管理端-评论(Admin-Comments)]
+      summary: （管理端）评论列表
+      operationId: adminListComments
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: status
+          in: query
+          schema: { type: integer, format: int32, enum: [0,1,3] }
+        - name: commentType
+          in: query
+          schema: { type: string, enum: [attraction, diary] }
+        - name: targetId
+          in: query
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseCommentAdminPage' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/comments/{id}/status:
+    put:
+      tags: [管理端-评论(Admin-Comments)]
+      summary: （管理端）修改评论状态（屏蔽/恢复/删除）
+      description: |
+        状态含义：
+        - 1=正常，3=屏蔽，0=删除（软删）
+      operationId: adminSetCommentStatus
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetStatusRequest' }
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/comments/{id}:
+    delete:
+      tags: [管理端-评论(Admin-Comments)]
+      summary: （管理端）删除评论（建议软删）
+      operationId: adminDeleteComment
+      servers:
+        - url: /api/v1
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        "200":
+          $ref: '#/components/responses/OkBoolean'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/dashboard/summary:
+    get:
+      tags: [管理端-看板(Admin-Dashboard)]
+      summary: （管理端）看板汇总（卡片数据）
+      description: |
+        注意事项：
+        - 建议 Redis 缓存（TTL 30~300s）避免聚合压库
+      operationId: adminDashboardSummary
+      servers:
+        - url: /api/v1
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseDashboardSummary' }
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /admin/dashboard/trends:
+    get:
+      tags: [管理端-看板(Admin-Dashboard)]
+      summary: （管理端）看板趋势（近 N 天）
+      description: |
+        注意事项：
+        - days 建议限制 1~60
+        - 建议 Redis 缓存（TTL 30~300s）
+      operationId: adminDashboardTrends
+      servers:
+        - url: /api/v1
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema: { type: integer, format: int32, default: 7, minimum: 1, maximum: 60 }
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseDashboardTrends' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # 复用参数
+  parameters:
+    PathId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+      description: 资源主键ID
+    Page:
+      name: page
+      in: query
+      required: false
+      schema: { type: integer, format: int32, default: 1, minimum: 1 }
+      description: 页码（从 1 开始）
+    Size:
+      name: size
+      in: query
+      required: false
+      schema: { type: integer, format: int32, default: 10, minimum: 1, maximum: 50 }
+      description: 每页条数（最大 50）
+    Algo:
+      name: algo
+      in: query
+      required: false
+      schema: { type: string, default: time_desc }
+      description: 推荐算法标识（预留扩展，当前 time_desc=按创建时间倒序）
+    Scene:
+      name: scene
+      in: query
+      required: false
+      schema: { type: string }
+      description: 场景标识（用于推荐/埋点统计）
+    SortAttraction:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        default: -createdAt
+        enum: [-createdAt, -viewCount, -rating]
+      description: 景点排序（-createdAt|-viewCount|-rating）
+    SortDiary:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        default: -createdAt
+        enum: [-createdAt, -likeCount, -viewCount]
+      description: 日记排序（-createdAt|-likeCount|-viewCount）
+    SortComment:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        default: -createdAt
+        enum: [-createdAt]
+      description: 评论排序（创建时间倒序）
+
+  # 统一错误响应
+  responses:
+    OkBoolean:
+      description: 成功
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponseBoolean' }
+    OkId:
+      description: 成功
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponseId' }
+    OkLikeState:
+      description: 成功
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponseLikeState' }
+    OkLikedOnly:
+      description: 成功
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponseLikedOnly' }
+    OkFavoritedOnly:
+      description: 成功
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponseFavoritedOnly' }
+
+    BadRequest:
+      description: 参数错误/业务校验失败
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+          examples:
+            PARAM_INVALID:
+              summary: 参数不合法
+              value: { code: 40001, message: PARAM_INVALID, details: "size 不能大于 50" }
+            DUPLICATE_ACTION:
+              summary: 重复动作（可选）
+              value: { code: 40003, message: DUPLICATE_ACTION, details: "已点赞，无需重复操作" }
+
+    Unauthorized:
+      description: 未登录/Token 无效
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+          example: { code: 40101, message: UNAUTHORIZED, details: "请先登录" }
+
+    Forbidden:
+      description: 无权限/用户被禁用
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+          examples:
+            FORBIDDEN:
+              summary: 无权限
+              value: { code: 40301, message: FORBIDDEN, details: "无权访问该资源" }
+            USER_DISABLED:
+              summary: 用户禁用
+              value: { code: 40302, message: USER_DISABLED, details: "账号已被禁用" }
+
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+          example: { code: 40002, message: RESOURCE_NOT_FOUND, details: "目标不存在或已删除" }
+
+    InternalError:
+      description: 服务端异常
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+          example: { code: 50000, message: INTERNAL_ERROR, details: "请稍后重试" }
+
+  schemas:
+    # ========== 通用错误 ==========
+    ApiError:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: 业务错误码（见 responses 示例）
+        message:
+          type: string
+          description: 错误标识/简要信息
+        details:
+          type: string
+          description: 详细说明（便于前端提示/排查）
+      required: [code, message]
+
+    # ========== 通用成功响应 ==========
+    ApiResponseBoolean:
+      type: object
+      properties:
+        code: { type: integer, format: int32, description: 0=成功 }
+        message: { type: string }
+        data: { type: boolean }
+      required: [code, message, data]
+
+    ApiResponseId:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            id: { type: integer, format: int64 }
+          required: [id]
+      required: [code, message, data]
+
+    ApiResponseRegister:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            userId: { type: integer, format: int64 }
+          required: [userId]
+      required: [code, message, data]
+
+    ApiResponseLogin:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/LoginResponse' }
+      required: [code, message, data]
+
+    ApiResponseUserMe:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/UserMe' }
+      required: [code, message, data]
+
+    ApiResponseUserPublic:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/UserPublic' }
+      required: [code, message, data]
+
+    ApiResponseAttractionPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageAttractionCard' }
+      required: [code, message, data]
+
+    ApiResponseAttractionDetail:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/AttractionDetail' }
+      required: [code, message, data]
+
+    ApiResponseDiaryPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageDiaryCard' }
+      required: [code, message, data]
+
+    ApiResponseDiaryDetail:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/DiaryDetail' }
+      required: [code, message, data]
+
+    ApiResponseCommentPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageComment' }
+      required: [code, message, data]
+
+    ApiResponseLikeState:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            liked: { type: boolean, description: 是否已点赞 }
+            likeCount: { type: integer, format: int32, description: 当前点赞数（可来自 Redis 或 DB） }
+          required: [liked, likeCount]
+      required: [code, message, data]
+
+    ApiResponseLikedOnly:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            liked: { type: boolean }
+          required: [liked]
+      required: [code, message, data]
+
+    ApiResponseFavoritedOnly:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            favorited: { type: boolean }
+          required: [favorited]
+      required: [code, message, data]
+
+    ApiResponseFavoritePage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageFavoriteItem' }
+      required: [code, message, data]
+
+    ApiResponseFeedPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageFeedItem' }
+      required: [code, message, data]
+
+    ApiResponseAdminUserPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageAdminUser' }
+      required: [code, message, data]
+
+    ApiResponseRoleList:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Role' }
+      required: [code, message, data]
+
+    ApiResponsePermissionList:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Permission' }
+      required: [code, message, data]
+
+    ApiResponseAttractionAdminPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageAttractionAdmin' }
+      required: [code, message, data]
+
+    ApiResponseDiaryAdminPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageDiaryAdmin' }
+      required: [code, message, data]
+
+    ApiResponseCommentAdminPage:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/PageCommentAdmin' }
+      required: [code, message, data]
+
+    ApiResponseDashboardSummary:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/DashboardSummary' }
+      required: [code, message, data]
+
+    ApiResponseDashboardTrends:
+      type: object
+      properties:
+        code: { type: integer, format: int32 }
+        message: { type: string }
+        data: { $ref: '#/components/schemas/DashboardTrends' }
+      required: [code, message, data]
+
+    # ========== 请求体 ==========
+    RegisterRequest:
+      type: object
+      properties:
+        username: { type: string, description: 用户名（唯一） }
+        email: { type: string, format: email, description: 邮箱（唯一） }
+        password: { type: string, format: password, description: 密码（建议强度校验） }
+      required: [username, email, password]
+
+    LoginRequest:
+      type: object
+      properties:
+        account: { type: string, description: username 或 email }
+        password: { type: string, format: password }
+      required: [account, password]
+
+    UpdateMeRequest:
+      type: object
+      properties:
+        avatarUrl: { type: string, description: 头像URL }
+        bio: { type: string, description: 个人简介 }
+
+    CreateDiaryRequest:
+      type: object
+      properties:
+        title: { type: string, description: 标题 }
+        summary: { type: string, maxLength: 500, description: 摘要（<=500） }
+        coverImage: { type: string, description: 封面图URL }
+        content: { type: string, description: 富文本内容（建议 XSS 清洗） }
+      required: [title, content]
+
+    UpdateDiaryRequest:
+      type: object
+      properties:
+        title: { type: string }
+        summary: { type: string, maxLength: 500 }
+        coverImage: { type: string }
+        content: { type: string }
+
+    CreateCommentRequest:
+      type: object
+      properties:
+        commentType: { type: string, enum: [attraction, diary] }
+        targetId: { type: integer, format: int64 }
+        content: { type: string }
+        starRating: { type: integer, format: int32, minimum: 1, maximum: 5 }
+      required: [commentType, targetId, content]
+
+    FavoriteRequest:
+      type: object
+      properties:
+        favType: { type: string, enum: [attraction, diary] }
+        targetId: { type: integer, format: int64 }
+      required: [favType, targetId]
+
+    EventRequest:
+      type: object
+      properties:
+        eventType: { type: string, description: view/click/like/fav/comment/share }
+        targetType: { type: string, description: attraction/diary }
+        targetId: { type: integer, format: int64 }
+        meta:
+          type: object
+          additionalProperties: true
+      required: [eventType, targetType, targetId]
+
+    ViewRequest:
+      type: object
+      properties:
+        scene: { type: string }
+
+    SetStatusRequest:
+      type: object
+      properties:
+        status: { type: integer, format: int32 }
+      required: [status]
+
+    SetFeaturedRequest:
+      type: object
+      properties:
+        isFeatured: { type: integer, format: int32, enum: [0,1] }
+      required: [isFeatured]
+
+    CreateRoleRequest:
+      type: object
+      properties:
+        name: { type: string }
+      required: [name]
+
+    CreatePermissionRequest:
+      type: object
+      properties:
+        name: { type: string }
+      required: [name]
+
+    SetRolePermissionsRequest:
+      type: object
+      properties:
+        permissionIds:
+          type: array
+          items: { type: integer, format: int64 }
+      required: [permissionIds]
+
+    SetUserRolesRequest:
+      type: object
+      properties:
+        roleIds:
+          type: array
+          items: { type: integer, format: int64 }
+      required: [roleIds]
+
+    UpsertAttractionRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        location: { type: string }
+        imageUrl: { type: string }
+        gallery: { type: array, items: { type: string } }
+        rating: { type: number, format: double }
+        tags: { type: array, items: { type: string } }
+        priceLevel: { type: integer, format: int32, enum: [1,2,3] }
+        status: { type: integer, format: int32, enum: [0,1,2,3] }
+      required: [name]
+
+    # ========== 模型 ==========
+    LoginResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        tokenType: { type: string }
+        expiresIn: { type: integer, format: int32 }
+        user: { $ref: '#/components/schemas/UserBrief' }
+      required: [accessToken, tokenType, expiresIn, user]
+
+    UserBrief:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        username: { type: string }
+        email: { type: string }
+        avatarUrl: { type: string }
+        status: { type: integer, format: int32 }
+      required: [id, username, status]
+
+    UserMe:
+      allOf:
+        - $ref: '#/components/schemas/UserBrief'
+        - type: object
+          properties:
+            bio: { type: string }
+            createdAt: { type: string, format: date-time }
+
+    UserPublic:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        username: { type: string }
+        avatarUrl: { type: string }
+        bio: { type: string }
+      required: [id, username]
+
+    AttractionCard:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        location: { type: string }
+        imageUrl: { type: string }
+        rating: { type: number, format: double }
+        tags: { type: array, items: { type: string } }
+        viewCount: { type: integer, format: int32 }
+        priceLevel: { type: integer, format: int32 }
+        createdAt: { type: string, format: date-time }
+      required: [id, name]
+
+    AttractionDetail:
+      allOf:
+        - $ref: '#/components/schemas/AttractionCard'
+        - type: object
+          properties:
+            description: { type: string }
+            gallery: { type: array, items: { type: string } }
+            updatedAt: { type: string, format: date-time }
+
+    DiaryCard:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        user: { $ref: '#/components/schemas/UserPublic' }
+        title: { type: string }
+        summary: { type: string }
+        coverImage: { type: string }
+        isFeatured: { type: integer, format: int32 }
+        likeCount: { type: integer, format: int32 }
+        viewCount: { type: integer, format: int32 }
+        createdAt: { type: string, format: date-time }
+      required: [id, title]
+
+    DiaryDetail:
+      allOf:
+        - $ref: '#/components/schemas/DiaryCard'
+        - type: object
+          properties:
+            content: { type: string }
+            status: { type: integer, format: int32 }
+            updatedAt: { type: string, format: date-time }
+
+    Comment:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        user: { $ref: '#/components/schemas/UserPublic' }
+        content: { type: string }
+        starRating: { type: integer, format: int32 }
+        createdAt: { type: string, format: date-time }
+      required: [id, content]
+
+    FavoriteItem:
+      type: object
+      properties:
+        favType: { type: string, enum: [attraction, diary] }
+        target:
+          type: object
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+      required: [favType, target]
+
+    FeedItem:
+      type: object
+      properties:
+        itemType: { type: string, enum: [attraction, diary] }
+        item: { type: object, additionalProperties: true }
+      required: [itemType, item]
+
+    Role:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+      required: [id, name]
+
+    Permission:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+      required: [id, name]
+
+    AdminUser:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        username: { type: string }
+        email: { type: string }
+        status: { type: integer, format: int32 }
+        createdAt: { type: string, format: date-time }
+      required: [id, username, email, status]
+
+    AttractionAdmin:
+      allOf:
+        - $ref: '#/components/schemas/AttractionDetail'
+        - type: object
+          properties:
+            status: { type: integer, format: int32 }
+
+    DiaryAdmin:
+      allOf:
+        - $ref: '#/components/schemas/DiaryDetail'
+        - type: object
+          properties:
+            status: { type: integer, format: int32 }
+
+    CommentAdmin:
+      allOf:
+        - $ref: '#/components/schemas/Comment'
+        - type: object
+          properties:
+            commentType: { type: string, enum: [attraction, diary] }
+            targetId: { type: integer, format: int64 }
+            status: { type: integer, format: int32 }
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalUsers: { type: integer, format: int64 }
+        activeToday: { type: integer, format: int64 }
+        totalAttractions: { type: integer, format: int64 }
+        totalDiaries: { type: integer, format: int64 }
+        totalComments: { type: integer, format: int64 }
+        todayNewUsers: { type: integer, format: int64 }
+        todayNewDiaries: { type: integer, format: int64 }
+        todayNewComments: { type: integer, format: int64 }
+
+    DashboardTrends:
+      type: object
+      properties:
+        days: { type: array, items: { type: string } }
+        newUsers: { type: array, items: { type: integer, format: int64 } }
+        newDiaries: { type: array, items: { type: integer, format: int64 } }
+        newComments: { type: array, items: { type: integer, format: int64 } }
+
+    # ========== 分页包装 ==========
+    PageAttractionCard:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/AttractionCard' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageDiaryCard:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/DiaryCard' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageComment:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageFavoriteItem:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/FavoriteItem' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageFeedItem:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/FeedItem' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageAdminUser:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/AdminUser' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageAttractionAdmin:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/AttractionAdmin' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageDiaryAdmin:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/DiaryAdmin' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]
+
+    PageCommentAdmin:
+      type: object
+      properties:
+        list: { type: array, items: { $ref: '#/components/schemas/CommentAdmin' } }
+        page: { type: integer, format: int32 }
+        size: { type: integer, format: int32 }
+        total: { type: integer, format: int64 }
+        hasNext: { type: boolean }
+      required: [list, page, size, total, hasNext]

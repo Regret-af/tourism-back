@@ -1,4 +1,4 @@
-﻿package com.af.tourism.securitylite;
+package com.af.tourism.securitylite;
 
 import com.af.tourism.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;

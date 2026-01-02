@@ -1,4 +1,4 @@
-﻿package com.af.tourism.pojo.vo;
+package com.af.tourism.pojo.vo;
 
 import lombok.Data;
 

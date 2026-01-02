@@ -1,4 +1,4 @@
-﻿package com.af.tourism.config;
+package com.af.tourism.config;
 
 import com.af.tourism.securitylite.AuthInterceptor;
 import org.springframework.context.annotation.Configuration;

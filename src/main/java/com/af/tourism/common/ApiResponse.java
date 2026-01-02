@@ -1,4 +1,4 @@
-﻿package com.af.tourism.common;
+package com.af.tourism.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

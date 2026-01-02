@@ -1,4 +1,4 @@
-﻿package com.af.tourism.config;
+package com.af.tourism.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

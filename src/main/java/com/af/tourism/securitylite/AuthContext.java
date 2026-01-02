@@ -1,4 +1,4 @@
-﻿package com.af.tourism.securitylite;
+package com.af.tourism.securitylite;
 
 /**
  * 登录上下文，基于 ThreadLocal 保存简单的用户标识。

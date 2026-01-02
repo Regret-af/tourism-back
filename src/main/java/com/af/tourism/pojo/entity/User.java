@@ -1,4 +1,4 @@
-﻿package com.af.tourism.pojo.entity;
+package com.af.tourism.pojo.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;

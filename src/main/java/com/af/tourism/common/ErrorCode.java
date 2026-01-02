@@ -1,4 +1,4 @@
-﻿package com.af.tourism.common;
+package com.af.tourism.common;
 
 /**
  * 业务统一错误码，部分取自接口文档建议值。

@@ -1,4 +1,4 @@
-﻿package com.af.tourism.config;
+package com.af.tourism.config;
 
 import com.baomidou.mybatisplus.autoconfigure.ConfigurationCustomizer;
 import org.mybatis.spring.annotation.MapperScan;

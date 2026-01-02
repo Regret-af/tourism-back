@@ -1,4 +1,4 @@
-﻿package com.af.tourism.controller;
+package com.af.tourism.controller;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.ErrorCode;

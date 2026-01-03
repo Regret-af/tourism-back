@@ -34,7 +34,7 @@ public class AttractionServiceImpl implements AttractionService {
         int pageNum = page;
         int pageSize = size;
 
-        List<String> tagList = parseTags(tags);
+        List<String> tagList = attractionConverter.parseTags(tags);
         SortSpec sortSpec = buildSort(sort);
 
         PageHelper.startPage(pageNum, pageSize);
@@ -74,19 +74,6 @@ public class AttractionServiceImpl implements AttractionService {
                 column = "created_at";
         }
         return new SortSpec(column, desc ? "DESC" : "ASC");
-    }
-
-    private List<String> parseTags(String tags) {
-        if (StrUtil.isBlank(tags)) {
-            return Collections.emptyList();
-        }
-        List<String> list = new ArrayList<>();
-        for (String tag : StrUtil.split(tags, ',')) {
-            if (StrUtil.isNotBlank(tag)) {
-                list.add(tag.trim());
-            }
-        }
-        return list;
     }
 
     private static class SortSpec {

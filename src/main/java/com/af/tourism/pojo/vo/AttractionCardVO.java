@@ -15,6 +15,7 @@ public class AttractionCardVO {
     private String name;
     private String location;
     private String imageUrl;
+    private String description;
     private BigDecimal rating;
     private List<String> tags;
     private Integer viewCount;

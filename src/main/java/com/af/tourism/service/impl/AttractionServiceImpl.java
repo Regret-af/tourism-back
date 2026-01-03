@@ -5,7 +5,7 @@ import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.pojo.entity.Attraction;
 import com.af.tourism.pojo.vo.AttractionCardVO;
 import com.af.tourism.pojo.vo.PageResponse;
-import com.af.tourism.service.AttractionConverter;
+import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.service.AttractionService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;

@@ -1,4 +1,4 @@
-package com.af.tourism.service;
+package com.af.tourism.converter;
 
 import cn.hutool.core.util.StrUtil;
 import com.af.tourism.pojo.entity.Attraction;

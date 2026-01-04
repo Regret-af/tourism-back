@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.af.tourism.mapper.DiaryMapper">
+
+    <resultMap id="DiaryWithUserMap" type="com.af.tourism.pojo.entity.DiaryWithUser">
+        <association property="diary" javaType="com.af.tourism.pojo.entity.TravelDiary">
+            <id column="id" property="id"/>
+            <result column="user_id" property="userId"/>
+            <result column="title" property="title"/>
+            <result column="summary" property="summary"/>
+            <result column="cover_image" property="coverImage"/>
+            <result column="content" property="content"/>
+            <result column="is_featured" property="isFeatured"/>
+            <result column="status" property="status"/>
+            <result column="like_count" property="likeCount"/>
+            <result column="view_count" property="viewCount"/>
+            <result column="created_at" property="createdAt"/>
+            <result column="updated_at" property="updatedAt"/>
+        </association>
+        <association property="user" javaType="com.af.tourism.pojo.entity.User">
+            <id column="u_id" property="id"/>
+            <result column="username" property="username"/>
+            <result column="email" property="email"/>
+            <result column="u_status" property="status"/>
+            <result column="avatar_url" property="avatarUrl"/>
+            <result column="bio" property="bio"/>
+        </association>
+    </resultMap>
+
+    <!-- 前台日记列表：仅展示 status=1 -->
+    <select id="selectDiaryList" resultMap="DiaryWithUserMap">
+        SELECT
+            d.id, d.user_id, d.title, d.summary, d.cover_image, d.content,
+            d.is_featured, d.status, d.like_count, d.view_count, d.created_at, d.updated_at,
+            u.id AS u_id, u.username, u.email, u.status AS u_status, u.avatar_url, u.bio
+        FROM travel_diaries d
+                 LEFT JOIN users u ON d.user_id = u.id
+        <where>
+            d.status = 1
+            <if test="userId != null and userId != ''">
+                AND d.user_id = #{userId}
+            </if>
+            <if test="featured != null and featured != ''">
+                AND d.is_featured = #{featured}
+            </if>
+            <if test="q != null and q != ''">
+                AND (d.title LIKE CONCAT('%', #{q}, '%') OR d.summary LIKE CONCAT('%', #{q}, '%'))
+            </if>
+        </where>
+        ORDER BY ${sortColumn} ${sortOrder}
+    </select>
+</mapper>

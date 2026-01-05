@@ -2027,10 +2027,13 @@ components:
         name: { type: string }
         location: { type: string }
         imageUrl: { type: string }
+        description: { type: string }
         rating: { type: number, format: double }
         tags: { type: array, items: { type: string } }
         viewCount: { type: integer, format: int32 }
         priceLevel: { type: integer, format: int32 }
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
         createdAt: { type: string, format: date-time }
       required: [id, name]
 

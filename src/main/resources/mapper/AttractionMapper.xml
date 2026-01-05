@@ -5,7 +5,7 @@
     <!-- 景点列表查询，遵循接口文档：仅返回 status=1 的可见数据 -->
     <select id="selectAttractions" resultType="com.af.tourism.pojo.entity.Attraction">
         SELECT
-            id, name, description, location, image_url, gallery, rating, tags, view_count, price_level, status, created_at, updated_at
+            id, name, description, location, image_url, gallery, rating, tags, view_count, price_level, status, longitude, latitude, created_at, updated_at
         FROM attractions
         <where>
             status = 1

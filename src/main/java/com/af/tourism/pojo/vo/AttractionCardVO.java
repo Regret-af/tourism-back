@@ -2,6 +2,8 @@ package com.af.tourism.pojo.vo;
 
 import lombok.Data;
 
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +22,8 @@ public class AttractionCardVO {
     private List<String> tags;
     private Integer viewCount;
     private Integer priceLevel;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private LocalDateTime createdAt;
 }
 

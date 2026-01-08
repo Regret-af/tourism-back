@@ -71,6 +71,8 @@ CREATE TABLE travel_diaries (
                                 status TINYINT DEFAULT 1 COMMENT '状态: 1-正常,2-待审核,3-屏蔽,0-删除',
                                 like_count INT DEFAULT 0 COMMENT '点赞数(建议Redis计数回写)',
                                 view_count INT DEFAULT 0 COMMENT '查看次数(建议Redis计数回写)',
+                                collect_count INT NULL DEFAULT 0 COMMENT '收藏数(建议Redis计数回写)',
+                                comment_count INT NULL DEFAULT 0 COMMENT '评论数(建议Redis计数回写)',
                                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                                 KEY idx_user_time (user_id, created_at) COMMENT '作者主页日记流',

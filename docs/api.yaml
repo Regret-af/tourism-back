@@ -2057,6 +2057,8 @@ components:
         isFeatured: { type: integer, format: int32 }
         likeCount: { type: integer, format: int32 }
         viewCount: { type: integer, format: int32 }
+        collectCount: { type: integer, format: int32 }
+        commentCount: { type: integer, format: int32 }
         createdAt: { type: string, format: date-time }
       required: [id, title]
 

@@ -17,6 +17,8 @@ public class DiaryCardVO {
     private Integer isFeatured;
     private Integer likeCount;
     private Integer viewCount;
+    private Integer collectCount;
+    private Integer commentCount;
     private LocalDateTime createdAt;
 }
 

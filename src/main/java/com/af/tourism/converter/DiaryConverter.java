@@ -22,6 +22,8 @@ public interface DiaryConverter {
     @Mapping(target = "isFeatured", source = "diary.isFeatured")
     @Mapping(target = "likeCount", source = "diary.likeCount")
     @Mapping(target = "viewCount", source = "diary.viewCount")
+    @Mapping(target = "collectCount", source = "diary.collectCount")
+    @Mapping(target = "commentCount", source = "diary.commentCount")
     @Mapping(target = "createdAt", source = "diary.createdAt")
     @Mapping(target = "user", source = "user")
     DiaryCardVO toCardVO(DiaryWithUser item);

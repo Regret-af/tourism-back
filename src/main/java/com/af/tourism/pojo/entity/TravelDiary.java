@@ -29,6 +29,10 @@ public class TravelDiary {
     private Integer likeCount;
     @TableField("view_count")
     private Integer viewCount;
+    @TableField("collect_count")
+    private Integer collectCount;
+    @TableField("comment_count")
+    private Integer commentCount;
     @TableField("created_at")
     private LocalDateTime createdAt;
     @TableField("updated_at")

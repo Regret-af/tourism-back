@@ -14,6 +14,8 @@
             <result column="status" property="status"/>
             <result column="like_count" property="likeCount"/>
             <result column="view_count" property="viewCount"/>
+            <result column="collect_count" property="collectCount"/>
+            <result column="comment_count" property="commentCount"/>
             <result column="created_at" property="createdAt"/>
             <result column="updated_at" property="updatedAt"/>
         </association>
@@ -31,7 +33,7 @@
     <select id="selectDiaryList" resultMap="DiaryWithUserMap">
         SELECT
             d.id, d.user_id, d.title, d.summary, d.cover_image, d.content,
-            d.is_featured, d.status, d.like_count, d.view_count, d.created_at, d.updated_at,
+            d.is_featured, d.status, d.like_count, d.view_count, d.collect_count, d.comment_count, d.created_at, d.updated_at,
             u.id AS u_id, u.username, u.email, u.status AS u_status, u.avatar_url, u.bio
         FROM travel_diaries d
                  LEFT JOIN users u ON d.user_id = u.id

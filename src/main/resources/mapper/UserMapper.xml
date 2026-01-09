@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.af.tourism.mapper.UserMapper">
+
+    <select id="selectByAccount" resultType="com.af.tourism.pojo.entity.User">
+        SELECT id,
+               username,
+               email,
+               password,
+               avatar_url,
+               bio,
+               status,
+               created_at,
+               updated_at
+        FROM users
+        WHERE username = #{account}
+           OR email = #{account}
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -20,4 +20,26 @@
         LIMIT 1
     </select>
 
+    <select id="selectByUsername" resultType="com.af.tourism.pojo.entity.User">
+        SELECT id,
+               username,
+               email,
+               avatar_url,
+               status
+        FROM users
+        WHERE username = #{username}
+        LIMIT 1
+    </select>
+
+    <select id="selectByEmail" resultType="com.af.tourism.pojo.entity.User">
+        SELECT id,
+               username,
+               email,
+               avatar_url,
+               status
+        FROM users
+        WHERE email = #{email}
+        LIMIT 1
+    </select>
+
 </mapper>

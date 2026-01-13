@@ -24,14 +24,14 @@ public class DiaryController {
 
     /**
      * 按条件查找笔记信息
-     * @param page 页数
-     * @param size 每页条数
-     * @param userId 用户id
-     * @param featured 是否推荐
-     * @param q 关键词
+     * @param page 页码（从 1 开始）
+     * @param size 每页条数（最大 50）
+     * @param userId 作者ID
+     * @param featured 是否精选
+     * @param q 关键词（title/summary 模糊）
      * @param sort 排序字段
-     * @param algo 算法(暂时未用到)
-     * @param scene (暂时未用到)
+     * @param algo 推荐算法标识（预留扩展，当前 time_desc=按创建时间倒序）(暂时未用到)
+     * @param scene 场景标识（用于推荐/埋点统计）(暂时未用到)
      * @return 笔记信息列表
      */
     @GetMapping("/diaries")

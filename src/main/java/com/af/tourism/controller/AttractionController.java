@@ -25,15 +25,15 @@ public class AttractionController {
 
     /**
      * 按条件查找景点信息
-     * @param page 页数
-     * @param size 每页条数
+     * @param page 页码（从 1 开始）
+     * @param size 每页条数（最大 50）
      * @param q 关键词
-     * @param location 景点位置
+     * @param location 地点筛选
      * @param priceLevel 消费等级
-     * @param tags 标签
+     * @param tags 多标签（逗号分隔，如 摄影,徒步）
      * @param sort 排序字段
-     * @param algo 算法(暂时未用到)
-     * @param scene (暂时未用到)
+     * @param algo 推荐算法标识（预留扩展，当前 time_desc=按创建时间倒序）
+     * @param scene 场景标识（用于推荐/埋点统计）(暂时未用到)
      * @return 景点信息列表
      */
     @GetMapping("/attractions")

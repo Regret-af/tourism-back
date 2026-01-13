@@ -23,6 +23,19 @@ public class AttractionController {
         this.attractionService = attractionService;
     }
 
+    /**
+     * 按条件查找景点信息
+     * @param page 页数
+     * @param size 每页条数
+     * @param q 关键词
+     * @param location 景点位置
+     * @param priceLevel 消费等级
+     * @param tags 标签
+     * @param sort 排序字段
+     * @param algo 算法(暂时未用到)
+     * @param scene (暂时未用到)
+     * @return 景点信息列表
+     */
     @GetMapping("/attractions")
     public ApiResponse<PageResponse<AttractionCardVO>> listAttractions(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                                                        @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,

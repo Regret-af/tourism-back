@@ -26,6 +26,10 @@ public class UserController {
         this.userService = userService;
     }
 
+    /**
+     * 获取用户信息
+     * @return 用户信息
+     */
     @GetMapping("/me")
     public ApiResponse<UserVO> me() {
         Long userId = AuthContext.getUserId();

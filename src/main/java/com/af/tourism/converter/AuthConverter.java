@@ -6,6 +6,9 @@ import com.af.tourism.pojo.vo.UserVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+/**
+ * MapStruct 用户实体与返回信息 VO 转换。
+ */
 @Mapper(componentModel = "spring")
 public interface AuthConverter {
 

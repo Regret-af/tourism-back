@@ -22,6 +22,18 @@ public class DiaryController {
         this.diaryService = diaryService;
     }
 
+    /**
+     * 按条件查找笔记信息
+     * @param page 页数
+     * @param size 每页条数
+     * @param userId 用户id
+     * @param featured 是否推荐
+     * @param q 关键词
+     * @param sort 排序字段
+     * @param algo 算法(暂时未用到)
+     * @param scene (暂时未用到)
+     * @return 笔记信息列表
+     */
     @GetMapping("/diaries")
     public ApiResponse<PageResponse<DiaryCardVO>> listDiaries(@RequestParam(value = "page", required = false) Integer page,
                                                               @RequestParam(value = "size", required = false) Integer size,

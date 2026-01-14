@@ -9,26 +9,26 @@
         FROM attractions
         <where>
             status = 1
-            <if test="q != null and q != ''">
+            <if test="queryDTO.q != null and queryDTO.q != ''">
                 AND (
-                    name LIKE CONCAT('%', #{q}, '%')
-                    OR location LIKE CONCAT('%', #{q}, '%')
-                    OR tags LIKE CONCAT('%', #{q}, '%')
+                    name LIKE CONCAT('%', #{queryDTO.q}, '%')
+                    OR location LIKE CONCAT('%', #{queryDTO.q}, '%')
+                    OR tags LIKE CONCAT('%', #{queryDTO.q}, '%')
                 )
             </if>
-            <if test="location != null and location != ''">
-                AND location = #{location}
+            <if test="queryDTO.location != null and queryDTO.location != ''">
+                AND location = #{queryDTO.location}
             </if>
-            <if test="priceLevel != null">
-                AND price_level = #{priceLevel}
+            <if test="queryDTO.priceLevel != null">
+                AND price_level = #{queryDTO.priceLevel}
             </if>
-            <if test="tags != null and tags.size() > 0">
-                <foreach collection="tags" item="tag">
-                    AND tags LIKE CONCAT('%', #{tag}, '%')
+            <if test="queryDTO.tagList != null and queryDTO.tagList.size() > 0">
+                <foreach collection="queryDTO.tagList" item="tag" separator="OR" open="AND (" close=")">
+                    tags LIKE CONCAT('%', #{tag}, '%')
                 </foreach>
             </if>
         </where>
-        ORDER BY ${sortColumn} ${sortOrder}
+        ORDER BY ${queryDTO.sortSpec.column} ${queryDTO.sortSpec.order}
     </select>
 
 </mapper>

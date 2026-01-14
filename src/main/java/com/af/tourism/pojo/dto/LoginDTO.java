@@ -11,8 +11,8 @@ import javax.validation.constraints.NotBlank;
 public class LoginDTO {
 
     @NotBlank(message = "用户名不得为空")
-    String account;
+    private String account;
 
     @NotBlank(message = "密码不得为空")
-    String password;
+    private String password;
 }

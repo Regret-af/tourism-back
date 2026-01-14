@@ -19,21 +19,21 @@ import java.util.List;
 public class AttractionQueryDTO {
 
     @Min(value = 1, message = "页码不能小于1")
-    Integer page = 1;
+    private Integer page = 1;
 
     @Min(value = 1, message = "每页条数不能小于1")
     @Max(value = 50, message = "每页条数不能大于50")
-    Integer size = 10;
+    private Integer size = 10;
 
-    String q;   // 关键词搜索（匹配名称/描述）
-    String location;    // 地点
-    Integer priceLevel; // 价格等级
-    String tags;    // 标签
-    String sort;    // 排序字段
-    String algo;    // 算法标识
-    String scene;   // 场景
-    List<String> tagList;   // 解析后的标签
-    SortSpec sortSpec; // 解析后的排序字段
+    private String q;   // 关键词搜索（匹配名称/描述）
+    private String location;    // 地点
+    private Integer priceLevel; // 价格等级
+    private String tags;    // 标签
+    private String sort;    // 排序字段
+    private String algo;    // 算法标识
+    private String scene;   // 场景
+    private List<String> tagList;   // 解析后的标签
+    private SortSpec sortSpec; // 解析后的排序字段
 
     // 进行参数解析
     public void parseParams() {
@@ -79,7 +79,7 @@ public class AttractionQueryDTO {
         return new SortSpec(column, desc ? "DESC" : "ASC");
     }
 
-    // 内部静态类
+    // 静态内部类
     @Data
     private static class SortSpec {
         final String column;

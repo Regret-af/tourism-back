@@ -23,7 +23,7 @@ public class User {
     private String bio;
     private Integer status;
     @TableField("created_at")
-    LocalDateTime createdAt;
+    private LocalDateTime createdAt;
     @TableField("updated_at")
-    LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

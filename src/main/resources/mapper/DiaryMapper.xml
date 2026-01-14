@@ -39,16 +39,16 @@
                  LEFT JOIN users u ON d.user_id = u.id
         <where>
             d.status = 1
-            <if test="userId != null and userId != ''">
-                AND d.user_id = #{userId}
+            <if test="queryDTO.userId != null and queryDTO.userId != ''">
+                AND d.user_id = #{queryDTO.userId}
             </if>
-            <if test="featured != null and featured != ''">
-                AND d.is_featured = #{featured}
+            <if test="queryDTO.featured != null and queryDTO.featured != ''">
+                AND d.is_featured = #{queryDTO.featured}
             </if>
-            <if test="q != null and q != ''">
-                AND (d.title LIKE CONCAT('%', #{q}, '%') OR d.summary LIKE CONCAT('%', #{q}, '%'))
+            <if test="queryDTO.q != null and queryDTO.q != ''">
+                AND (d.title LIKE CONCAT('%', #{queryDTO.q}, '%') OR d.summary LIKE CONCAT('%', #{queryDTO.q}, '%'))
             </if>
         </where>
-        ORDER BY ${sortColumn} ${sortOrder}
+        ORDER BY ${queryDTO.sortSpec.column} ${queryDTO.sortSpec.order}
     </select>
 </mapper>

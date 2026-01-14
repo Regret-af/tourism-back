@@ -23,9 +23,11 @@
                 AND price_level = #{queryDTO.priceLevel}
             </if>
             <if test="queryDTO.tagList != null and queryDTO.tagList.size() > 0">
-                <foreach collection="queryDTO.tagList" item="tag" separator="OR" open="AND (" close=")">
-                    tags LIKE CONCAT('%', #{tag}, '%')
+                AND (
+                <foreach collection="queryDTO.tagList" item="tag" separator="OR">
+                    FIND_IN_SET(#{tag}, tags)
                 </foreach>
+                )
             </if>
         </where>
         ORDER BY ${queryDTO.sortSpec.column} ${queryDTO.sortSpec.order}

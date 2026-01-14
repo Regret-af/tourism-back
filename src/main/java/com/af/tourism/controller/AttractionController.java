@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/attractions")
 public class AttractionController {
 
     private final AttractionService attractionService;
@@ -30,7 +30,7 @@ public class AttractionController {
      * @param queryDTO 查询参数
      * @return 景点信息列表
      */
-    @GetMapping("/attractions")
+    @GetMapping
     public ApiResponse<PageResponse<AttractionCardVO>> listAttractions(AttractionQueryDTO queryDTO) {
 
         log.info("开始查询景点信息:{}", queryDTO);

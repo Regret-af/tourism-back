@@ -5,6 +5,7 @@ import com.af.tourism.service.impl.AttractionServiceImpl;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +22,7 @@ public class AttractionQueryDTO {
     Integer page = 1;
 
     @Min(value = 1, message = "每页条数不能小于1")
+    @Max(value = 50, message = "每页条数不能大于50")
     Integer size = 10;
 
     String q;   // 关键词搜索（匹配名称/描述）

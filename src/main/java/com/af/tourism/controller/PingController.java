@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class PingController {
 
+    /**
+     * 检测服务状态
+     * @return 服务存活且连通
+     */
     @GetMapping("/ping")
     public ApiResponse<String> ping() {
         return ApiResponse.ok("ok");

@@ -2,6 +2,7 @@ package com.af.tourism.controller;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.exception.BusinessException;
 import com.af.tourism.pojo.vo.AttractionCardVO;
 import com.af.tourism.pojo.vo.PageResponse;
 import com.af.tourism.service.AttractionService;
@@ -35,7 +36,7 @@ public class AttractionController {
                                                                        @RequestParam(value = "scene", required = false) String scene) {
 
         if (page < 1 || size < 1) {
-            return ApiResponse.fail(ErrorCode.PARAM_INVALID, "参数有误");
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "参数有误");
         }
 
         PageResponse<AttractionCardVO> data = attractionService.listAttractions(page, size, q, location, priceLevel, tags, sort);

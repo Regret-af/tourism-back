@@ -1,23 +1,30 @@
 package com.af.tourism.common;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
- * 通用响应包装，保证前后端 code/message/data 统一。
+ * 通用响应包装，统一输出 code/message/data/requestId/timestamp。
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
+
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private int code;
     private String message;
     private T data;
+    private String requestId;
+    private String timestamp;
 
     public ApiResponse() {
+        fillMeta();
     }
 
     public ApiResponse(int code, String message, T data) {
         this.code = code;
         this.message = message;
         this.data = data;
+        fillMeta();
     }
 
     public static <T> ApiResponse<T> ok(T data) {
@@ -30,6 +37,11 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> fail(ErrorCode errorCode, String message) {
         return new ApiResponse<>(errorCode.getCode(), message, null);
+    }
+
+    private void fillMeta() {
+        this.requestId = RequestContext.getOrCreateRequestId();
+        this.timestamp = LocalDateTime.now().format(TIMESTAMP_FORMATTER);
     }
 
     public int getCode() {
@@ -54,5 +66,21 @@ public class ApiResponse<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 }

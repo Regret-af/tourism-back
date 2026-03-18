@@ -2,17 +2,19 @@ package com.af.tourism.pojo.dto;
 
 import lombok.Data;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 /**
- * 登录请求信息
+ * 登录请求参数。
  */
 @Data
 public class LoginDTO {
 
-    @NotBlank(message = "用户名不得为空")
-    private String account;
+    @NotBlank(message = "邮箱不能为空")
+    @Email(message = "邮箱格式不正确")
+    private String email;
 
-    @NotBlank(message = "密码不得为空")
+    @NotBlank(message = "密码不能为空")
     private String password;
 }

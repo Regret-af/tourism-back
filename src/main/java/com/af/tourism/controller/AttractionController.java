@@ -3,6 +3,7 @@ package com.af.tourism.controller;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.exception.BusinessException;
+import com.af.tourism.pojo.dto.AttractionQueryDTO;
 import com.af.tourism.pojo.vo.AttractionCardVO;
 import com.af.tourism.pojo.vo.PageResponse;
 import com.af.tourism.service.AttractionService;
@@ -39,7 +40,18 @@ public class AttractionController {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "参数有误");
         }
 
-        PageResponse<AttractionCardVO> data = attractionService.listAttractions(page, size, q, location, priceLevel, tags, sort);
+        AttractionQueryDTO queryDTO = new AttractionQueryDTO();
+        queryDTO.setPage(page);
+        queryDTO.setSize(size);
+        queryDTO.setQ(q);
+        queryDTO.setLocation(location);
+        queryDTO.setPriceLevel(priceLevel);
+        queryDTO.setTags(tags);
+        queryDTO.setSort(sort);
+        queryDTO.setAlgo(algo);
+        queryDTO.setScene(scene);
+
+        PageResponse<AttractionCardVO> data = attractionService.listAttractions(queryDTO);
         return ApiResponse.ok(data);
     }
 }

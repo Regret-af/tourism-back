@@ -4,7 +4,7 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.LoginDTO;
 import com.af.tourism.pojo.dto.RegisterDTO;
 import com.af.tourism.pojo.vo.LoginVO;
-import com.af.tourism.pojo.vo.UserVO;
+import com.af.tourism.pojo.vo.RegisterVO;
 import com.af.tourism.service.AuthService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,8 +27,8 @@ public class AuthController {
 
     /**
      * 用户登录
-     * @param request 登录信息
-     * @return 用户信息与JWT令牌
+     * @param request 登录请求参数
+     * @return 登录响应
      */
     @PostMapping("/login")
     public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO request) {
@@ -37,11 +37,11 @@ public class AuthController {
 
     /**
      * 用户注册
-     * @param request 注册信息
-     * @return 用户信息
+     * @param request 注册请求参数
+     * @return 注册响应
      */
     @PostMapping("/register")
-    public ApiResponse<UserVO> register(@Valid @RequestBody RegisterDTO request) {
+    public ApiResponse<RegisterVO> register(@Valid @RequestBody RegisterDTO request) {
         return ApiResponse.ok(authService.register(request));
     }
 }

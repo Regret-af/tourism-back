@@ -8,26 +8,20 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 用户表实体。
+ * 角色表实体。
  */
 @Data
-@TableName("users")
-public class User {
+@TableName("roles")
+public class Role {
 
     @TableId
     private Long id;
 
-    private String email;
+    @TableField("role_code")
+    private String roleCode;
 
-    private String username;
-
-    @TableField("password_hash")
-    private String passwordHash;
-
-    private String nickname;
-
-    @TableField("avatar_url")
-    private String avatarUrl;
+    @TableField("role_name")
+    private String roleName;
 
     private Integer status;
 

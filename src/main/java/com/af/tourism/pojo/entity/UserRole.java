@@ -8,32 +8,21 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 用户表实体。
+ * 用户角色关联表实体。
  */
 @Data
-@TableName("users")
-public class User {
+@TableName("user_roles")
+public class UserRole {
 
     @TableId
     private Long id;
 
-    private String email;
+    @TableField("user_id")
+    private Long userId;
 
-    private String username;
-
-    @TableField("password_hash")
-    private String passwordHash;
-
-    private String nickname;
-
-    @TableField("avatar_url")
-    private String avatarUrl;
-
-    private Integer status;
+    @TableField("role_id")
+    private Long roleId;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
-
-    @TableField("updated_at")
-    private LocalDateTime updatedAt;
 }

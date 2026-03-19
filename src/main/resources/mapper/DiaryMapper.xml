@@ -2,53 +2,99 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.DiaryMapper">
 
-    <resultMap id="DiaryWithUserMap" type="com.af.tourism.pojo.entity.DiaryWithUser">
-        <association property="diary" javaType="com.af.tourism.pojo.entity.TravelDiary">
-            <id column="id" property="id"/>
-            <result column="user_id" property="userId"/>
-            <result column="title" property="title"/>
-            <result column="summary" property="summary"/>
-            <result column="cover_image" property="coverImage"/>
-            <result column="content" property="content"/>
-            <result column="is_featured" property="isFeatured"/>
-            <result column="status" property="status"/>
-            <result column="like_count" property="likeCount"/>
-            <result column="view_count" property="viewCount"/>
-            <result column="collect_count" property="collectCount"/>
-            <result column="comment_count" property="commentCount"/>
-            <result column="created_at" property="createdAt"/>
-            <result column="updated_at" property="updatedAt"/>
-        </association>
-        <association property="user" javaType="com.af.tourism.pojo.entity.User">
-            <id column="u_id" property="id"/>
-            <result column="username" property="username"/>
-            <result column="email" property="email"/>
-            <result column="u_status" property="status"/>
-            <result column="avatar_url" property="avatarUrl"/>
-            <result column="bio" property="bio"/>
+    <resultMap id="DiaryCardMap" type="com.af.tourism.pojo.vo.DiaryCardVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="liked" property="liked"/>
+        <result column="favorited" property="favorited"/>
+        <result column="published_at" property="publishedAt"/>
+        <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
+            <id column="author_id" property="id"/>
+            <result column="author_nickname" property="nickname"/>
+            <result column="author_avatar_url" property="avatarUrl"/>
         </association>
     </resultMap>
 
-    <!-- 前台日记列表：仅展示 status=1 -->
-    <select id="selectDiaryList" resultMap="DiaryWithUserMap">
+    <resultMap id="DiaryDetailMap" type="com.af.tourism.pojo.vo.DiaryDetailVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="content" property="content"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="liked" property="liked"/>
+        <result column="favorited" property="favorited"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
+            <id column="author_id" property="id"/>
+            <result column="author_nickname" property="nickname"/>
+            <result column="author_avatar_url" property="avatarUrl"/>
+        </association>
+    </resultMap>
+
+    <select id="selectDiaryList" resultMap="DiaryCardMap">
         SELECT
-            d.id, d.user_id, d.title, d.summary, d.cover_image, d.content,
-            d.is_featured, d.status, d.like_count, d.view_count, d.collect_count, d.comment_count, d.created_at, d.updated_at,
-            u.id AS u_id, u.username, u.email, u.status AS u_status, u.avatar_url, u.bio
+            d.id,
+            d.title,
+            d.summary,
+            d.cover_url,
+            d.view_count,
+            d.like_count,
+            d.favorite_count,
+            d.comment_count,
+            d.published_at,
+            0 AS liked,
+            0 AS favorited,
+            u.id AS author_id,
+            u.nickname AS author_nickname,
+            u.avatar_url AS author_avatar_url
         FROM travel_diaries d
-                 LEFT JOIN users u ON d.user_id = u.id
-        <where>
-            d.status = 1
-            <if test="queryDTO.userId != null and queryDTO.userId != ''">
-                AND d.user_id = #{queryDTO.userId}
-            </if>
-            <if test="queryDTO.featured != null and queryDTO.featured != ''">
-                AND d.is_featured = #{queryDTO.featured}
-            </if>
-            <if test="queryDTO.q != null and queryDTO.q != ''">
-                AND (d.title LIKE CONCAT('%', #{queryDTO.q}, '%') OR d.summary LIKE CONCAT('%', #{queryDTO.q}, '%'))
-            </if>
-        </where>
-        ORDER BY ${queryDTO.sortSpec.column} ${queryDTO.sortSpec.order}
+        INNER JOIN users u ON d.user_id = u.id
+        WHERE d.status = 1
+        <choose>
+            <when test="queryDTO.sort == 'hot'">
+                ORDER BY d.like_count DESC, d.published_at DESC, d.id DESC
+            </when>
+            <otherwise>
+                ORDER BY d.published_at DESC, d.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectDiaryDetail" resultMap="DiaryDetailMap">
+        SELECT
+            d.id,
+            d.title,
+            d.summary,
+            d.cover_url,
+            d.content,
+            d.view_count,
+            d.like_count,
+            d.favorite_count,
+            d.comment_count,
+            d.published_at,
+            d.created_at,
+            d.updated_at,
+            0 AS liked,
+            0 AS favorited,
+            u.id AS author_id,
+            u.nickname AS author_nickname,
+            u.avatar_url AS author_avatar_url
+        FROM travel_diaries d
+        INNER JOIN users u ON d.user_id = u.id
+        WHERE d.id = #{diaryId}
+          AND d.status = 1
+        LIMIT 1
     </select>
 </mapper>

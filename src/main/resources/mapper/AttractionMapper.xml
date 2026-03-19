@@ -2,35 +2,93 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.AttractionMapper">
 
-    <!-- 景点列表查询，遵循接口文档：仅返回 status=1 的可见数据 -->
-    <select id="selectAttractions" resultType="com.af.tourism.pojo.entity.Attraction">
-        SELECT
-            id, name, description, location, image_url, gallery, rating, tags, view_count, price_level, status, longitude, latitude, created_at, updated_at
-        FROM attractions
+    <resultMap id="AttractionCardMap" type="com.af.tourism.pojo.vo.AttractionCardVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="location_text" property="locationText"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="created_at" property="createdAt"/>
+        <association property="category" javaType="com.af.tourism.pojo.vo.AttractionCategorySimpleVO">
+            <id column="category_id" property="id"/>
+            <result column="category_name" property="name"/>
+            <result column="category_code" property="code"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="AttractionDetailMap" type="com.af.tourism.pojo.vo.AttractionDetailVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="summary" property="summary"/>
+        <result column="description" property="description"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="location_text" property="locationText"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <association property="category" javaType="com.af.tourism.pojo.vo.AttractionCategorySimpleVO">
+            <id column="category_id" property="id"/>
+            <result column="category_name" property="name"/>
+            <result column="category_code" property="code"/>
+        </association>
+    </resultMap>
+
+    <select id="selectAttractions" resultMap="AttractionCardMap">
+        SELECT a.id,
+               a.name,
+               a.summary,
+               a.cover_url,
+               a.location_text,
+               a.view_count,
+               a.created_at,
+               c.id AS category_id,
+               c.name AS category_name,
+               c.code AS category_code
+        FROM attractions a
+                 INNER JOIN attraction_categories c ON a.category_id = c.id
         <where>
-            status = 1
-            <if test="queryDTO.q != null and queryDTO.q != ''">
+            a.status = 1
+            AND c.status = 1
+            <if test="queryDTO.keyword != null and queryDTO.keyword != ''">
                 AND (
-                    name LIKE CONCAT('%', #{queryDTO.q}, '%')
-                    OR location LIKE CONCAT('%', #{queryDTO.q}, '%')
-                    OR tags LIKE CONCAT('%', #{queryDTO.q}, '%')
+                    a.name LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+                    OR a.summary LIKE CONCAT('%', #{queryDTO.keyword}, '%')
                 )
             </if>
-            <if test="queryDTO.location != null and queryDTO.location != ''">
-                AND location = #{queryDTO.location}
-            </if>
-            <if test="queryDTO.priceLevel != null">
-                AND price_level = #{queryDTO.priceLevel}
-            </if>
-            <if test="queryDTO.tagList != null and queryDTO.tagList.size() > 0">
-                AND (
-                <foreach collection="queryDTO.tagList" item="tag" separator="OR">
-                    FIND_IN_SET(#{tag}, tags)
-                </foreach>
-                )
+            <if test="queryDTO.categoryId != null">
+                AND a.category_id = #{queryDTO.categoryId}
             </if>
         </where>
-        ORDER BY ${queryDTO.sortSpec.column} ${queryDTO.sortSpec.order}
+        <choose>
+            <when test="queryDTO.sort == 'hot'">
+                ORDER BY a.view_count DESC, a.created_at DESC, a.id DESC
+            </when>
+            <otherwise>
+                ORDER BY a.created_at DESC, a.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectAttractionDetail" resultMap="AttractionDetailMap">
+        SELECT a.id,
+               a.name,
+               a.summary,
+               a.description,
+               a.cover_url,
+               a.location_text,
+               a.view_count,
+               a.created_at,
+               a.updated_at,
+               c.id AS category_id,
+               c.name AS category_name,
+               c.code AS category_code
+        FROM attractions a
+                 INNER JOIN attraction_categories c ON a.category_id = c.id
+        WHERE a.id = #{attractionId}
+          AND a.status = 1
+          AND c.status = 1
+        LIMIT 1
     </select>
 
 </mapper>

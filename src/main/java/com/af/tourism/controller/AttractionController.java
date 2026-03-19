@@ -1,57 +1,61 @@
 package com.af.tourism.controller;
 
 import com.af.tourism.common.ApiResponse;
-import com.af.tourism.common.ErrorCode;
-import com.af.tourism.exception.BusinessException;
 import com.af.tourism.pojo.dto.AttractionQueryDTO;
 import com.af.tourism.pojo.vo.AttractionCardVO;
+import com.af.tourism.pojo.vo.AttractionCategoryVO;
+import com.af.tourism.pojo.vo.AttractionDetailVO;
 import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.service.AttractionCategoryService;
 import com.af.tourism.service.AttractionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+import java.util.List;
+
 /**
- * 景点推荐列表接口
+ * 景点相关接口。
  */
 @RestController
+@Validated
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class AttractionController {
 
+    private final AttractionCategoryService attractionCategoryService;
     private final AttractionService attractionService;
 
-    public AttractionController(AttractionService attractionService) {
-        this.attractionService = attractionService;
+    /**
+     * 景点分类列表
+     * @return 景点分类列表项
+     */
+    @GetMapping("/attraction-categories")
+    public ApiResponse<List<AttractionCategoryVO>> listCategories() {
+        return ApiResponse.ok(attractionCategoryService.listCategories());
     }
 
+    /**
+     * 景点列表，覆盖列表、搜索、分类筛选
+     * @param queryDTO 列表、搜索、分类筛选参数
+     * @return 景点列表
+     */
     @GetMapping("/attractions")
-    public ApiResponse<PageResponse<AttractionCardVO>> listAttractions(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-                                                                       @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-                                                                       @RequestParam(value = "q", required = false) String q,
-                                                                       @RequestParam(value = "location", required = false) String location,
-                                                                       @RequestParam(value = "priceLevel", required = false) Integer priceLevel,
-                                                                       @RequestParam(value = "tags", required = false) String tags,
-                                                                       @RequestParam(value = "sort", required = false) String sort,
-                                                                       @RequestParam(value = "algo", required = false) String algo,
-                                                                       @RequestParam(value = "scene", required = false) String scene) {
+    public ApiResponse<PageResponse<AttractionCardVO>> listAttractions(@Valid AttractionQueryDTO queryDTO) {
+        return ApiResponse.ok(attractionService.listAttractions(queryDTO));
+    }
 
-        if (page < 1 || size < 1) {
-            throw new BusinessException(ErrorCode.PARAM_INVALID, "参数有误");
-        }
-
-        AttractionQueryDTO queryDTO = new AttractionQueryDTO();
-        queryDTO.setPage(page);
-        queryDTO.setSize(size);
-        queryDTO.setQ(q);
-        queryDTO.setLocation(location);
-        queryDTO.setPriceLevel(priceLevel);
-        queryDTO.setTags(tags);
-        queryDTO.setSort(sort);
-        queryDTO.setAlgo(algo);
-        queryDTO.setScene(scene);
-
-        PageResponse<AttractionCardVO> data = attractionService.listAttractions(queryDTO);
-        return ApiResponse.ok(data);
+    /**
+     * 景点详情
+     * @param attractionId 景点id
+     * @return 景点详情信息
+     */
+    @GetMapping("/attractions/{attractionId}")
+    public ApiResponse<AttractionDetailVO> getAttractionDetail(@PathVariable("attractionId") Long attractionId) {
+        return ApiResponse.ok(attractionService.getAttractionDetail(attractionId));
     }
 }

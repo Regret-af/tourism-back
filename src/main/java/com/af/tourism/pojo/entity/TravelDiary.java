@@ -8,34 +8,47 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 日记表实体，对应 travel_diaries。
+ * 旅行日记实体。
  */
 @Data
 @TableName("travel_diaries")
 public class TravelDiary {
+
     @TableId
     private Long id;
+
     @TableField("user_id")
     private Long userId;
+
     private String title;
+
     private String summary;
-    @TableField("cover_image")
-    private String coverImage;
+
+    @TableField("cover_url")
+    private String coverUrl;
+
     private String content;
-    @TableField("is_featured")
-    private Integer isFeatured;
+
     private Integer status;
-    @TableField("like_count")
-    private Integer likeCount;
+
     @TableField("view_count")
     private Integer viewCount;
-    @TableField("collect_count")
-    private Integer collectCount;
+
+    @TableField("like_count")
+    private Integer likeCount;
+
+    @TableField("favorite_count")
+    private Integer favoriteCount;
+
     @TableField("comment_count")
     private Integer commentCount;
+
+    @TableField("published_at")
+    private LocalDateTime publishedAt;
+
     @TableField("created_at")
     private LocalDateTime createdAt;
+
     @TableField("updated_at")
     private LocalDateTime updatedAt;
 }
-

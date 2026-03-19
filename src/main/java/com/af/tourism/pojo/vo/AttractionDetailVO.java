@@ -5,17 +5,19 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 景点列表项响应。
+ * 景点详情响应。
  */
 @Data
-public class AttractionCardVO {
+public class AttractionDetailVO {
 
     private Long id;
     private String name;
     private String summary;
+    private String description;
     private String coverUrl;
     private String locationText;
     private Integer viewCount;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private AttractionCategorySimpleVO category;
 }

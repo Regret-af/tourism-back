@@ -5,15 +5,16 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 旅行日记列表项。
+ * 旅行日记详情。
  */
 @Data
-public class DiaryCardVO {
+public class DiaryDetailVO {
 
     private Long id;
     private String title;
     private String summary;
     private String coverUrl;
+    private String content;
     private UserPublicVO author;
     private Integer viewCount;
     private Integer likeCount;
@@ -22,4 +23,6 @@ public class DiaryCardVO {
     private Boolean liked;
     private Boolean favorited;
     private LocalDateTime publishedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

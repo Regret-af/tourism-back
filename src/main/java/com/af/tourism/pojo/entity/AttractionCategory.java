@@ -8,34 +8,23 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 景点实体。
+ * 景点分类实体。
  */
 @Data
-@TableName("attractions")
-public class Attraction {
+@TableName("attraction_categories")
+public class AttractionCategory {
 
     @TableId
     private Long id;
 
-    @TableField("category_id")
-    private Long categoryId;
-
     private String name;
 
-    private String summary;
+    private String code;
 
-    private String description;
-
-    @TableField("cover_url")
-    private String coverUrl;
-
-    @TableField("location_text")
-    private String locationText;
+    @TableField("sort_order")
+    private Integer sortOrder;
 
     private Integer status;
-
-    @TableField("view_count")
-    private Integer viewCount;
 
     @TableField("created_at")
     private LocalDateTime createdAt;

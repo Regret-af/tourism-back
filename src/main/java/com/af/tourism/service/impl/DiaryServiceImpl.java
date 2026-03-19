@@ -1,75 +1,113 @@
 package com.af.tourism.service.impl;
 
+import com.af.tourism.common.ErrorCode;
 import com.af.tourism.converter.DiaryConverter;
+import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.DiaryQueryDTO;
-import com.af.tourism.pojo.entity.DiaryWithUser;
+import com.af.tourism.pojo.dto.TravelDiaryPublishDTO;
+import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.DiaryCardVO;
+import com.af.tourism.pojo.vo.DiaryDetailVO;
 import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.vo.TravelDiaryPublishVO;
 import com.af.tourism.service.DiaryService;
-import com.af.tourism.utils.ListCacheUtils;
-import com.af.tourism.utils.RedisUtils;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
- * 日记列表服务
+ * 旅行日记服务实现。
  */
 @Service
+@RequiredArgsConstructor
 public class DiaryServiceImpl implements DiaryService {
 
     private final DiaryMapper diaryMapper;
     private final DiaryConverter diaryConverter;
-    private final RedisUtils redisUtils;
 
-    public DiaryServiceImpl(DiaryMapper diaryMapper, DiaryConverter diaryConverter, RedisUtils redisUtils) {
-        this.diaryMapper = diaryMapper;
-        this.diaryConverter = diaryConverter;
-        this.redisUtils = redisUtils;
-    }
-
+    /**
+     * 发布旅行日记
+     * @param request 旅行日记信息
+     * @return 返回值
+     */
     @Override
-    public PageResponse<DiaryCardVO> listDiaries(DiaryQueryDTO queryDTO) {
+    @Transactional(rollbackFor = Exception.class)
+    public TravelDiaryPublishVO publishDiary(TravelDiaryPublishDTO request, Long userId) {
+        // 1.将信息解析到实体
+        TravelDiary diary = diaryConverter.toTravelDiary(request);
 
-        // 1.尝试获取缓存
-        String key = ListCacheUtils.buildHashKey("travel_diaries", queryDTO);
-        String cacheData = redisUtils.get(key);
-        if (cacheData != null) {
-            return ListCacheUtils.toBean(cacheData, new TypeReference<PageResponse<DiaryCardVO>>() {});
+        // 2.填充发布旅行日记时的业务默认值
+        fillPublishDefault(diary, userId);
+
+        // 3.执行插入操作
+        int rows = diaryMapper.insert(diary);
+        if (rows <= 0) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库插入失败");
         }
 
-        // 没有命中缓存，查询数据库
-        // 2.执行参数解析
-        queryDTO.parseParams();
-
-        // 3.开始分页查询
-        PageHelper.startPage(queryDTO.getPage(), queryDTO.getSize());
-
-        List<DiaryWithUser> list = diaryMapper.selectDiaryList(queryDTO);
-        PageInfo<DiaryWithUser> pageInfo = new PageInfo<>(list);
-
-        // 4.将笔记实体转为 VO 卡片
-        List<DiaryCardVO> voList = diaryConverter.toCardVOList(list);
-
-        // 5.封装为分页返回类型
-        PageResponse<DiaryCardVO> resp = new PageResponse<>();
-        resp.setList(voList);
-        resp.setPage(pageInfo.getPageNum());
-        resp.setSize(pageInfo.getPageSize());
-        resp.setTotal(pageInfo.getTotal());
-        resp.setHasNext(pageInfo.isHasNextPage());
-
-        // 6.存入缓存
-        String json = ListCacheUtils.toJSON(resp);
-        redisUtils.setEx(key, json, 120, TimeUnit.SECONDS);
-
-        return resp;
+        return diaryConverter.toTravelDiaryPublishVO(diary);
     }
 
-}
+    /**
+     * 旅行日记列表
+     * @param queryDTO 请求参数
+     * @return 日记列表
+     */
+    @Override
+    public PageResponse<DiaryCardVO> listDiaries(DiaryQueryDTO queryDTO) {
+        // 1.开启分页查询
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
+        // 2.进行查询操作
+        List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO);
+        PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
+
+        // 3.填充返回值
+        PageResponse<DiaryCardVO> response = new PageResponse<>();
+        response.setList(list);
+        response.setPageNum(pageInfo.getPageNum());
+        response.setPageSize(pageInfo.getPageSize());
+        response.setTotal(pageInfo.getTotal());
+
+        return response;
+    }
+
+    /**
+     * 旅行日记详情
+     * @param diaryId 旅行日记 id
+     * @return 旅行日记详细信息
+     */
+    @Override
+    public DiaryDetailVO getDiaryDetail(Long diaryId) {
+        // 1.查询旅行日记详情
+        DiaryDetailVO detailVO = diaryMapper.selectDiaryDetail(diaryId);
+
+        // 2.若为空，抛出异常
+        if (detailVO == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
+        }
+
+        return detailVO;
+    }
+
+    /**
+     * 填充旅行日记发布时的默认值
+     * @param diary 日记实体
+     * @param userId 用户 id
+     */
+    private void fillPublishDefault(TravelDiary diary, Long userId) {
+        diary.setUserId(userId);
+        diary.setStatus(1);
+        diary.setViewCount(0);
+        diary.setLikeCount(0);
+        diary.setFavoriteCount(0);
+        diary.setCommentCount(0);
+        diary.setPublishedAt(LocalDateTime.now());
+    }
+}

@@ -3,13 +3,12 @@ package com.af.tourism.pojo.vo;
 import lombok.Data;
 
 /**
- * 对外公开的用户信息。
+ * 作者公开信息。
  */
 @Data
 public class UserPublicVO {
-    private Long id;
-    private String username;
-    private String avatarUrl;
-    private String bio;
-}
 
+    private Long id;
+    private String nickname;
+    private String avatarUrl;
+}

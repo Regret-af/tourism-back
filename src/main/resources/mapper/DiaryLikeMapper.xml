@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.af.tourism.mapper.DiaryLikeMapper">
+
+    <select id="selectByDiaryIdAndUserId" resultType="com.af.tourism.pojo.entity.DiaryLike">
+        SELECT id,
+               diary_id,
+               user_id,
+               created_at
+        FROM diary_likes
+        WHERE diary_id = #{diaryId}
+          AND user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <delete id="deleteByDiaryIdAndUserId">
+        DELETE FROM diary_likes
+        WHERE diary_id = #{diaryId}
+          AND user_id = #{userId}
+    </delete>
+</mapper>

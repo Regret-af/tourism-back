@@ -97,4 +97,22 @@
           AND d.status = 1
         LIMIT 1
     </select>
+
+    <update id="updateCommentCount">
+        UPDATE travel_diaries
+        SET comment_count = IF(comment_count + #{delta} &lt; 0, 0, comment_count + #{delta})
+        WHERE id = #{diaryId}
+    </update>
+
+    <update id="updateLikeCount">
+        UPDATE travel_diaries
+        SET like_count = IF(like_count + #{delta} &lt; 0, 0, like_count + #{delta})
+        WHERE id = #{diaryId}
+    </update>
+
+    <update id="updateFavoriteCount">
+        UPDATE travel_diaries
+        SET favorite_count = IF(favorite_count + #{delta} &lt; 0, 0, favorite_count + #{delta})
+        WHERE id = #{diaryId}
+    </update>
 </mapper>

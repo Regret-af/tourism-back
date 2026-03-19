@@ -29,4 +29,28 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @return 旅行日记详情
      */
     DiaryDetailVO selectDiaryDetail(@Param("diaryId") Long diaryId);
+
+    /**
+     * 更新旅行日记评论数量
+     * @param diaryId 旅行日记 id
+     * @param delta 评论数量差值
+     * @return 更新条数
+     */
+    int updateCommentCount(@Param("diaryId") Long diaryId, @Param("delta") Integer delta);
+
+    /**
+     * 更新旅行日记点赞数量
+     * @param diaryId 旅行日记 id
+     * @param delta 点赞数量差值
+     * @return 更新条数
+     */
+    int updateLikeCount(@Param("diaryId") Long diaryId, @Param("delta") Integer delta);
+
+    /**
+     * 更新旅行日记收藏数量
+     * @param diaryId 旅行日记 id
+     * @param delta 收藏数量差值
+     * @return 更新条数
+     */
+    int updateFavoriteCount(@Param("diaryId") Long diaryId, @Param("delta") Integer delta);
 }

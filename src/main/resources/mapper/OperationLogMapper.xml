@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.af.tourism.mapper.OperationLogMapper">
+
+    <select id="selectRecentByUserId" resultType="com.af.tourism.pojo.entity.OperationLog">
+        SELECT id,
+               user_id,
+               module,
+               action,
+               biz_id,
+               description,
+               request_ip,
+               user_agent,
+               created_at
+        FROM operation_logs
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+</mapper>

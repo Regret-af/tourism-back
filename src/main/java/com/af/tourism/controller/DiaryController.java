@@ -1,5 +1,6 @@
 package com.af.tourism.controller;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.TravelDiaryPublishDTO;
@@ -37,6 +38,7 @@ public class DiaryController {
      * @return 返回值
      */
     @PostMapping("/travel-diaries")
+    @OperationLogRecord(module = "DIARY", action = "CREATE_DIARY", description = "发布旅行日记", bizIdField = "data.id")
     public ApiResponse<TravelDiaryPublishVO> publishDiary(@Valid @RequestBody TravelDiaryPublishDTO request) {
         // 获取用户id，若 id 为空，直接抛出异常
         Long userId = AuthContext.requireCurrentUserId();

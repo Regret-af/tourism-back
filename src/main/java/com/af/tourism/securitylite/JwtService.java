@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ import java.util.Date;
  * 轻量 JWT 服务，仅负责生成和解析当前登录用户标识。
  */
 @Component
+@Slf4j
 public class JwtService {
 
     @Value("${app.jwt.secret:change-me}")
@@ -29,7 +31,7 @@ public class JwtService {
     private SecretKey secretKey;
 
     /**
-     * 初始胡完成生成密钥
+     * 初始化完成生成密钥
      */
     @PostConstruct
     public void init() {

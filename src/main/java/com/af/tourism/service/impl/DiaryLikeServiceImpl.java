@@ -1,15 +1,13 @@
 package com.af.tourism.service.impl;
 
-import com.af.tourism.common.ErrorCode;
-import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryLikeMapper;
 import com.af.tourism.mapper.DiaryMapper;
-import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.entity.DiaryLike;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.DiaryLikeVO;
 import com.af.tourism.service.DiaryLikeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,13 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DiaryLikeServiceImpl implements DiaryLikeService {
 
     private final DiaryLikeMapper diaryLikeMapper;
     private final DiaryMapper diaryMapper;
-    private final UserMapper userMapper;
 
     private final UserCheckService userCheckService;
+    private final DiaryCheckService diaryCheckService;
 
     /**
      * 点赞旅行日记
@@ -36,7 +35,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
     @Transactional(rollbackFor = Exception.class)
     public DiaryLikeVO likeDiary(Long diaryId, Long userId) {
         // 1.校验参数是否存在
-        TravelDiary diary = requirePublicDiary(diaryId);
+        TravelDiary diary = diaryCheckService.requirePublicDiary(diaryId);
         userCheckService.requireActiveUser(userId);
 
         // 2.判断是否已经点过赞
@@ -49,6 +48,9 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             diaryLikeMapper.insert(like);
             diaryMapper.updateLikeCount(diaryId, 1);
             diary = diaryMapper.selectById(diaryId);
+            log.info("点赞日记成功，diaryId={}, userId={}", diaryId, userId);
+        } else {
+            log.info("重复点赞，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
         }
 
         return buildLikeVO(true, diary.getLikeCount());
@@ -64,7 +66,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
     @Transactional(rollbackFor = Exception.class)
     public DiaryLikeVO unlikeDiary(Long diaryId, Long userId) {
         // 1.校验参数是否存在
-        TravelDiary diary = requirePublicDiary(diaryId);
+        TravelDiary diary = diaryCheckService.requirePublicDiary(diaryId);
         userCheckService.requireActiveUser(userId);
 
         // 2.判断是否已经点过赞
@@ -74,22 +76,12 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             diaryLikeMapper.deleteByDiaryIdAndUserId(diaryId, userId);
             diaryMapper.updateLikeCount(diaryId, -1);
             diary = diaryMapper.selectById(diaryId);
+            log.info("取消点赞成功，diaryId={}, userId={}", diaryId, userId);
+        } else {
+            log.info("用户本次取消点赞时为未点赞状态，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
         }
 
         return buildLikeVO(false, diary.getLikeCount());
-    }
-
-    /**
-     * 校验旅行日记是否存在
-     * @param diaryId 旅行日记 id
-     * @return 旅行日记实体
-     */
-    private TravelDiary requirePublicDiary(Long diaryId) {
-        TravelDiary diary = diaryMapper.selectById(diaryId);
-        if (diary == null || diary.getStatus() == null || diary.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
-        }
-        return diary;
     }
 
     /**

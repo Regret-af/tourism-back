@@ -8,22 +8,20 @@ import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.UserVO;
 import com.af.tourism.service.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
     private final AuthConverter authConverter;
-
-    public UserServiceImpl(UserMapper userMapper, RoleMapper roleMapper, AuthConverter authConverter) {
-        this.userMapper = userMapper;
-        this.roleMapper = roleMapper;
-        this.authConverter = authConverter;
-    }
 
     /**
      * 通过用户id进行查询
@@ -44,6 +42,7 @@ public class UserServiceImpl implements UserService {
     public UserVO getCurrentUserProfile(Long userId) {
         User user = findById(userId);
         if (user == null) {
+            log.warn("用户不存在，userId={}", userId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "用户不存在");
         }
         return authConverter.toUserVO(user, listRoleCodes(userId));

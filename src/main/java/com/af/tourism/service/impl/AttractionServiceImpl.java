@@ -10,6 +10,8 @@ import com.af.tourism.pojo.vo.PageResponse;
 import com.af.tourism.service.AttractionService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,13 +20,11 @@ import java.util.List;
  * 景点服务实现。
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class AttractionServiceImpl implements AttractionService {
 
     private final AttractionMapper attractionMapper;
-
-    public AttractionServiceImpl(AttractionMapper attractionMapper) {
-        this.attractionMapper = attractionMapper;
-    }
 
     /**
      * 景点列表，覆盖列表、搜索、分类筛选
@@ -37,8 +37,14 @@ public class AttractionServiceImpl implements AttractionService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 2.查询景点信息
+        log.debug("查询景点列表，pageNum={}, pageSize={}, keyword={}, categoryId={}",
+                queryDTO.getPageNum(),
+                queryDTO.getPageSize(),
+                queryDTO.getKeyword(),
+                queryDTO.getCategoryId());
         List<AttractionCardVO> list = attractionMapper.selectAttractions(queryDTO);
         PageInfo<AttractionCardVO> pageInfo = new PageInfo<>(list);
+        log.debug("查询景点信息完成，总记录数: {}", pageInfo.getTotal());
 
         // 3.封装返回信息
         PageResponse<AttractionCardVO> response = new PageResponse<>();
@@ -60,6 +66,7 @@ public class AttractionServiceImpl implements AttractionService {
         AttractionDetailVO detailVO = attractionMapper.selectAttractionDetail(attractionId);
         // 2.若为空，抛出异常
         if (detailVO == null) {
+            log.warn("景点不存在，attractionId={}", attractionId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "景点不存在");
         }
         return detailVO;

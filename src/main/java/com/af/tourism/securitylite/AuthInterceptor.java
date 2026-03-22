@@ -1,6 +1,7 @@
 package com.af.tourism.securitylite;
 
 import com.af.tourism.exception.UnauthorizedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
  * 对未携带 Token 的请求不直接拦截，由业务接口自行判断是否要求登录。
  */
 @Component
+@Slf4j
 public class AuthInterceptor implements HandlerInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
@@ -33,12 +35,14 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
         // 2.判断请求头格式
         if (!header.startsWith(BEARER_PREFIX)) {
+            log.warn("请求Authorization头格式错误，uri={}, method={}", request.getRequestURI(), request.getMethod());
             throw new UnauthorizedException("Authorization头格式错误");
         }
 
         // 3.校验 token
         String token = header.substring(BEARER_PREFIX.length()).trim();
         if (!StringUtils.hasText(token)) {
+            log.warn("请求token为空，uri={}, method={}", request.getRequestURI(), request.getMethod());
             throw new UnauthorizedException("Token不能为空");
         }
 

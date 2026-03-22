@@ -7,6 +7,7 @@ import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.vo.AttractionCategoryVO;
 import com.af.tourism.service.AttractionCategoryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttractionCategoryServiceImpl implements AttractionCategoryService {
 
     private final AttractionCategoryMapper attractionCategoryMapper;
@@ -31,6 +33,7 @@ public class AttractionCategoryServiceImpl implements AttractionCategoryService 
 
         // 2.检查是否为空
         if (categories == null || categories.isEmpty()) {
+            log.debug("查询景点分类结果为空");
             return Collections.emptyList();
         }
 

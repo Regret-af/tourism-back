@@ -5,17 +5,18 @@ import com.af.tourism.pojo.vo.LoginUserVO;
 import com.af.tourism.pojo.vo.LoginVO;
 import com.af.tourism.pojo.vo.RegisterVO;
 import com.af.tourism.pojo.vo.UserVO;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.util.List;
 
 /**
  * 认证相关对象转换器。
  */
-@Component
-public class AuthConverter {
+@Mapper(componentModel = "spring")
+public interface AuthConverter {
 
-    public LoginVO toLoginVO(User user, List<String> roles, String accessToken, String tokenType, Long expiresIn) {
+    default LoginVO toLoginVO(User user, List<String> roles, String accessToken, String tokenType, Long expiresIn) {
         LoginVO loginVO = new LoginVO();
         loginVO.setAccessToken(accessToken);
         loginVO.setTokenType(tokenType);
@@ -24,36 +25,11 @@ public class AuthConverter {
         return loginVO;
     }
 
-    public RegisterVO toRegisterVO(User user) {
-        RegisterVO registerVO = new RegisterVO();
-        registerVO.setId(user.getId());
-        registerVO.setEmail(user.getEmail());
-        registerVO.setUsername(user.getUsername());
-        registerVO.setNickname(user.getNickname());
-        return registerVO;
-    }
+    RegisterVO toRegisterVO(User user);
 
-    public UserVO toUserVO(User user, List<String> roles) {
-        UserVO userVO = new UserVO();
-        userVO.setId(user.getId());
-        userVO.setEmail(user.getEmail());
-        userVO.setUsername(user.getUsername());
-        userVO.setNickname(user.getNickname());
-        userVO.setAvatarUrl(user.getAvatarUrl());
-        userVO.setStatus(user.getStatus());
-        userVO.setRoles(roles);
-        userVO.setCreatedAt(user.getCreatedAt());
-        return userVO;
-    }
+    @Mapping(target = "roles", source = "roles")
+    UserVO toUserVO(User user, List<String> roles);
 
-    private LoginUserVO toLoginUserVO(User user, List<String> roles) {
-        LoginUserVO loginUserVO = new LoginUserVO();
-        loginUserVO.setId(user.getId());
-        loginUserVO.setEmail(user.getEmail());
-        loginUserVO.setUsername(user.getUsername());
-        loginUserVO.setNickname(user.getNickname());
-        loginUserVO.setAvatarUrl(user.getAvatarUrl());
-        loginUserVO.setRoles(roles);
-        return loginUserVO;
-    }
+    @Mapping(target = "roles", source = "roles")
+    LoginUserVO toLoginUserVO(User user, List<String> roles);
 }

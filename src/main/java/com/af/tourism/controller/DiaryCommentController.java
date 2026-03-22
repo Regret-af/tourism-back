@@ -1,5 +1,6 @@
 package com.af.tourism.controller;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.DiaryCommentCreateDTO;
 import com.af.tourism.pojo.dto.DiaryCommentQueryDTO;
@@ -50,6 +51,7 @@ public class DiaryCommentController {
      * @return 评论详情内容
      */
     @PostMapping("/travel-diaries/{diaryId}/comments")
+    @OperationLogRecord(module = "DIARY", action = "COMMENT", description = "发表评论", bizIdField = "data.id")
     public ApiResponse<DiaryCommentCreateVO> createComment(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId,
                                                            @Valid @RequestBody DiaryCommentCreateDTO request) {
         Long userId = AuthContext.requireCurrentUserId();

@@ -19,6 +19,7 @@ import com.af.tourism.service.DiaryCommentService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,16 +31,17 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DiaryCommentServiceImpl implements DiaryCommentService {
 
     private final DiaryCommentMapper diaryCommentMapper;
     private final DiaryMapper diaryMapper;
-    private final UserMapper userMapper;
 
     private final UserConverter userConverter;
     private final DiaryConverter diaryConverter;
 
     private final UserCheckService userCheckService;
+    private final DiaryCheckService diaryCheckService;
 
     /**
      * 查询旅行日记评论列表
@@ -50,11 +52,13 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
     @Override
     public PageResponse<DiaryCommentVO> listComments(Long diaryId, DiaryCommentQueryDTO queryDTO) {
         // 1.校验旅行日记是否存在
-        requirePublicDiary(diaryId);
+        diaryCheckService.requirePublicDiary(diaryId);
 
         // 2.开启分页查询
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
         // 3.开始查询评论列表
+        log.debug("查询日记评论列表，diaryId={}, pageNum={}, pageSize={}",
+                diaryId, queryDTO.getPageNum(), queryDTO.getPageSize());
         List<DiaryCommentVO> list = diaryCommentMapper.selectCommentList(diaryId);
         PageInfo<DiaryCommentVO> pageInfo = new PageInfo<>(list);
 
@@ -79,7 +83,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
     @Transactional(rollbackFor = Exception.class)
     public DiaryCommentCreateVO createComment(Long diaryId, Long userId, DiaryCommentCreateDTO request) {
         // 1.校验旅行日记是否存在
-        requirePublicDiary(diaryId);
+        diaryCheckService.requirePublicDiary(diaryId);
         User user = userCheckService.requireActiveUser(userId);
 
         // 2.填充发布评论时的初始值和业务默认值
@@ -92,30 +96,18 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         // 3.执行插入操作
         int rows = diaryCommentMapper.insert(comment);
         if (rows <= 0) {
+            log.error("发表评论失败，数据库插入失败");
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库插入失败");
         }
         // 4.执行旅行日记评论数量更新操作
         diaryMapper.updateCommentCount(diaryId, 1);
+        log.info("发表评论成功，diaryId={}, commentId={}, userId={}", diaryId, comment.getId(), userId);
 
         // 5.返回评论信息
         DiaryCommentCreateVO response = diaryConverter.toDiaryCommentCreateVO(comment);
         response.setAuthor(userConverter.toUserPublicVO(user));
 
         return response;
-    }
-
-    /**
-     * 查询旅行日记是否存在
-     * @param diaryId 旅行日记 id
-     * @return 旅行日记实体
-     */
-    private TravelDiary requirePublicDiary(Long diaryId) {
-        TravelDiary diary = diaryMapper.selectById(diaryId);
-        if (diary == null || diary.getStatus() == null || diary.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
-        }
-
-        return diary;
     }
 
     /**

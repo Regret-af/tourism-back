@@ -15,6 +15,7 @@ import com.af.tourism.service.DiaryService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DiaryServiceImpl implements DiaryService {
 
     private final DiaryMapper diaryMapper;
@@ -48,8 +50,10 @@ public class DiaryServiceImpl implements DiaryService {
         // 3.执行插入操作
         int rows = diaryMapper.insert(diary);
         if (rows <= 0) {
+            log.error("旅行日记发布失败，数据库插入失败，userId={}", userId);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库插入失败");
         }
+        log.info("旅行日记发布成功，diaryId={}, userId={}", diary.getId(), userId);
 
         return diaryConverter.toTravelDiaryPublishVO(diary);
     }
@@ -65,6 +69,8 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 2.进行查询操作
+        log.debug("查询日记列表，pageNum={}, pageSize={}, sort={}",
+                queryDTO.getPageNum(), queryDTO.getPageSize(), queryDTO.getSort());
         List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
@@ -90,6 +96,7 @@ public class DiaryServiceImpl implements DiaryService {
 
         // 2.若为空，抛出异常
         if (detailVO == null) {
+            log.warn("旅行日记不存在，diaryId={}", diaryId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
         }
 

@@ -1,5 +1,6 @@
 package com.af.tourism.controller;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.vo.DiaryFavoriteVO;
 import com.af.tourism.securitylite.AuthContext;
@@ -31,6 +32,7 @@ public class DiaryFavoriteController {
      * @return 收藏状态和数量
      */
     @PostMapping("/travel-diaries/{diaryId}/favorites")
+    @OperationLogRecord(module = "DIARY", action = "FAVORITE", description = "收藏旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryFavoriteVO> favoriteDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
         // 查看是否登录，未登录报错
         Long userId = AuthContext.requireCurrentUserId();
@@ -43,8 +45,8 @@ public class DiaryFavoriteController {
      * @return 收藏状态和数量
      */
     @DeleteMapping("/travel-diaries/{diaryId}/favorites")
+    @OperationLogRecord(module = "DIARY", action = "UNFAVORITE", description = "取消收藏旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryFavoriteVO> unfavoriteDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
-        // 查看是否登录，未登录报错
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryFavoriteService.unfavoriteDiary(diaryId, userId));
     }

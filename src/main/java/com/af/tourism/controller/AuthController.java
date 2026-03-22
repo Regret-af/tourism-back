@@ -1,11 +1,13 @@
 package com.af.tourism.controller;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.LoginDTO;
 import com.af.tourism.pojo.dto.RegisterDTO;
 import com.af.tourism.pojo.vo.LoginVO;
 import com.af.tourism.pojo.vo.RegisterVO;
 import com.af.tourism.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,13 +19,10 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Validated
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
-
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
 
     /**
      * 用户登录
@@ -31,6 +30,7 @@ public class AuthController {
      * @return 登录响应
      */
     @PostMapping("/login")
+    @OperationLogRecord(module = "USER", action = "LOGIN", description = "用户登录", userIdField = "data.user.id")
     public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO request) {
         return ApiResponse.ok(authService.login(request));
     }
@@ -41,6 +41,7 @@ public class AuthController {
      * @return 注册响应
      */
     @PostMapping("/register")
+    @OperationLogRecord(module = "USER", action = "REGISTER", description = "用户注册", userIdField = "data.id", bizIdField = "data.id")
     public ApiResponse<RegisterVO> register(@Valid @RequestBody RegisterDTO request) {
         return ApiResponse.ok(authService.register(request));
     }

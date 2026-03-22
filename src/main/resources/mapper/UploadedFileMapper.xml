@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.af.tourism.mapper.UploadedFileMapper">
+
+    <select id="selectByObjectKey" resultType="com.af.tourism.pojo.entity.UploadedFile">
+        SELECT id,
+               user_id,
+               biz_type,
+               storage_provider,
+               bucket_name,
+               region,
+               object_key,
+               file_url,
+               original_name,
+               mime_type,
+               file_size,
+               status,
+               created_at
+        FROM uploaded_files
+        WHERE object_key = #{objectKey}
+        LIMIT 1
+    </select>
+</mapper>

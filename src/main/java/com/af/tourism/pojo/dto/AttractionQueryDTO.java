@@ -1,10 +1,10 @@
 package com.af.tourism.pojo.dto;
 
+import com.af.tourism.common.enums.SortType;
 import lombok.Data;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
 
 /**
  * 景点列表查询参数。
@@ -23,6 +23,11 @@ public class AttractionQueryDTO {
 
     private Long categoryId;
 
-    @Pattern(regexp = "^(latest|hot)$", message = "sort只支持latest或hot")
-    private String sort;
+
+    private SortType sort;
+
+    public String getSortCode() {
+        return sort == null ? null : sort.getCode();
+    }
+
 }

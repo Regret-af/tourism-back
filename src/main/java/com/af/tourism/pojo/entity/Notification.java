@@ -37,7 +37,7 @@ public class Notification {
     private Long relatedCommentId;
 
     @TableField("is_read")
-    private Integer isRead;
+    private Boolean isRead;
 
     @TableField("read_time")
     private LocalDateTime readTime;

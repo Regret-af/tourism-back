@@ -1,5 +1,6 @@
 package com.af.tourism.storage;
 
+import com.af.tourism.common.enums.FileBizType;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -14,5 +15,5 @@ public interface ObjectStorageService {
      * @param userId 用户 id
      * @return 上传文件信息
      */
-    StorageUploadResult upload(MultipartFile file, String bizType, Long userId);
+    StorageUploadResult upload(MultipartFile file, FileBizType bizType, Long userId);
 }

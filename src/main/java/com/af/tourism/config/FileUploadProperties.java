@@ -24,7 +24,4 @@ public class FileUploadProperties {
             "image/webp",
             "image/gif"
     );
-
-    // 业务类型
-    private List<String> allowedBizTypes = Arrays.asList("avatar", "diary_image");
 }

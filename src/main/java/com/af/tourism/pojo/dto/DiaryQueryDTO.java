@@ -1,5 +1,6 @@
 package com.af.tourism.pojo.dto;
 
+import com.af.tourism.common.enums.SortType;
 import lombok.Data;
 
 import javax.validation.constraints.Max;
@@ -19,6 +20,10 @@ public class DiaryQueryDTO {
     @Max(value = 50, message = "pageSize不能大于50")
     private Integer pageSize = 10;
 
-    @Pattern(regexp = "^(latest|hot)$", message = "sort只支持latest或hot")
-    private String sort;
+    private SortType sort;
+
+    public String getSortCode() {
+        return sort == null ? null : sort.getCode();
+    }
+
 }

@@ -56,8 +56,8 @@ public class FileServiceImpl implements FileService {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "上传文件不能为空");
         }
 
-        // 1.2.校验业务类型是否合规
-        validateBizType(request.getBizType());
+        // 1.2.校验业务类型是否合规并转换为枚举类型
+        FileBizType bizType = FileBizType.fromCode(request.getBizType());
         // 1.3.校验文件大小是否合规
         validateFileSize(file);
         // 1.4.解析文件真实类型，校验文件类型是否合规
@@ -65,12 +65,12 @@ public class FileServiceImpl implements FileService {
         validateMimeType(mimeType);
 
         // 2.上传文件
-        StorageUploadResult uploadResult = objectStorageService.upload(file, request.getBizType(), userId);
+        StorageUploadResult uploadResult = objectStorageService.upload(file, bizType, userId);
 
         // 3.将上传文件操作记录入库
         UploadedFile uploadedFile = fileConverter.toUploadedFile(uploadResult);
         uploadedFile.setUserId(userId);
-        uploadedFile.setBizType(request.getBizType());
+        uploadedFile.setBizType(bizType.getCode());
         uploadedFile.setOriginalName(file.getOriginalFilename());
         uploadedFile.setMimeType(mimeType);
         uploadedFile.setFileSize(file.getSize());
@@ -79,19 +79,6 @@ public class FileServiceImpl implements FileService {
         uploadedFileMapper.insert(uploadedFile);
 
         return fileConverter.toFileUploadVO(uploadedFile);
-    }
-
-    /**
-     * 校验业务类型是否合规
-     * @param bizType 业务类型
-     */
-    private void validateBizType(String bizType) {
-        if (!StringUtils.hasText(bizType)
-                || !fileUploadProperties.getAllowedBizTypes().contains(bizType)
-                || !FileBizType.supports(bizType)) {
-            log.warn("上传失败，文件bizType为空或bizType不支持，bizType={}", bizType);
-            throw new BusinessException(ErrorCode.PARAM_INVALID, "bizType不支持");
-        }
     }
 
     /**

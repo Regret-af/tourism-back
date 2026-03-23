@@ -1,5 +1,8 @@
 package com.af.tourism.annotation;
 
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -13,10 +16,10 @@ import java.lang.annotation.Target;
 public @interface OperationLogRecord {
 
     // 模块
-    String module();
+    OperationLogModule module();
 
     // 操作
-    String action();
+    OperationLogAction action();
 
     // 操作描述
     String description();

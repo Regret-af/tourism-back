@@ -1,5 +1,6 @@
 package com.af.tourism.storage;
 
+import com.af.tourism.common.enums.FileBizType;
 import com.af.tourism.config.CosStorageProperties;
 import com.af.tourism.converter.FileConverter;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class CosStorageService implements ObjectStorageService {
      * @return 上传文件信息
      */
     @Override
-    public StorageUploadResult upload(MultipartFile file, String bizType, Long userId) {
+    public StorageUploadResult upload(MultipartFile file, FileBizType bizType, Long userId) {
         String objectKey = buildObjectKey(file.getOriginalFilename(), bizType, userId);
 
         // TODO: 对接 COS 执行上传操作
@@ -51,14 +52,14 @@ public class CosStorageService implements ObjectStorageService {
      * @param userId 用户 id
      * @return 文件名
      */
-    private String buildObjectKey(String originalName, String bizType, Long userId) {
+    private String buildObjectKey(String originalName, FileBizType bizType, Long userId) {
         // 构建文件后缀
         String extension = "";
         if (StringUtils.hasText(originalName) && originalName.contains(".")) {
             extension = originalName.substring(originalName.lastIndexOf('.'));
         }
 
-        return bizType + "/" + userId + "/" + LocalDate.now().format(DATE_FORMATTER) + "/" + UUID.randomUUID() + extension;
+        return bizType.getCode() + "/" + userId + "/" + LocalDate.now().format(DATE_FORMATTER) + "/" + UUID.randomUUID() + extension;
     }
 
     /**

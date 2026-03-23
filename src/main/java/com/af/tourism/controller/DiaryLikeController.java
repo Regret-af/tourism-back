@@ -2,6 +2,8 @@ package com.af.tourism.controller;
 
 import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.vo.DiaryLikeVO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.DiaryLikeService;
@@ -32,7 +34,7 @@ public class DiaryLikeController {
      * @return 点赞状态与数量
      */
     @PostMapping("/travel-diaries/{diaryId}/likes")
-    @OperationLogRecord(module = "DIARY", action = "LIKE", description = "点赞旅行日记", bizIdArgIndex = 0)
+    @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.LIKE, description = "点赞旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryLikeVO> likeDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
         // 查看是否登录，未登录报错
         Long userId = AuthContext.requireCurrentUserId();
@@ -45,7 +47,7 @@ public class DiaryLikeController {
      * @return 点赞状态与数量
      */
     @DeleteMapping("/travel-diaries/{diaryId}/likes")
-    @OperationLogRecord(module = "DIARY", action = "UNLIKE", description = "取消点赞旅行日记", bizIdArgIndex = 0)
+    @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.UNLIKE, description = "取消点赞旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryLikeVO> unlikeDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
         // 查看是否登录，未登录报错
         Long userId = AuthContext.requireCurrentUserId();

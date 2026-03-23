@@ -52,9 +52,6 @@ app:
       - image/png
       - image/webp
       - image/gif
-    allowed-biz-types:
-      - avatar
-      - diary_image
   cos:
     provider: COS
     bucket-name: demo-bucket

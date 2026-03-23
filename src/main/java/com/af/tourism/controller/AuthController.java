@@ -2,6 +2,8 @@ package com.af.tourism.controller;
 
 import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.LoginDTO;
 import com.af.tourism.pojo.dto.RegisterDTO;
 import com.af.tourism.pojo.vo.LoginVO;
@@ -30,7 +32,7 @@ public class AuthController {
      * @return 登录响应
      */
     @PostMapping("/login")
-    @OperationLogRecord(module = "USER", action = "LOGIN", description = "用户登录", userIdField = "data.user.id")
+    @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.LOGIN, description = "用户登录", userIdField = "data.user.id")
     public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO request) {
         return ApiResponse.ok(authService.login(request));
     }
@@ -41,7 +43,7 @@ public class AuthController {
      * @return 注册响应
      */
     @PostMapping("/register")
-    @OperationLogRecord(module = "USER", action = "REGISTER", description = "用户注册", userIdField = "data.id", bizIdField = "data.id")
+    @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.REGISTER, description = "用户注册", userIdField = "data.id", bizIdField = "data.id")
     public ApiResponse<RegisterVO> register(@Valid @RequestBody RegisterDTO request) {
         return ApiResponse.ok(authService.register(request));
     }

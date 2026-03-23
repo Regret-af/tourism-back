@@ -61,7 +61,7 @@
             </if>
         </where>
         <choose>
-            <when test="queryDTO.sort == 'hot'">
+            <when test="queryDTO.sortCode == 'hot'">
                 ORDER BY a.view_count DESC, a.created_at DESC, a.id DESC
             </when>
             <otherwise>

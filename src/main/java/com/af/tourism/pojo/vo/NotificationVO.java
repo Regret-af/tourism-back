@@ -1,5 +1,6 @@
 package com.af.tourism.pojo.vo;
 
+import com.af.tourism.common.enums.NotificationType;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 public class NotificationVO {
 
     private Long id;
-    private String type;
+    private NotificationType type;
     private String title;
     private String content;
     private UserPublicVO sender;

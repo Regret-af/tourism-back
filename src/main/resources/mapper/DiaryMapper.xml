@@ -63,7 +63,7 @@
         INNER JOIN users u ON d.user_id = u.id
         WHERE d.status = 1
         <choose>
-            <when test="queryDTO.sort == 'hot'">
+            <when test="queryDTO.sortCode == 'hot'">
                 ORDER BY d.like_count DESC, d.published_at DESC, d.id DESC
             </when>
             <otherwise>

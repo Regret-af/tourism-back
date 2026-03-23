@@ -87,7 +87,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         // 2.查看是否为未读状态
         LocalDateTime readTime = notification.getReadTime();
-        if (notification.getIsRead() == null || notification.getIsRead() != 1) {
+        if (!Boolean.TRUE.equals(notification.getIsRead())) {
             readTime = LocalDateTime.now();
             notificationMapper.markAsRead(notificationId, userId, readTime);
         }

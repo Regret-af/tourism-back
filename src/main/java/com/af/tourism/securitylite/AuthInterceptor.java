@@ -1,5 +1,6 @@
 package com.af.tourism.securitylite;
 
+import com.af.tourism.common.constants.AuthConstants;
 import com.af.tourism.exception.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,8 +18,6 @@ import javax.servlet.http.HttpServletResponse;
 @Slf4j
 public class AuthInterceptor implements HandlerInterceptor {
 
-    private static final String BEARER_PREFIX = "Bearer ";
-
     private final JwtService jwtService;
 
     public AuthInterceptor(JwtService jwtService) {
@@ -28,19 +27,19 @@ public class AuthInterceptor implements HandlerInterceptor {
     // 执行接口前拦截
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader(AuthConstants.AUTHORIZATION_HEADER);
         // 1.若为空，证明未登录，直接放行，业务接口自行判断
         if (!StringUtils.hasText(header)) {
             return true;
         }
         // 2.判断请求头格式
-        if (!header.startsWith(BEARER_PREFIX)) {
+        if (!header.startsWith(AuthConstants.BEARER_PREFIX)) {
             log.warn("请求Authorization头格式错误，uri={}, method={}", request.getRequestURI(), request.getMethod());
             throw new UnauthorizedException("Authorization头格式错误");
         }
 
         // 3.校验 token
-        String token = header.substring(BEARER_PREFIX.length()).trim();
+        String token = header.substring(AuthConstants.BEARER_PREFIX.length()).trim();
         if (!StringUtils.hasText(token)) {
             log.warn("请求token为空，uri={}, method={}", request.getRequestURI(), request.getMethod());
             throw new UnauthorizedException("Token不能为空");

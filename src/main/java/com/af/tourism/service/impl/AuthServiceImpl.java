@@ -2,6 +2,9 @@ package com.af.tourism.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.AuthConstants;
+import com.af.tourism.common.enums.RoleCode;
+import com.af.tourism.common.enums.UserStatus;
 import com.af.tourism.converter.AuthConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
@@ -32,8 +35,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private static final String DEFAULT_TOKEN_TYPE = "Bearer";
-    private static final String DEFAULT_ROLE_CODE = "USER";
+    private static final RoleCode DEFAULT_ROLE_CODE = RoleCode.USER;
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[A-Za-z0-9_]{3,20}$");
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,32}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -67,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.BUSINESS_ERROR, "邮箱或密码错误");
         }
         // 3.2.用户状态异常或不可用
-        if (user.getStatus() != null && user.getStatus() == 0) {
+        if (!UserStatus.isEnabled(user.getStatus())) {
             log.warn("登录失败，账号状态异常，id={}", user.getId());
             throw new BusinessException(ErrorCode.USER_DISABLED, "账号已禁用");
         }
@@ -78,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
         // 4.2.为该用户生成JWT令牌
         String token = jwtService.generateToken(user.getId());
 
-        return authConverter.toLoginVO(user, roles, token, DEFAULT_TOKEN_TYPE, jwtService.getExpireSeconds());
+        return authConverter.toLoginVO(user, roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
     }
 
     /**
@@ -108,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getUsername());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setNickname(generateDefaultNickname());
-        user.setStatus(1);
+        user.setStatus(UserStatus.ENABLED.getCode());
 
         try {
             userMapper.insert(user);
@@ -119,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 4.将用户与角色进行关联
         // 4.1.查看默认角色是否存在
-        Role defaultRole = roleMapper.selectByRoleCode(DEFAULT_ROLE_CODE);
+        Role defaultRole = roleMapper.selectByRoleCode(DEFAULT_ROLE_CODE.name());
         if (defaultRole == null) {
             log.error("默认角色不存在，注册功能无法使用，请尽快创建默认角色或更改代码");
             throw new BusinessException(ErrorCode.BUSINESS_ERROR, "默认角色不存在");

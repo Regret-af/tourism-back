@@ -107,6 +107,11 @@ public class GlobalExceptionHandler {
         if (ex instanceof BindException) {
             BindException exception = (BindException) ex;
             if (exception.getBindingResult().getFieldError() != null) {
+                String field = exception.getBindingResult().getFieldError().getField();
+                if ("sort".equals(field)) {
+                    return "排序类型不支持";
+                }
+
                 return exception.getBindingResult().getFieldError().getDefaultMessage();
             }
         }

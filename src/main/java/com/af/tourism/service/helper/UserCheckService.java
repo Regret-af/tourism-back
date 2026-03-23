@@ -1,4 +1,4 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.helper;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.exception.BusinessException;

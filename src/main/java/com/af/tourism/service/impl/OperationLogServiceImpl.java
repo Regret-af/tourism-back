@@ -3,6 +3,7 @@ package com.af.tourism.service.impl;
 import com.af.tourism.pojo.dto.OperationLogRecordDTO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.OperationLogService;
+import com.af.tourism.service.helper.OperationLogAsyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;

@@ -6,6 +6,8 @@ import com.af.tourism.pojo.entity.DiaryLike;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.DiaryLikeVO;
 import com.af.tourism.service.DiaryLikeService;
+import com.af.tourism.service.helper.DiaryCheckService;
+import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

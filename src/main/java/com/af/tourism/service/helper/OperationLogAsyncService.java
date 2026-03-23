@@ -1,4 +1,4 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.helper;
 
 import com.af.tourism.converter.OperationLogConverter;
 import com.af.tourism.mapper.OperationLogMapper;

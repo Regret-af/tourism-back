@@ -6,6 +6,8 @@ package com.af.tourism.common.enums;
 public enum OperationLogAction {
     LOGIN,
     REGISTER,
+    UPDATE_PROFILE,
+    UPDATE_PASSWORD,
     COMMENT,
     CREATE_DIARY,
     FAVORITE,

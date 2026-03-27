@@ -1,10 +1,12 @@
 package com.af.tourism.service;
 
+import com.af.tourism.pojo.dto.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.UserPublicVO;
 import com.af.tourism.pojo.vo.UserVO;
 
+import javax.validation.Valid;
 import java.util.List;
 
 public interface UserService {
@@ -37,4 +39,12 @@ public interface UserService {
      * @return 更新后的用户信息
      */
     UserPublicVO updateUserProfile(Long userId, UserProfileUpdateDTO profileUpdateDTO);
+
+    /**
+     * 修改当前用户密码
+     * @param userId 用户 id
+     * @param passwordUpdateDTO 新旧密码
+     * @return 操作结果
+     */
+    Boolean updatePassword(Long userId, @Valid UserPasswordUpdateDTO passwordUpdateDTO);
 }

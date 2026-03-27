@@ -1,6 +1,10 @@
 package com.af.tourism.controller;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
+import com.af.tourism.pojo.dto.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.UserProfileUpdateDTO;
 import com.af.tourism.pojo.vo.UserPublicVO;
 import com.af.tourism.pojo.vo.UserVO;
@@ -39,8 +43,21 @@ public class UserController {
      * @return 更新后的用户信息
      */
     @PutMapping("/me/profile")
+    @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.UPDATE_PROFILE, description = "用户修改个人信息", userIdField = "data.id")
     public ApiResponse<UserPublicVO> updateProfile(@Valid @RequestBody UserProfileUpdateDTO profileUpdateDTO) {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(userService.updateUserProfile(userId, profileUpdateDTO));
+    }
+
+    /**
+     * 修改当前用户密码
+     * @param passwordUpdateDTO 新旧密码
+     * @return 操作结果
+     */
+    @PutMapping("/me/password")
+    @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.UPDATE_PASSWORD, description = "用户修改密码")
+    public ApiResponse<Boolean> updatePassword(@Valid @RequestBody UserPasswordUpdateDTO passwordUpdateDTO) {
+        Long userId = AuthContext.requireCurrentUserId();
+        return ApiResponse.ok(userService.updatePassword(userId, passwordUpdateDTO));
     }
 }

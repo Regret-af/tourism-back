@@ -6,6 +6,7 @@ import com.af.tourism.converter.UserConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
+import com.af.tourism.pojo.dto.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.UserPublicVO;
@@ -14,19 +15,24 @@ import com.af.tourism.service.UserService;
 import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
 
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,32}$");
+
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
 
     private final UserCheckService userCheckService;
+    private final PasswordEncoder passwordEncoder;
 
     private final AuthConverter authConverter;
     private final UserConverter userConverter;
@@ -83,5 +89,41 @@ public class UserServiceImpl implements UserService {
         userMapper.updateById(user);
 
         return userConverter.toUserPublicVO(user);
+    }
+
+    /**
+     * 修改当前用户密码
+     * @param userId 用户 id
+     * @param passwordUpdateDTO 新旧密码
+     * @return 操作结果
+     */
+    @Override
+    public Boolean updatePassword(Long userId, UserPasswordUpdateDTO passwordUpdateDTO) {
+        // 1.获取用户，判断用户是否异常
+        User user = userCheckService.requireActiveUser(userId);
+
+        // 2.判断旧密码是否正确
+        if (!passwordEncoder.matches(passwordUpdateDTO.getCurrentPassword(), user.getPasswordHash())) {
+            log.info("修改密码失败，旧密码不正确");
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "旧密码不正确");
+        }
+
+        // 3.判断新旧密码是否相同
+        if (passwordUpdateDTO.getNewPassword().equals(passwordUpdateDTO.getCurrentPassword())) {
+            log.info("修改密码失败，新旧密码不能相同");
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "新旧密码不能相同");
+        }
+
+        // 4.判断新密码是否符合格式要求
+        if (!PASSWORD_PATTERN.matcher(passwordUpdateDTO.getNewPassword()).matches()) {
+            log.info("修改密码失败，新密码不符合格式要求");
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "新密码不符合格式要求");
+        }
+
+        // 5.修改新密码
+        user.setPasswordHash(passwordEncoder.encode(passwordUpdateDTO.getNewPassword()));
+        userMapper.updateById(user);
+
+        return true;
     }
 }

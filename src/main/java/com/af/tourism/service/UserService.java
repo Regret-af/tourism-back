@@ -1,6 +1,8 @@
 package com.af.tourism.service;
 
+import com.af.tourism.pojo.dto.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.pojo.vo.UserPublicVO;
 import com.af.tourism.pojo.vo.UserVO;
 
 import java.util.List;
@@ -27,4 +29,12 @@ public interface UserService {
      * @return 用户角色列表
      */
     List<String> listRoleCodes(Long userId);
+
+    /**
+     * 更新当前用户资料
+     * @param userId 用户 id
+     * @param profileUpdateDTO 用户信息
+     * @return 更新后的用户信息
+     */
+    UserPublicVO updateUserProfile(Long userId, UserProfileUpdateDTO profileUpdateDTO);
 }

@@ -2,12 +2,16 @@ package com.af.tourism.service.impl;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.converter.AuthConverter;
+import com.af.tourism.converter.UserConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
+import com.af.tourism.pojo.dto.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.pojo.vo.UserPublicVO;
 import com.af.tourism.pojo.vo.UserVO;
 import com.af.tourism.service.UserService;
+import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +25,11 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+
+    private final UserCheckService userCheckService;
+
     private final AuthConverter authConverter;
+    private final UserConverter userConverter;
 
     /**
      * 通过用户id进行查询
@@ -56,5 +64,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<String> listRoleCodes(Long userId) {
         return roleMapper.selectRoleCodesByUserId(userId);
+    }
+
+    /**
+     * 更新当前用户资料
+     * @param userId 用户 id
+     * @param profileUpdateDTO 用户信息
+     * @return 更新后的用户信息
+     */
+    @Override
+    public UserPublicVO updateUserProfile(Long userId, UserProfileUpdateDTO profileUpdateDTO) {
+        // 1.查看用户是否存在且状态是否正常
+        User user = userCheckService.requireActiveUser(userId);
+
+        // 2.更新用户资料
+        user.setNickname(profileUpdateDTO.getNickname());
+        user.setAvatarUrl(profileUpdateDTO.getAvatarUrl());
+        userMapper.updateById(user);
+
+        return userConverter.toUserPublicVO(user);
     }
 }

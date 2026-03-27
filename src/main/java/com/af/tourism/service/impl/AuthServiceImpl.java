@@ -111,6 +111,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setNickname(generateDefaultNickname());
         user.setStatus(UserStatus.ENABLED.getCode());
+        user.setAvatarUrl("https://tourism-1358828693.cos.ap-beijing.myqcloud.com/users/photo-default-avatar.jpg");
 
         try {
             userMapper.insert(user);

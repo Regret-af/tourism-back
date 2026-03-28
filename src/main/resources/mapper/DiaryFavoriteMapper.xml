@@ -2,6 +2,26 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.DiaryFavoriteMapper">
 
+    <resultMap id="FavoriteDiaryCardMap" type="com.af.tourism.pojo.vo.FavoriteDiaryCardVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="liked" property="liked"/>
+        <result column="favorited" property="favorited"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="invalid" property="invalid"/>
+        <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
+            <id column="author_id" property="id"/>
+            <result column="author_nickname" property="nickname"/>
+            <result column="author_avatar_url" property="avatarUrl"/>
+        </association>
+    </resultMap>
+
     <select id="selectByDiaryIdAndUserId" resultType="com.af.tourism.pojo.entity.DiaryFavorite">
         SELECT id,
                diary_id,
@@ -18,4 +38,64 @@
         WHERE diary_id = #{diaryId}
           AND user_id = #{userId}
     </delete>
+
+    <select id="selectFavoriteDiaryList" resultMap="FavoriteDiaryCardMap">
+        SELECT
+            f.diary_id AS id,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN '日记已失效'
+                ELSE d.title
+            END AS title,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN NULL
+                ELSE d.summary
+            END AS summary,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN NULL
+                ELSE d.cover_url
+            END AS cover_url,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN NULL
+                ELSE d.view_count
+            END AS view_count,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN 0
+                ELSE d.like_count
+            END AS like_count,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN 0
+                ELSE d.favorite_count
+            END AS favorite_count,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN 0
+                ELSE d.comment_count
+            END AS comment_count,
+            0 AS liked,
+            1 AS favorited,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN NULL
+                ELSE d.published_at
+            END AS published_at,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN 1
+                ELSE 0
+            END AS invalid,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN NULL
+                ELSE u.id
+            END AS author_id,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN NULL
+                ELSE u.nickname
+            END AS author_nickname,
+            CASE
+                WHEN d.id IS NULL OR d.status != 1 THEN NULL
+                ELSE u.avatar_url
+            END AS author_avatar_url
+        FROM diary_favorites f
+        LEFT JOIN travel_diaries d ON f.diary_id = d.id
+        LEFT JOIN users u ON d.user_id = u.id
+        WHERE f.user_id = #{userId}
+        ORDER BY f.created_at DESC, f.id DESC
+    </select>
 </mapper>

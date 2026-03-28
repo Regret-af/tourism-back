@@ -19,10 +19,11 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
 
     /**
      * 查询符合条件的旅行日记
+     * @param userId 用户 id
      * @param queryDTO 查询条件
      * @return 旅行日记列表
      */
-    List<DiaryCardVO> selectDiaryList(@Param("userId") Long diaryId, @Param("queryDTO") DiaryQueryDTO queryDTO);
+    List<DiaryCardVO> selectDiaryList(@Param("userId") Long userId, @Param("queryDTO") DiaryQueryDTO queryDTO);
 
     /**
      * 查询旅行日记详情

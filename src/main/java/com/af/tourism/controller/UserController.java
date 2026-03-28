@@ -5,10 +5,12 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.DiaryQueryDTO;
+import com.af.tourism.pojo.dto.FavoriteDiaryQueryDTO;
 import com.af.tourism.pojo.dto.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.UserProfileUpdateDTO;
 import com.af.tourism.pojo.vo.*;
 import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.service.DiaryFavoriteService;
 import com.af.tourism.service.DiaryService;
 import com.af.tourism.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class UserController {
 
     private final UserService userService;
     private final DiaryService diaryService;
+    private final DiaryFavoriteService diaryFavoriteService;
 
     /**
      * 获取当前用户信息
@@ -72,6 +75,17 @@ public class UserController {
     public ApiResponse<PageResponse<MyDiaryCardVO>> getTravelDiaries(@Valid DiaryQueryDTO queryDTO) {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryService.listMyDiaries(userId, queryDTO));
+    }
+
+    /**
+     * 获取我的收藏
+     * @param queryDTO 分页参数
+     * @return 分页后的当前用户收藏日记列表
+     */
+    @GetMapping("me/favorite-diaries")
+    public ApiResponse<PageResponse<FavoriteDiaryCardVO>> getFavoriteDiaries(@Valid FavoriteDiaryQueryDTO queryDTO) {
+        Long userId = AuthContext.requireCurrentUserId();
+        return ApiResponse.ok(diaryFavoriteService.listFavoriteDiaries(userId, queryDTO));
     }
 
     /**

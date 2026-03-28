@@ -2,16 +2,23 @@ package com.af.tourism.service.impl;
 
 import com.af.tourism.mapper.DiaryFavoriteMapper;
 import com.af.tourism.mapper.DiaryMapper;
+import com.af.tourism.pojo.dto.FavoriteDiaryQueryDTO;
 import com.af.tourism.pojo.entity.DiaryFavorite;
 import com.af.tourism.pojo.entity.TravelDiary;
+import com.af.tourism.pojo.vo.FavoriteDiaryCardVO;
 import com.af.tourism.pojo.vo.DiaryFavoriteVO;
+import com.af.tourism.pojo.vo.PageResponse;
 import com.af.tourism.service.DiaryFavoriteService;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.UserCheckService;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * 收藏服务实现。
@@ -84,6 +91,31 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
         }
 
         return buildFavoriteVO(false, diary.getFavoriteCount());
+    }
+
+    /**
+     * 获取我的收藏列表
+     * @param userId 用户 id
+     * @param queryDTO 分页参数
+     * @return 收藏的日记分页列表
+     */
+    @Override
+    public PageResponse<FavoriteDiaryCardVO> listFavoriteDiaries(Long userId, FavoriteDiaryQueryDTO queryDTO) {
+        // 1.开启分页查询
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+
+        // 2.查询收藏列表
+        List<FavoriteDiaryCardVO> list = diaryFavoriteMapper.selectFavoriteDiaryList(userId, queryDTO);
+        PageInfo<FavoriteDiaryCardVO> pageInfo = new PageInfo<>(list);
+
+        // 3.填充返回值
+        PageResponse<FavoriteDiaryCardVO> response = new PageResponse<>();
+        response.setList(list);
+        response.setPageNum(pageInfo.getPageNum());
+        response.setPageSize(pageInfo.getPageSize());
+        response.setTotal(pageInfo.getTotal());
+
+        return response;
     }
 
     /**

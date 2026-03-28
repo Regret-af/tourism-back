@@ -1,6 +1,9 @@
 package com.af.tourism.service;
 
+import com.af.tourism.pojo.dto.FavoriteDiaryQueryDTO;
+import com.af.tourism.pojo.vo.FavoriteDiaryCardVO;
 import com.af.tourism.pojo.vo.DiaryFavoriteVO;
+import com.af.tourism.pojo.vo.PageResponse;
 
 public interface DiaryFavoriteService {
 
@@ -19,4 +22,12 @@ public interface DiaryFavoriteService {
      * @return 收藏状态和数量
      */
     DiaryFavoriteVO unfavoriteDiary(Long diaryId, Long userId);
+
+    /**
+     * 获取我的收藏列表
+     * @param userId 用户 id
+     * @param queryDTO 分页参数
+     * @return 收藏的日记分页列表
+     */
+    PageResponse<FavoriteDiaryCardVO> listFavoriteDiaries(Long userId, FavoriteDiaryQueryDTO queryDTO);
 }

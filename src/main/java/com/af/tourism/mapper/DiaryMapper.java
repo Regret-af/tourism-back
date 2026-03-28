@@ -4,6 +4,7 @@ import com.af.tourism.pojo.dto.DiaryQueryDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.DiaryCardVO;
 import com.af.tourism.pojo.vo.DiaryDetailVO;
+import com.af.tourism.pojo.vo.MyDiaryCardVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -21,7 +22,7 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @param queryDTO 查询条件
      * @return 旅行日记列表
      */
-    List<DiaryCardVO> selectDiaryList(@Param("queryDTO") DiaryQueryDTO queryDTO);
+    List<DiaryCardVO> selectDiaryList(@Param("userId") Long diaryId, @Param("queryDTO") DiaryQueryDTO queryDTO);
 
     /**
      * 查询旅行日记详情
@@ -53,4 +54,13 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @return 更新条数
      */
     int updateFavoriteCount(@Param("diaryId") Long diaryId, @Param("delta") Integer delta);
+
+    /**
+     * 获取我的日记
+     * @param userId 当前用户 id
+     * @param queryDTO 排序分页参数
+     * @return 分页后的当前用户日记列表
+     */
+    List<MyDiaryCardVO> selectMyDiaryList(@Param("userId") Long userId, @Param("queryDTO") DiaryQueryDTO queryDTO);
+
 }

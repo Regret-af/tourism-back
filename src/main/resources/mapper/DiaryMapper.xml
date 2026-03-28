@@ -21,6 +21,10 @@
         </association>
     </resultMap>
 
+    <resultMap id="MyDiaryCardMap" type="com.af.tourism.pojo.vo.MyDiaryCardVO" extends="DiaryCardMap">
+        <result column="status" property="status"/>
+    </resultMap>
+
     <resultMap id="DiaryDetailMap" type="com.af.tourism.pojo.vo.DiaryDetailVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
@@ -43,25 +47,24 @@
         </association>
     </resultMap>
 
-    <select id="selectDiaryList" resultMap="DiaryCardMap">
-        SELECT
-            d.id,
-            d.title,
-            d.summary,
-            d.cover_url,
-            d.view_count,
-            d.like_count,
-            d.favorite_count,
-            d.comment_count,
-            d.published_at,
-            0 AS liked,
-            0 AS favorited,
-            u.id AS author_id,
-            u.nickname AS author_nickname,
-            u.avatar_url AS author_avatar_url
-        FROM travel_diaries d
-        INNER JOIN users u ON d.user_id = u.id
-        WHERE d.status = 1
+    <sql id="DiaryCardColumns">
+        d.id,
+    d.title,
+    d.summary,
+    d.cover_url,
+    d.view_count,
+    d.like_count,
+    d.favorite_count,
+    d.comment_count,
+    d.published_at,
+    0 AS liked,
+    0 AS favorited,
+    u.id AS author_id,
+    u.nickname AS author_nickname,
+    u.avatar_url AS author_avatar_url
+    </sql>
+
+    <sql id="DiaryListOrderBy">
         <choose>
             <when test="queryDTO.sortCode == 'hot'">
                 ORDER BY d.like_count DESC, d.published_at DESC, d.id DESC
@@ -70,6 +73,24 @@
                 ORDER BY d.published_at DESC, d.id DESC
             </otherwise>
         </choose>
+    </sql>
+
+    <select id="selectMyDiaryList" resultMap="MyDiaryCardMap">
+        SELECT <include refid="DiaryCardColumns"/>
+            , d.status
+        FROM travel_diaries d
+        INNER JOIN users u ON d.user_id = u.id
+        WHERE d.user_id = #{userId}
+        <include refid="DiaryListOrderBy"/>
+    </select>
+
+    <select id="selectDiaryList" resultMap="DiaryCardMap">
+        SELECT <include refid="DiaryCardColumns"/>
+        FROM travel_diaries d
+        INNER JOIN users u ON d.user_id = u.id
+        WHERE d.status = 1
+        <if test="userId != null and userId != ''">and d.user_id = #{userId}</if>
+        <include refid="DiaryListOrderBy"/>
     </select>
 
     <select id="selectDiaryDetail" resultMap="DiaryDetailMap">

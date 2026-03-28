@@ -2,10 +2,9 @@ package com.af.tourism.service;
 
 import com.af.tourism.pojo.dto.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.TravelDiaryPublishDTO;
-import com.af.tourism.pojo.vo.DiaryCardVO;
-import com.af.tourism.pojo.vo.DiaryDetailVO;
-import com.af.tourism.pojo.vo.PageResponse;
-import com.af.tourism.pojo.vo.TravelDiaryPublishVO;
+import com.af.tourism.pojo.vo.*;
+
+import javax.validation.Valid;
 
 public interface DiaryService {
 
@@ -29,4 +28,20 @@ public interface DiaryService {
      * @return 旅行日记详细信息
      */
     DiaryDetailVO getDiaryDetail(Long diaryId);
+
+    /**
+     * 获取我的日记
+     * @param userId 当前用户 id
+     * @param queryDTO 排序分页参数
+     * @return 分页后的当前用户日记列表
+     */
+    PageResponse<MyDiaryCardVO> listMyDiaries(Long userId, DiaryQueryDTO queryDTO);
+
+    /**
+     * 获取他人主页日记
+     * @param userId 用户 id
+     * @param queryDTO 排序分页参数
+     * @return 分页后的用户日记列表
+     */
+    PageResponse<DiaryCardVO> listUserPublicDiaries(Long userId, @Valid DiaryQueryDTO queryDTO);
 }

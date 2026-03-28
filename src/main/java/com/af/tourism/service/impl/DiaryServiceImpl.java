@@ -7,10 +7,7 @@ import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.TravelDiaryPublishDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
-import com.af.tourism.pojo.vo.DiaryCardVO;
-import com.af.tourism.pojo.vo.DiaryDetailVO;
-import com.af.tourism.pojo.vo.PageResponse;
-import com.af.tourism.pojo.vo.TravelDiaryPublishVO;
+import com.af.tourism.pojo.vo.*;
 import com.af.tourism.service.DiaryService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -71,7 +68,7 @@ public class DiaryServiceImpl implements DiaryService {
         // 2.进行查询操作
         log.debug("查询日记列表，pageNum={}, pageSize={}, sort={}",
                 queryDTO.getPageNum(), queryDTO.getPageSize(), queryDTO.getSort());
-        List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO);
+        List<DiaryCardVO> list = diaryMapper.selectDiaryList(null, queryDTO);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
         // 3.填充返回值
@@ -101,6 +98,56 @@ public class DiaryServiceImpl implements DiaryService {
         }
 
         return detailVO;
+    }
+
+    /**
+     * 获取我的日记
+     * @param userId 当前用户 id
+     * @param queryDTO 排序分页参数
+     * @return 分页后的当前用户日记列表
+     */
+    @Override
+    public PageResponse<MyDiaryCardVO> listMyDiaries(Long userId, DiaryQueryDTO queryDTO) {
+        // 1.开启分页查询
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+
+        // 2.进行查询操作
+        List<MyDiaryCardVO> list = diaryMapper.selectMyDiaryList(userId, queryDTO);
+        PageInfo<MyDiaryCardVO> pageInfo = new PageInfo<>(list);
+
+        // 3.填充返回值
+        PageResponse<MyDiaryCardVO> response = new PageResponse<>();
+        response.setList(list);
+        response.setPageNum(pageInfo.getPageNum());
+        response.setPageSize(pageInfo.getPageSize());
+        response.setTotal(pageInfo.getTotal());
+
+        return response;
+    }
+
+    /**
+     * 获取他人主页日记
+     * @param userId 用户 id
+     * @param queryDTO 排序分页参数
+     * @return 分页后的用户日记列表
+     */
+    @Override
+    public PageResponse<DiaryCardVO> listUserPublicDiaries(Long userId, DiaryQueryDTO queryDTO) {
+        // 1.开启分页查询
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+
+        // 2.进行查询操作
+        List<DiaryCardVO> list = diaryMapper.selectDiaryList(userId, queryDTO);
+        PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
+
+        // 3.填充返回值
+        PageResponse<DiaryCardVO> response = new PageResponse<>();
+        response.setList(list);
+        response.setPageNum(pageInfo.getPageNum());
+        response.setPageSize(pageInfo.getPageSize());
+        response.setTotal(pageInfo.getTotal());
+
+        return response;
     }
 
     /**

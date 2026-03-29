@@ -22,6 +22,7 @@
         <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
         <tika.version>2.9.1</tika.version>
         <lombok.version>1.18.30</lombok.version>
+        <cos.version>5.6.227</cos.version>
     </properties>
     <!-- Spring Boot BOM -->
     <dependencyManagement>
@@ -115,6 +116,11 @@
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
             <version>${tika.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.qcloud</groupId>
+            <artifactId>cos_api</artifactId>
+            <version>${cos.version}</version>
         </dependency>
         <!-- 对象映射 -->
         <dependency>

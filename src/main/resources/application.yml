@@ -54,9 +54,11 @@ app:
       - image/gif
   cos:
     provider: COS
-    bucket-name: demo-bucket
-    region: ap-guangzhou
-    base-url: https://demo-bucket.cos.ap-guangzhou.myqcloud.com
+    secret-id: ${cos.secret-id}
+    secret-key: ${cos.secret-key}
+    bucket-name: ${cos.bucket-name}
+    region: ${cos.region}
+    base-url: ${cos.base-url}
 
 logging:
   level:

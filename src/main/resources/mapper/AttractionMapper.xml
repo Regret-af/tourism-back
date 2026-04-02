@@ -9,6 +9,8 @@
         <result column="cover_url" property="coverUrl"/>
         <result column="location_text" property="locationText"/>
         <result column="view_count" property="viewCount"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
         <result column="created_at" property="createdAt"/>
         <association property="category" javaType="com.af.tourism.pojo.vo.AttractionCategorySimpleVO">
             <id column="category_id" property="id"/>
@@ -25,6 +27,12 @@
         <result column="cover_url" property="coverUrl"/>
         <result column="location_text" property="locationText"/>
         <result column="view_count" property="viewCount"/>
+        <result column="sourceSynced_at" property="sourceSyncedAt"/>
+        <result column="address_detail" property="addressDetail"/>
+        <result column="telephone" property="telephone"/>
+        <result column="opening_hours" property="openingHours"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
         <association property="category" javaType="com.af.tourism.pojo.vo.AttractionCategorySimpleVO">
@@ -41,6 +49,8 @@
                a.cover_url,
                a.location_text,
                a.view_count,
+               a.longitude,
+               a.latitude,
                a.created_at,
                c.id AS category_id,
                c.name AS category_name,
@@ -78,6 +88,12 @@
                a.cover_url,
                a.location_text,
                a.view_count,
+               a.sourceSynced_at,
+               a.address_detail,
+               a.telephone,
+               a.opening_hours,
+               a.longitude,
+               a.latitude,
                a.created_at,
                a.updated_at,
                c.id AS category_id,

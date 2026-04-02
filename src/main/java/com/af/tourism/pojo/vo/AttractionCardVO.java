@@ -2,6 +2,7 @@ package com.af.tourism.pojo.vo;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -16,6 +17,8 @@ public class AttractionCardVO {
     private String coverUrl;
     private String locationText;
     private Integer viewCount;
+    private BigDecimal longitude;
+    private BigDecimal latitude;
     private LocalDateTime createdAt;
     private AttractionCategorySimpleVO category;
 }

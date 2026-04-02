@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -69,6 +70,10 @@ public class AttractionServiceImpl implements AttractionService {
             log.warn("景点不存在，attractionId={}", attractionId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "景点不存在");
         }
+
+        // 3.封装telephoneList，对telephone字段进行数据清洗
+        detailVO.setTelephoneList(Arrays.asList(detailVO.getTelephone().split(",")));
+
         return detailVO;
     }
 }

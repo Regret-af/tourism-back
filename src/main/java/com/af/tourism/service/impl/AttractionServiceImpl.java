@@ -2,18 +2,25 @@ package com.af.tourism.service.impl;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.exception.BusinessException;
+import com.af.tourism.integration.common.exception.ThirdPartyApiException;
+import com.af.tourism.integration.qweather.QWeatherClient;
+import com.af.tourism.integration.qweather.converter.QWeatherConverter;
+import com.af.tourism.integration.qweather.dto.QWeatherDailyResponse;
+import com.af.tourism.integration.qweather.dto.QWeatherNowResponse;
+import com.af.tourism.integration.qweather.dto.QWeatherWarningResponse;
 import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.pojo.dto.AttractionQueryDTO;
-import com.af.tourism.pojo.vo.AttractionCardVO;
-import com.af.tourism.pojo.vo.AttractionDetailVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.entity.Attraction;
+import com.af.tourism.pojo.vo.*;
 import com.af.tourism.service.AttractionService;
+import com.af.tourism.service.helper.AttractionCheckService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +33,12 @@ import java.util.List;
 public class AttractionServiceImpl implements AttractionService {
 
     private final AttractionMapper attractionMapper;
+
+    private final AttractionCheckService attractionCheckService;
+
+    private final QWeatherClient qWeatherClient;
+
+    private final QWeatherConverter qWeatherConverter;
 
     /**
      * 景点列表，覆盖列表、搜索、分类筛选
@@ -72,8 +85,123 @@ public class AttractionServiceImpl implements AttractionService {
         }
 
         // 3.封装telephoneList，对telephone字段进行数据清洗
-        detailVO.setTelephoneList(Arrays.asList(detailVO.getTelephone().split(",")));
+        if (detailVO.getTelephone() != null)
+            detailVO.setTelephoneList(Arrays.asList(detailVO.getTelephone().split(",")));
 
         return detailVO;
+    }
+
+    /**
+     * 查询景点天气信息、未来天气信息与预警信息
+     * @param attractionId 景点 id
+     * @return 景点天气信息
+     */
+    @Override
+    public AttractionWeatherVO getAttractionWeather(Long attractionId) {
+        // 1.校验景点状态
+        Attraction attraction = attractionCheckService.requireAttraction(attractionId);
+        AttractionWeatherVO weatherVO = new AttractionWeatherVO();
+
+        // 2.获取并校验调用外部API的参数
+        BigDecimal longitude = attraction.getLongitude();
+        BigDecimal latitude = attraction.getLatitude();
+        if (longitude == null || latitude == null) {
+            log.warn("查询景点天气失败，景点缺少经纬度，attractionId={}", attractionId);
+            weatherVO.setAvailable(false);
+            return weatherVO;
+        }
+
+        // 3.调用外部API
+        QWeatherNowResponse weatherNow = qWeatherClient.getWeatherNow(longitude, latitude);
+
+        QWeatherDailyResponse weatherDaily = qWeatherClient.getWeatherDaily(longitude, latitude);
+
+        QWeatherWarningResponse weatherWarning = qWeatherClient.getWeatherWarning(longitude, latitude);
+
+        // 4.处理各个字段
+        // 4.1.首先进行第三方API返回实体和业务实体的转换
+        WeatherCurrentVO currentVO = qWeatherConverter.toWeatherCurrentVO(weatherNow);
+        List<WeatherForecastVO> forecastVOList = qWeatherConverter.toWeatherForecastVOList(weatherDaily.getDaily());
+        // 4.1.1.如果没有预警，直接跳过，有预警进行转换
+        if (!weatherWarning.getMetadata().getZeroResult()) {
+            weatherVO.setAlerts(
+                    qWeatherConverter.toWeatherAlertVOList(weatherWarning.getAlerts())
+            );
+        }
+
+        // 4.2.补充业务字段
+        // 4.2.1.补充 isSuitable 字段
+        currentVO.setIsSuitable(judgeSuitable(currentVO.getTemperature(), weatherWarning.getMetadata()));
+        forecastVOList.forEach(forecastVO ->{
+            forecastVO.setIsSuitable(judgeSuitable(forecastVO.getTempMax(), weatherWarning.getMetadata()));
+        });
+
+        // 4.2.2.补充 travelTip 字段
+        currentVO.setTravelTip(buildTravelTip(currentVO.getIsSuitable(), weatherWarning.getMetadata()));
+
+        // 4.2.3.补充 weekLabel 字段
+        for (int i = 0; i < forecastVOList.size(); i++) {
+            WeatherForecastVO forecast = forecastVOList.get(i);
+            forecast.setWeekLabel(buildWeekLabel(i));
+        }
+
+        // 5.进行封装
+        weatherVO.setAvailable(true);
+        weatherVO.setSourceUpdateTime(weatherNow.getUpdateTime().toLocalDateTime());
+        weatherVO.setCurrent(currentVO);
+        weatherVO.setForecast(forecastVOList);
+
+        return weatherVO;
+    }
+
+    /**
+     * 判断天气是否舒适
+     * @param temp 温度
+     * @param metaData 预警信息
+     * @return 是否舒适
+     */
+    private Boolean judgeSuitable(Integer temp, QWeatherWarningResponse.MetaData metaData) {
+        if (!metaData.getZeroResult()) return false;
+
+        if (temp >= 35) return false;
+
+        return true;
+    }
+
+    /**
+     * 构建旅行建议
+     * @param isSuitable 是否舒适
+     * @param metaData 预警信息
+     * @return 旅行建议
+     */
+    private String buildTravelTip(Boolean isSuitable, QWeatherWarningResponse.MetaData metaData) {
+        if (isSuitable) {
+            return "当前天气较适合游览";
+        }
+
+        if (!metaData.getZeroResult()) {
+            return "当前天气存在预警，建议谨慎出行";
+        }
+
+        return "当前天气一般，建议合理安排行程";
+    }
+
+    /**
+     * 构建日期标签
+     * @param index 下标
+     * @return 日期标签
+     */
+    private String buildWeekLabel(int index) {
+        if (index == 0) {
+            return "今天";
+        }
+        if (index == 1) {
+            return "明天";
+        }
+        if (index == 2) {
+            return "后天";
+        }
+
+        return null;
     }
 }

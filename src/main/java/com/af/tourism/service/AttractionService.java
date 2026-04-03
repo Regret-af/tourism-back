@@ -1,8 +1,10 @@
 package com.af.tourism.service;
 
+import com.af.tourism.integration.qweather.dto.QWeatherNowResponse;
 import com.af.tourism.pojo.dto.AttractionQueryDTO;
 import com.af.tourism.pojo.vo.AttractionCardVO;
 import com.af.tourism.pojo.vo.AttractionDetailVO;
+import com.af.tourism.pojo.vo.AttractionWeatherVO;
 import com.af.tourism.pojo.vo.PageResponse;
 
 public interface AttractionService {
@@ -20,4 +22,11 @@ public interface AttractionService {
      * @return 景点详情信息
      */
     AttractionDetailVO getAttractionDetail(Long attractionId);
+
+    /**
+     * 查询景点天气信息、未来天气信息与预警信息
+     * @param attractionId 景点 id
+     * @return 景点天气信息
+     */
+    AttractionWeatherVO getAttractionWeather(Long attractionId);
 }

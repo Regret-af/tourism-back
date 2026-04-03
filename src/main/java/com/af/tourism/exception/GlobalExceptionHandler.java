@@ -2,6 +2,7 @@ package com.af.tourism.exception;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.integration.common.exception.ThirdPartyApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -70,6 +71,13 @@ public class GlobalExceptionHandler {
         log.info("业务异常: {}", ex.getMessage());
         return buildResponse(resolveHttpStatus(ex.getErrorCode()), ex.getErrorCode(), ex.getMessage());
     }
+
+    @ExceptionHandler(ThirdPartyApiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleThirdPartyApiException(ThirdPartyApiException ex) {
+        log.error("第三方服务异常: {}", ex.getMessage(), ex);
+        return buildResponse(resolveHttpStatus(ex.getErrorCode()), ex.getErrorCode(), ex.getMessage());
+    }
+
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorized(UnauthorizedException ex) {
@@ -152,6 +160,8 @@ public class GlobalExceptionHandler {
                 return HttpStatus.UNPROCESSABLE_ENTITY;
             case FILE_UPLOAD_ERROR:
             case INTERNAL_ERROR:
+            case THIRD_PARTY_API_ERROR:
+            case THIRD_PARTY_API_TIMEOUT:
                 return HttpStatus.INTERNAL_SERVER_ERROR;
             default:
                 return HttpStatus.BAD_REQUEST;

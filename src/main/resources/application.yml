@@ -59,6 +59,10 @@ app:
     bucket-name: ${cos.bucket-name}
     region: ${cos.region}
     base-url: ${cos.base-url}
+  weather:
+    qweather:
+      base-url: ${qweather.base-url:https://devapi.qweather.com}
+      token: ${qweather.token}
 
 logging:
   level:

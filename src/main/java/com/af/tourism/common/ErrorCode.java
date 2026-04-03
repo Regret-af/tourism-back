@@ -13,7 +13,9 @@ public enum ErrorCode {
     CONFLICT(40900, "资源冲突"),
     BUSINESS_ERROR(42200, "业务处理失败"),
     INTERNAL_ERROR(50000, "系统异常"),
-    FILE_UPLOAD_ERROR(50010, "文件上传失败");
+    FILE_UPLOAD_ERROR(50010, "文件上传失败"),
+    THIRD_PARTY_API_ERROR(50020, "第三方服务异常"),
+    THIRD_PARTY_API_TIMEOUT(50021, "第三方服务超时");
 
     private final int code;
     private final String defaultMessage;

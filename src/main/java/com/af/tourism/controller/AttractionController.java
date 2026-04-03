@@ -2,10 +2,7 @@ package com.af.tourism.controller;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.AttractionQueryDTO;
-import com.af.tourism.pojo.vo.AttractionCardVO;
-import com.af.tourism.pojo.vo.AttractionCategoryVO;
-import com.af.tourism.pojo.vo.AttractionDetailVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.vo.*;
 import com.af.tourism.service.AttractionCategoryService;
 import com.af.tourism.service.AttractionService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 /**
@@ -57,5 +55,16 @@ public class AttractionController {
     @GetMapping("/attractions/{attractionId}")
     public ApiResponse<AttractionDetailVO> getAttractionDetail(@PathVariable("attractionId") Long attractionId) {
         return ApiResponse.ok(attractionService.getAttractionDetail(attractionId));
+    }
+
+    /**
+     * 查询景点天气信息、未来天气信息与预警信息
+     * @param attractionId 景点 id
+     * @return 景点天气信息
+     */
+    @GetMapping("/attractions/{id}/weather")
+    public ApiResponse<AttractionWeatherVO> getAttractionWeather(
+            @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long attractionId) {
+        return ApiResponse.ok(attractionService.getAttractionWeather(attractionId));
     }
 }

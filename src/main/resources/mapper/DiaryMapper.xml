@@ -99,6 +99,7 @@
 
     <select id="selectDiaryDetail" resultMap="DiaryDetailMap">
         SELECT <include refid="DiaryCardColumns"/>
+        , d.content
         , d.created_at
         , d.updated_at
         , u.bio AS author_bio

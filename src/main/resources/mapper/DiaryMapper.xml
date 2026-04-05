@@ -13,6 +13,7 @@
         <result column="comment_count" property="commentCount"/>
         <result column="liked" property="liked"/>
         <result column="favorited" property="favorited"/>
+        <result column="is_top" property="isTop"/>
         <result column="published_at" property="publishedAt"/>
         <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
             <id column="author_id" property="id"/>
@@ -35,6 +36,7 @@
         <result column="like_count" property="likeCount"/>
         <result column="favorite_count" property="favoriteCount"/>
         <result column="comment_count" property="commentCount"/>
+        <result column="content_type_name" property="contentType"/>
         <result column="liked" property="liked"/>
         <result column="favorited" property="favorited"/>
         <result column="published_at" property="publishedAt"/>
@@ -71,7 +73,7 @@
                 ORDER BY d.like_count DESC, d.published_at DESC, d.id DESC
             </when>
             <otherwise>
-                ORDER BY d.published_at DESC, d.id DESC
+                ORDER BY d.is_top DESC, d.published_at DESC, d.id DESC
             </otherwise>
         </choose>
     </sql>
@@ -79,6 +81,7 @@
     <select id="selectMyDiaryList" resultMap="MyDiaryCardMap">
         SELECT <include refid="DiaryCardColumns"/>
             , d.status
+            , d.is_top
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
         WHERE d.user_id = #{userId}
@@ -89,33 +92,20 @@
         SELECT <include refid="DiaryCardColumns"/>
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
-        WHERE d.status = 1
+        WHERE d.status = 1 AND d.visibility = 1
         <if test="userId != null and userId != ''">and d.user_id = #{userId}</if>
         <include refid="DiaryListOrderBy"/>
     </select>
 
     <select id="selectDiaryDetail" resultMap="DiaryDetailMap">
-        SELECT
-            d.id,
-            d.title,
-            d.summary,
-            d.cover_url,
-            d.content,
-            d.view_count,
-            d.like_count,
-            d.favorite_count,
-            d.comment_count,
-            d.published_at,
-            d.created_at,
-            d.updated_at,
-            0 AS liked,
-            0 AS favorited,
-            u.id AS author_id,
-            u.nickname AS author_nickname,
-            u.avatar_url AS author_avatar_url,
-            u.bio AS author_bio
+        SELECT <include refid="DiaryCardColumns"/>
+        , d.created_at
+        , d.updated_at
+        , u.bio AS author_bio
+        , dc.name AS content_type_name
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
+        LEFT JOIN diary_category dc ON d.content_type = dc.id
         WHERE d.id = #{diaryId}
           AND d.status = 1
         LIMIT 1

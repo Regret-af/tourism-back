@@ -19,6 +19,7 @@ public class DiaryCardVO {
     private Integer likeCount;
     private Integer favoriteCount;
     private Integer commentCount;
+    private Boolean isTop;
     private Boolean liked;
     private Boolean favorited;
     private LocalDateTime publishedAt;

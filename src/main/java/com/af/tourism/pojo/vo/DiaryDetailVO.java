@@ -20,6 +20,7 @@ public class DiaryDetailVO {
     private Integer likeCount;
     private Integer favoriteCount;
     private Integer commentCount;
+    private String contentType;
     private Boolean liked;
     private Boolean favorited;
     private LocalDateTime publishedAt;

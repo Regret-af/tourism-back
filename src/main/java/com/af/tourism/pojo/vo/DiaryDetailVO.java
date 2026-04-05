@@ -15,7 +15,7 @@ public class DiaryDetailVO {
     private String summary;
     private String coverUrl;
     private String content;
-    private UserPublicVO author;
+    private DiaryAuthorVO author;
     private Integer viewCount;
     private Integer likeCount;
     private Integer favoriteCount;

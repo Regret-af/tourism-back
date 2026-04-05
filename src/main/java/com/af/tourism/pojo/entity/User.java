@@ -29,6 +29,8 @@ public class User {
     @TableField("avatar_url")
     private String avatarUrl;
 
+    private String bio;
+
     private Integer status;
 
     @TableField("created_at")

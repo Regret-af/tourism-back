@@ -16,6 +16,7 @@ public class UserVO {
     private String username;
     private String nickname;
     private String avatarUrl;
+    private String bio;
     private Integer status;
     private List<String> roles;
     private LocalDateTime createdAt;

@@ -40,10 +40,11 @@
         <result column="published_at" property="publishedAt"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
-        <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
+        <association property="author" javaType="com.af.tourism.pojo.vo.DiaryAuthorVO">
             <id column="author_id" property="id"/>
             <result column="author_nickname" property="nickname"/>
             <result column="author_avatar_url" property="avatarUrl"/>
+            <result column="author_bio" property="bio"/>
         </association>
     </resultMap>
 
@@ -111,7 +112,8 @@
             0 AS favorited,
             u.id AS author_id,
             u.nickname AS author_nickname,
-            u.avatar_url AS author_avatar_url
+            u.avatar_url AS author_avatar_url,
+            u.bio AS author_bio
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
         WHERE d.id = #{diaryId}

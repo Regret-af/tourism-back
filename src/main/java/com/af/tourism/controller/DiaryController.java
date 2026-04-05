@@ -66,4 +66,15 @@ public class DiaryController {
     public ApiResponse<DiaryDetailVO> getDiaryDetail(@PathVariable("diaryId") Long diaryId) {
         return ApiResponse.ok(diaryService.getDiaryDetail(diaryId));
     }
+
+    /**
+     * 查询作者更多创作列表
+     * @param diaryId 日记列表
+     * @param queryDTO 请求参数
+     * @return 作者其他日记列表
+     */
+    @GetMapping("/travel-diaries/{diaryId}/more-from-author")
+    public ApiResponse<PageResponse<DiaryCardVO>> getMoreFromAuthor(@PathVariable("diaryId") Long diaryId, DiaryQueryDTO queryDTO) {
+        return ApiResponse.ok(diaryService.getMoreFromAuthor(diaryId, queryDTO));
+    }
 }

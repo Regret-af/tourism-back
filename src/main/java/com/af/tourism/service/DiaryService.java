@@ -35,7 +35,7 @@ public interface DiaryService {
      * @param queryDTO 排序分页参数
      * @return 分页后的当前用户日记列表
      */
-    PageResponse<MyDiaryCardVO> listMyDiaries(Long userId, DiaryQueryDTO queryDTO);
+    PageResponse<MyDiaryProfileCardVO> listMyDiaries(Long userId, DiaryQueryDTO queryDTO);
 
     /**
      * 获取他人主页日记
@@ -43,5 +43,13 @@ public interface DiaryService {
      * @param queryDTO 排序分页参数
      * @return 分页后的用户日记列表
      */
-    PageResponse<DiaryCardVO> listUserPublicDiaries(Long userId, @Valid DiaryQueryDTO queryDTO);
+    PageResponse<DiaryProfileCardVO> listUserPublicDiaries(Long userId, @Valid DiaryQueryDTO queryDTO);
+
+    /**
+     * 查询作者更多创作列表
+     * @param diaryId 日记列表
+     * @param queryDTO 请求参数
+     * @return 作者其他日记列表
+     */
+    PageResponse<DiaryCardVO> getMoreFromAuthor(Long diaryId, DiaryQueryDTO queryDTO);
 }

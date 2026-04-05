@@ -8,6 +8,7 @@ import com.af.tourism.pojo.dto.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.TravelDiaryPublishDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.*;
+import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.DiaryService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 旅行日记服务实现。
@@ -68,7 +70,7 @@ public class DiaryServiceImpl implements DiaryService {
         // 2.进行查询操作
         log.debug("查询日记列表，pageNum={}, pageSize={}, sort={}",
                 queryDTO.getPageNum(), queryDTO.getPageSize(), queryDTO.getSort());
-        List<DiaryCardVO> list = diaryMapper.selectDiaryList(null, queryDTO);
+        List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
         // 3.填充返回值
@@ -107,16 +109,21 @@ public class DiaryServiceImpl implements DiaryService {
      * @return 分页后的当前用户日记列表
      */
     @Override
-    public PageResponse<MyDiaryCardVO> listMyDiaries(Long userId, DiaryQueryDTO queryDTO) {
-        // 1.开启分页查询
+    public PageResponse<MyDiaryProfileCardVO> listMyDiaries(Long userId, DiaryQueryDTO queryDTO) {
+        // 1.判断查询的是否是已登录用户日记，防止信息泄露
+        if (!Objects.equals(userId, AuthContext.requireCurrentUserId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "暂无权限查询他人日记");
+        }
+
+        // 2.开启分页查询
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
-        // 2.进行查询操作
-        List<MyDiaryCardVO> list = diaryMapper.selectMyDiaryList(userId, queryDTO);
-        PageInfo<MyDiaryCardVO> pageInfo = new PageInfo<>(list);
+        // 3.进行查询操作
+        List<MyDiaryProfileCardVO> list = diaryMapper.selectMyDiaryProfileList(userId, queryDTO);
+        PageInfo<MyDiaryProfileCardVO> pageInfo = new PageInfo<>(list);
 
-        // 3.填充返回值
-        PageResponse<MyDiaryCardVO> response = new PageResponse<>();
+        // 4.填充返回值
+        PageResponse<MyDiaryProfileCardVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());
         response.setPageSize(pageInfo.getPageSize());
@@ -132,15 +139,43 @@ public class DiaryServiceImpl implements DiaryService {
      * @return 分页后的用户日记列表
      */
     @Override
-    public PageResponse<DiaryCardVO> listUserPublicDiaries(Long userId, DiaryQueryDTO queryDTO) {
+    public PageResponse<DiaryProfileCardVO> listUserPublicDiaries(Long userId, DiaryQueryDTO queryDTO) {
         // 1.开启分页查询
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 2.进行查询操作
-        List<DiaryCardVO> list = diaryMapper.selectDiaryList(userId, queryDTO);
-        PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
+        List<DiaryProfileCardVO> list = diaryMapper.selectUserDiaryProfileList(userId, queryDTO);
+        PageInfo<DiaryProfileCardVO> pageInfo = new PageInfo<>(list);
 
         // 3.填充返回值
+        PageResponse<DiaryProfileCardVO> response = new PageResponse<>();
+        response.setList(list);
+        response.setPageNum(pageInfo.getPageNum());
+        response.setPageSize(pageInfo.getPageSize());
+        response.setTotal(pageInfo.getTotal());
+
+        return response;
+    }
+
+    /**
+     * 查询作者更多创作列表
+     * @param diaryId 日记列表
+     * @param queryDTO 请求参数
+     * @return 作者其他日记列表
+     */
+    @Override
+    public PageResponse<DiaryCardVO> getMoreFromAuthor(Long diaryId, DiaryQueryDTO queryDTO) {
+        // 1.根据日记 id 反查出作者
+        TravelDiary travelDiary = diaryMapper.selectById(diaryId);
+
+        // 2.开启分页查询
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+
+        // 3.进行查询
+        List<DiaryCardVO> list = diaryMapper.selectMoreDiariesByAuthor(travelDiary.getUserId(), diaryId, queryDTO);
+        PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
+
+        // 4.封装返回信息
         PageResponse<DiaryCardVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());

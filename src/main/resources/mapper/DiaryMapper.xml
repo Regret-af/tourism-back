@@ -13,7 +13,6 @@
         <result column="comment_count" property="commentCount"/>
         <result column="liked" property="liked"/>
         <result column="favorited" property="favorited"/>
-        <result column="is_top" property="isTop"/>
         <result column="published_at" property="publishedAt"/>
         <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
             <id column="author_id" property="id"/>
@@ -22,8 +21,13 @@
         </association>
     </resultMap>
 
-    <resultMap id="MyDiaryCardMap" type="com.af.tourism.pojo.vo.MyDiaryCardVO" extends="DiaryCardMap">
+    <resultMap id="DiaryProfileCardMap" type="com.af.tourism.pojo.vo.DiaryProfileCardVO" extends="DiaryCardMap">
+        <result column="is_top" property="isTop"/>
+    </resultMap>
+
+    <resultMap id="MyDiaryProfileCardMap" type="com.af.tourism.pojo.vo.MyDiaryProfileCardVO" extends="DiaryProfileCardMap">
         <result column="status" property="status"/>
+        <result column="visibility" property="visibility"/>
     </resultMap>
 
     <resultMap id="DiaryDetailMap" type="com.af.tourism.pojo.vo.DiaryDetailVO">
@@ -50,7 +54,7 @@
         </association>
     </resultMap>
 
-    <sql id="DiaryCardColumns">
+    <sql id="BaseDiaryCardColumns">
         d.id,
     d.title,
     d.summary,
@@ -67,7 +71,21 @@
     u.avatar_url AS author_avatar_url
     </sql>
 
-    <sql id="DiaryListOrderBy">
+    <sql id="ProfileDiaryExtraColumns">
+        , d.is_top
+    </sql>
+
+    <sql id="MyProfileDiaryExtraColumns">
+        , d.status
+    , d.visibility
+    </sql>
+
+    <sql id="PublicDiaryConditions">
+        d.status = 1
+    AND d.visibility = 1
+    </sql>
+
+    <sql id="ProfileDiaryOrderBy">
         <choose>
             <when test="queryDTO.sortCode == 'hot'">
                 ORDER BY d.like_count DESC, d.published_at DESC, d.id DESC
@@ -78,27 +96,61 @@
         </choose>
     </sql>
 
-    <select id="selectMyDiaryList" resultMap="MyDiaryCardMap">
-        SELECT <include refid="DiaryCardColumns"/>
-            , d.status
-            , d.is_top
+    <sql id="CommonDiaryOrderBy">
+        <choose>
+            <when test="queryDTO.sortCode == 'hot'">
+                ORDER BY d.like_count DESC, d.published_at DESC, d.id DESC
+            </when>
+            <otherwise>
+                ORDER BY d.published_at DESC, d.id DESC
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="selectMyDiaryProfileList" resultMap="MyDiaryProfileCardMap">
+        SELECT
+        <include refid="BaseDiaryCardColumns"/>
+        <include refid="ProfileDiaryExtraColumns"/>
+        <include refid="MyProfileDiaryExtraColumns"/>
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
         WHERE d.user_id = #{userId}
-        <include refid="DiaryListOrderBy"/>
+        <include refid="ProfileDiaryOrderBy"/>
+    </select>
+
+    <select id="selectUserDiaryProfileList" resultMap="DiaryProfileCardMap">
+        SELECT
+        <include refid="BaseDiaryCardColumns"/>
+        <include refid="ProfileDiaryExtraColumns"/>
+        FROM travel_diaries d
+        INNER JOIN users u ON d.user_id = u.id
+        WHERE d.user_id = #{userId}
+        AND <include refid="PublicDiaryConditions"/>
+        <include refid="ProfileDiaryOrderBy"/>
+    </select>
+
+    <select id="selectMoreDiariesByAuthor" resultMap="DiaryCardMap">
+        SELECT
+        <include refid="BaseDiaryCardColumns"/>
+        FROM travel_diaries d
+        INNER JOIN users u ON d.user_id = u.id
+        WHERE d.user_id = #{userId}
+        AND <include refid="PublicDiaryConditions"/>
+        AND d.id != #{excludeDiaryId}
+        <include refid="CommonDiaryOrderBy"/>
     </select>
 
     <select id="selectDiaryList" resultMap="DiaryCardMap">
-        SELECT <include refid="DiaryCardColumns"/>
+        SELECT
+        <include refid="BaseDiaryCardColumns"/>
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
-        WHERE d.status = 1 AND d.visibility = 1
-        <if test="userId != null and userId != ''">and d.user_id = #{userId}</if>
-        <include refid="DiaryListOrderBy"/>
+        WHERE <include refid="PublicDiaryConditions"/>
+        <include refid="CommonDiaryOrderBy"/>
     </select>
 
     <select id="selectDiaryDetail" resultMap="DiaryDetailMap">
-        SELECT <include refid="DiaryCardColumns"/>
+        SELECT <include refid="BaseDiaryCardColumns"/>
         , d.content
         , d.created_at
         , d.updated_at

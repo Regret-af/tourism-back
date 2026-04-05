@@ -72,7 +72,7 @@ public class UserController {
      * @return 分页后的当前用户日记列表
      */
     @GetMapping("me/travel-diaries")
-    public ApiResponse<PageResponse<MyDiaryCardVO>> getTravelDiaries(@Valid DiaryQueryDTO queryDTO) {
+    public ApiResponse<PageResponse<MyDiaryProfileCardVO>> getTravelDiaries(@Valid DiaryQueryDTO queryDTO) {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryService.listMyDiaries(userId, queryDTO));
     }
@@ -95,7 +95,7 @@ public class UserController {
      * @return 分页后的用户日记列表
      */
     @GetMapping("{userId}/travel-diaries")
-    public ApiResponse<PageResponse<DiaryCardVO>> getUserPublicDiaries(@PathVariable Long userId, @Valid DiaryQueryDTO queryDTO) {
+    public ApiResponse<PageResponse<DiaryProfileCardVO>> getUserPublicDiaries(@PathVariable Long userId, @Valid DiaryQueryDTO queryDTO) {
         return ApiResponse.ok(diaryService.listUserPublicDiaries(userId, queryDTO));
     }
 }

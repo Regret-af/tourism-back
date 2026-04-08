@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
+import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.common.constants.AuthConstants;
 import com.af.tourism.common.enums.RoleCode;
@@ -19,6 +20,7 @@ import com.af.tourism.pojo.vo.LoginVO;
 import com.af.tourism.pojo.vo.RegisterVO;
 import com.af.tourism.securitylite.JwtService;
 import com.af.tourism.service.AuthService;
+import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -46,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthConverter authConverter;
+    private final UserCheckService userCheckService;
 
     /**
      * 用户登录
@@ -61,23 +64,42 @@ public class AuthServiceImpl implements AuthService {
         // 2.验证登录请求参数格式
         validateLoginRequest(email, password);
 
-        // 3.根据邮箱查询用户
-        User user = userMapper.selectByEmail(email);
-        // 3.1.查询失败或密码错误
-        if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
-            log.warn("登录失败，邮箱或密码错误");
-            throw new BusinessException(ErrorCode.BUSINESS_ERROR, "邮箱或密码错误");
-        }
-        // 3.2.用户状态异常或不可用
-        if (!UserStatus.isEnabled(user.getStatus())) {
-            log.warn("登录失败，账号状态异常，id={}", user.getId());
-            throw new BusinessException(ErrorCode.USER_DISABLED, "账号已禁用");
-        }
+        // 3.验证用户信息与状态
+        User user = validateUser(email, password);
 
         // 4.封装返回值
         // 4.1.查询该用户角色
         List<String> roles = roleMapper.selectRoleCodesByUserId(user.getId());
         // 4.2.为该用户生成JWT令牌
+        String token = jwtService.generateToken(user.getId());
+
+        return authConverter.toLoginVO(user, roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
+    }
+
+    /**
+     * 管理员登录
+     * @param request 登录参数
+     * @return 登录信息响应
+     */
+    @Override
+    public LoginVO adminLogin(LoginDTO request) {
+        // 1.获取参数
+        String email = request.getEmail();
+        String password = request.getPassword();
+
+        // 2.验证登录请求参数格式
+        validateLoginRequest(email, password);
+
+        // 3.验证用户信息与状态
+        User user = validateUser(email, password);
+
+        // 4.查询该用户角色
+        List<String> roles = roleMapper.selectRoleCodesByUserId(user.getId());
+
+        // 5.判断是否有管理权限
+        requireAdminRole(user.getId(), roles);
+
+        // 6.为该用户生成 token 令牌
         String token = jwtService.generateToken(user.getId());
 
         return authConverter.toLoginVO(user, roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
@@ -142,6 +164,27 @@ public class AuthServiceImpl implements AuthService {
         return authConverter.toRegisterVO(user);
     }
 
+    /**
+     * 验证用户登录信息与状态
+     * @param email 邮箱
+     * @param password 密码
+     * @return 用户实体
+     */
+    private User validateUser(String email, String password) {
+        User user = userMapper.selectByEmail(email);
+        // 3.1.查询失败或密码错误
+        if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            log.warn("登录失败，邮箱或密码错误");
+            throw new BusinessException(ErrorCode.BUSINESS_ERROR, "邮箱或密码错误");
+        }
+        // 3.2.用户状态异常或不可用
+        if (!UserStatus.isEnabled(user.getStatus())) {
+            log.warn("登录失败，账号状态异常，id={}", user.getId());
+            throw new BusinessException(ErrorCode.USER_DISABLED, "账号已禁用");
+        }
+        return user;
+    }
+
     // 验证登录请求参数
     private void validateLoginRequest(String email, String password) {
         if (!StringUtils.hasText(email) || !StringUtils.hasText(password)) {
@@ -180,5 +223,17 @@ public class AuthServiceImpl implements AuthService {
     // 生成随机用户名
     private String generateDefaultNickname() {
         return "用户" + RandomUtil.randomNumbers(6);
+    }
+
+    /**
+     * 验证是否存在管理员权限
+     * @param userId 用户 id
+     * @param roles 用户角色
+     */
+    private void requireAdminRole(Long userId, List<String> roles) {
+        if (roles == null || !roles.contains(RoleCode.ADMIN.name())) {
+            log.warn("管理员登录失败，账号无管理员权限，userId={}", userId);
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无管理端访问权限");
+        }
     }
 }

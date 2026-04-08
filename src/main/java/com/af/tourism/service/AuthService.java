@@ -20,4 +20,11 @@ public interface AuthService {
      * @return 注册响应
      */
     RegisterVO register(RegisterDTO request);
+
+    /**
+     * 管理员登录
+     * @param request 登录参数
+     * @return 登录信息响应
+     */
+    LoginVO adminLogin(LoginDTO request);
 }

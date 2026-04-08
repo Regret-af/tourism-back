@@ -1,4 +1,4 @@
-package com.af.tourism.controller;
+package com.af.tourism.controller.app;
 
 import com.af.tourism.common.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;

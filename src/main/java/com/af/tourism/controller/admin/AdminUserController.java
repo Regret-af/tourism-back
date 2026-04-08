@@ -4,8 +4,6 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.securitylite.AuthContext;
-import com.af.tourism.service.AuthService;
 import com.af.tourism.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -21,7 +19,6 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class AdminUserController {
 
-    private final AuthService authService;
     private final UserService userService;
 
     /**
@@ -31,8 +28,6 @@ public class AdminUserController {
      */
     @GetMapping("/users")
     public ApiResponse<PageResponse<UserForAdminVO>> listUsers(@Valid UserQueryDTO queryDTO) {
-        Long userId = AuthContext.requireCurrentUserId();
-        authService.getCurrentAdminProfile(userId);
         return ApiResponse.ok(userService.listUsers(queryDTO));
     }
 }

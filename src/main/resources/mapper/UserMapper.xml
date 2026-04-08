@@ -4,6 +4,19 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.UserMapper">
 
+    <resultMap id="AdminUserListMap" type="com.af.tourism.pojo.vo.admin.UserForAdminVO">
+        <id property="id" column="id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="bio" column="bio"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="roleCodes" column="role_codes"/>
+    </resultMap>
+
     <select id="selectByEmail" resultType="com.af.tourism.pojo.entity.User">
         SELECT id,
                email,
@@ -34,6 +47,60 @@
         FROM users
         WHERE username = #{username}
         LIMIT 1
+    </select>
+
+    <select id="selectUserList" resultMap="AdminUserListMap">
+        SELECT u.id,
+               u.email,
+               u.username,
+               u.nickname,
+               u.avatar_url,
+               u.bio,
+               u.status,
+               u.created_at,
+               u.updated_at,
+               GROUP_CONCAT(DISTINCT r.role_code ORDER BY r.id SEPARATOR ',') AS role_codes
+        FROM users u
+        LEFT JOIN user_roles ur ON ur.user_id = u.id
+        LEFT JOIN roles r ON r.id = ur.role_id AND r.status = 1
+        <where>
+            <if test="queryDTO.keyword != null and queryDTO.keyword != ''">
+                AND (
+                    u.email LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+                    OR u.username LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+                    OR u.nickname LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+                )
+            </if>
+            <if test="queryDTO.status != null">
+                AND u.status = #{queryDTO.status}
+            </if>
+            <if test="queryDTO.roleCode != null">
+                AND EXISTS (
+                    SELECT 1
+                    FROM user_roles ur
+                    INNER JOIN roles r ON r.id = ur.role_id
+                    WHERE ur.user_id = u.id
+                      AND r.role_code = #{queryDTO.roleCode}
+                      AND r.status = 1
+                )
+            </if>
+            <if test="queryDTO.createdStart != null">
+                AND u.created_at &gt;= #{queryDTO.createdStart}
+            </if>
+            <if test="queryDTO.createdEnd != null">
+                AND u.created_at &lt;= #{queryDTO.createdEnd}
+            </if>
+        </where>
+        GROUP BY u.id,
+                 u.email,
+                 u.username,
+                 u.nickname,
+                 u.avatar_url,
+                 u.bio,
+                 u.status,
+                 u.created_at,
+                 u.updated_at
+        ORDER BY u.created_at DESC, u.id DESC
     </select>
 
 </mapper>

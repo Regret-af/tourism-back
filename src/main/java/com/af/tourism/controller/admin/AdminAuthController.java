@@ -39,4 +39,16 @@ public class AdminAuthController {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(authService.getCurrentAdminProfile(userId));
     }
+
+    /**
+     * 管理员退出登录
+     * @return 退出登录信息
+     */
+    @PostMapping("/auth/logout")
+    public ApiResponse<Void> logout() {
+        // 获取当前登录管理员信息，确保真实登录
+        Long userId = AuthContext.requireCurrentUserId();
+        // 暂无业务处理，直接返回
+        return ApiResponse.ok();
+    }
 }

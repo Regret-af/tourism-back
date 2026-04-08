@@ -17,6 +17,7 @@ import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.entity.UserRole;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.app.RegisterVO;
+import com.af.tourism.pojo.vo.common.UserVO;
 import com.af.tourism.securitylite.JwtService;
 import com.af.tourism.service.AuthService;
 import com.af.tourism.service.helper.UserCheckService;
@@ -102,6 +103,25 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtService.generateToken(user.getId());
 
         return authConverter.toLoginVO(user, roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
+    }
+
+    /**
+     * 获取当前管理员信息
+     * @param userId 当前登录管理员 id
+     * @return 当前管理员信息
+     */
+    @Override
+    public UserVO getCurrentAdminProfile(Long userId) {
+        // 1.判断当前用户是否可用
+        User user = userCheckService.requireActiveUser(userId);
+
+        // 2.获取用户角色列表
+        List<String> roles = roleMapper.selectRoleCodesByUserId(userId);
+
+        // 3.判断用户是否有管理员权限
+        requireAdminRole(userId, roles);
+
+        return authConverter.toUserVO(user, roles);
     }
 
     /**

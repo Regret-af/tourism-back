@@ -4,6 +4,7 @@ import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.dto.app.RegisterDTO;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.app.RegisterVO;
+import com.af.tourism.pojo.vo.common.UserVO;
 
 public interface AuthService {
 
@@ -27,4 +28,11 @@ public interface AuthService {
      * @return 登录信息响应
      */
     LoginVO adminLogin(LoginDTO request);
+
+    /**
+     * 获取当前管理员信息
+     * @param userId 当前登录管理员 id
+     * @return 当前管理员信息
+     */
+    UserVO getCurrentAdminProfile(Long userId);
 }

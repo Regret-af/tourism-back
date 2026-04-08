@@ -3,6 +3,8 @@ package com.af.tourism.controller.admin;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.vo.common.LoginVO;
+import com.af.tourism.pojo.vo.common.UserVO;
+import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -28,4 +30,13 @@ public class AdminAuthController {
         return ApiResponse.ok(authService.adminLogin(loginDTO));
     }
 
+    /**
+     * 获取当前管理员信息
+     * @return 当前管理员信息
+     */
+    @GetMapping("/auth/me")
+    public ApiResponse<UserVO> me() {
+        Long userId = AuthContext.requireCurrentUserId();
+        return ApiResponse.ok(authService.getCurrentAdminProfile(userId));
+    }
 }

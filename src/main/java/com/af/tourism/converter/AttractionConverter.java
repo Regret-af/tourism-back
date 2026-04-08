@@ -1,7 +1,7 @@
 package com.af.tourism.converter;
 
 import com.af.tourism.pojo.entity.AttractionCategory;
-import com.af.tourism.pojo.vo.AttractionCategoryVO;
+import com.af.tourism.pojo.vo.app.AttractionCategoryVO;
 import org.mapstruct.Mapper;
 
 import java.util.List;

@@ -1,8 +1,12 @@
 package com.af.tourism.controller.app;
 
 import com.af.tourism.common.ApiResponse;
-import com.af.tourism.pojo.dto.AttractionQueryDTO;
-import com.af.tourism.pojo.vo.*;
+import com.af.tourism.pojo.dto.app.AttractionQueryDTO;
+import com.af.tourism.pojo.vo.app.AttractionCardVO;
+import com.af.tourism.pojo.vo.app.AttractionCategoryVO;
+import com.af.tourism.pojo.vo.app.AttractionDetailVO;
+import com.af.tourism.pojo.vo.app.AttractionWeatherVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.AttractionCategoryService;
 import com.af.tourism.service.AttractionService;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.af.tourism.converter;
 
 import com.af.tourism.pojo.entity.User;
-import com.af.tourism.pojo.vo.UserPublicVO;
+import com.af.tourism.pojo.vo.app.UserPublicVO;
 import org.mapstruct.Mapper;
 
 /**

@@ -1,8 +1,8 @@
 package com.af.tourism.mapper;
 
-import com.af.tourism.pojo.dto.NotificationQueryDTO;
+import com.af.tourism.pojo.dto.app.NotificationQueryDTO;
 import com.af.tourism.pojo.entity.Notification;
-import com.af.tourism.pojo.vo.NotificationVO;
+import com.af.tourism.pojo.vo.app.NotificationVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

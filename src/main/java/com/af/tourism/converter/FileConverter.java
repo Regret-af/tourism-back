@@ -2,7 +2,7 @@ package com.af.tourism.converter;
 
 import com.af.tourism.config.CosStorageProperties;
 import com.af.tourism.pojo.entity.UploadedFile;
-import com.af.tourism.pojo.vo.FileUploadVO;
+import com.af.tourism.pojo.vo.app.FileUploadVO;
 import com.af.tourism.storage.StorageUploadResult;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

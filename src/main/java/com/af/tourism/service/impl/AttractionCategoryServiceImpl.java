@@ -1,16 +1,14 @@
 package com.af.tourism.service.impl;
 
 import com.af.tourism.converter.AttractionConverter;
-import com.af.tourism.converter.AttractionConverterImpl;
 import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.pojo.entity.AttractionCategory;
-import com.af.tourism.pojo.vo.AttractionCategoryVO;
+import com.af.tourism.pojo.vo.app.AttractionCategoryVO;
 import com.af.tourism.service.AttractionCategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 

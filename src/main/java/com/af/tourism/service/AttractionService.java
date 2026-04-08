@@ -1,11 +1,10 @@
 package com.af.tourism.service;
 
-import com.af.tourism.integration.qweather.dto.QWeatherNowResponse;
-import com.af.tourism.pojo.dto.AttractionQueryDTO;
-import com.af.tourism.pojo.vo.AttractionCardVO;
-import com.af.tourism.pojo.vo.AttractionDetailVO;
-import com.af.tourism.pojo.vo.AttractionWeatherVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.dto.app.AttractionQueryDTO;
+import com.af.tourism.pojo.vo.app.AttractionCardVO;
+import com.af.tourism.pojo.vo.app.AttractionDetailVO;
+import com.af.tourism.pojo.vo.app.AttractionWeatherVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
 
 public interface AttractionService {
 

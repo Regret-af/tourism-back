@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.NotificationMapper">
 
-    <resultMap id="NotificationVOMap" type="com.af.tourism.pojo.vo.NotificationVO">
+    <resultMap id="NotificationVOMap" type="com.af.tourism.pojo.vo.app.NotificationVO">
         <id column="id" property="id"/>
         <result column="type" property="type"/>
         <result column="title" property="title"/>
@@ -12,7 +12,7 @@
         <result column="is_read" property="isRead"/>
         <result column="read_time" property="readTime"/>
         <result column="created_at" property="createdAt"/>
-        <association property="sender" javaType="com.af.tourism.pojo.vo.UserPublicVO">
+        <association property="sender" javaType="com.af.tourism.pojo.vo.app.UserPublicVO">
             <id column="sender_id" property="id"/>
             <result column="sender_nickname" property="nickname"/>
             <result column="sender_avatar_url" property="avatarUrl"/>

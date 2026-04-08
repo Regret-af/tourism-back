@@ -1,10 +1,10 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.DiaryCommentCreateDTO;
-import com.af.tourism.pojo.dto.DiaryCommentQueryDTO;
-import com.af.tourism.pojo.vo.DiaryCommentCreateVO;
-import com.af.tourism.pojo.vo.DiaryCommentVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.dto.app.DiaryCommentCreateDTO;
+import com.af.tourism.pojo.dto.app.DiaryCommentQueryDTO;
+import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
+import com.af.tourism.pojo.vo.app.DiaryCommentVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
 
 public interface DiaryCommentService {
 

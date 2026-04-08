@@ -2,7 +2,7 @@ package com.af.tourism.service.helper;
 
 import com.af.tourism.converter.OperationLogConverter;
 import com.af.tourism.mapper.OperationLogMapper;
-import com.af.tourism.pojo.dto.OperationLogRecordDTO;
+import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
 import com.af.tourism.pojo.entity.OperationLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

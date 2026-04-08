@@ -1,6 +1,6 @@
 package com.af.tourism.converter;
 
-import com.af.tourism.pojo.dto.OperationLogRecordDTO;
+import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
 import com.af.tourism.pojo.entity.OperationLog;
 import org.mapstruct.Mapper;
 

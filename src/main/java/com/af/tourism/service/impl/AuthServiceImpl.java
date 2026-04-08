@@ -1,7 +1,6 @@
 package com.af.tourism.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
-import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.common.constants.AuthConstants;
 import com.af.tourism.common.enums.RoleCode;
@@ -11,13 +10,13 @@ import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.mapper.UserRoleMapper;
-import com.af.tourism.pojo.dto.LoginDTO;
-import com.af.tourism.pojo.dto.RegisterDTO;
+import com.af.tourism.pojo.dto.common.LoginDTO;
+import com.af.tourism.pojo.dto.app.RegisterDTO;
 import com.af.tourism.pojo.entity.Role;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.entity.UserRole;
-import com.af.tourism.pojo.vo.LoginVO;
-import com.af.tourism.pojo.vo.RegisterVO;
+import com.af.tourism.pojo.vo.common.LoginVO;
+import com.af.tourism.pojo.vo.app.RegisterVO;
 import com.af.tourism.securitylite.JwtService;
 import com.af.tourism.service.AuthService;
 import com.af.tourism.service.helper.UserCheckService;

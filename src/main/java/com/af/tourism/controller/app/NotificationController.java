@@ -1,11 +1,11 @@
 package com.af.tourism.controller.app;
 
 import com.af.tourism.common.ApiResponse;
-import com.af.tourism.pojo.dto.NotificationQueryDTO;
-import com.af.tourism.pojo.vo.NotificationReadVO;
-import com.af.tourism.pojo.vo.NotificationUnreadCountVO;
-import com.af.tourism.pojo.vo.NotificationVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.dto.app.NotificationQueryDTO;
+import com.af.tourism.pojo.vo.app.NotificationReadVO;
+import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
+import com.af.tourism.pojo.vo.app.NotificationVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.NotificationService;
 import lombok.RequiredArgsConstructor;

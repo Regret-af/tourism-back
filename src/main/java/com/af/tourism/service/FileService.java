@@ -1,7 +1,7 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.FileUploadDTO;
-import com.af.tourism.pojo.vo.FileUploadVO;
+import com.af.tourism.pojo.dto.app.FileUploadDTO;
+import com.af.tourism.pojo.vo.app.FileUploadVO;
 
 public interface FileService {
 

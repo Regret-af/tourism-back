@@ -1,8 +1,8 @@
 package com.af.tourism.controller.admin;
 
 import com.af.tourism.common.ApiResponse;
-import com.af.tourism.pojo.dto.LoginDTO;
-import com.af.tourism.pojo.vo.LoginVO;
+import com.af.tourism.pojo.dto.common.LoginDTO;
+import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;

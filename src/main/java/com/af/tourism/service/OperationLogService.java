@@ -1,6 +1,6 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.OperationLogRecordDTO;
+import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
 
 public interface OperationLogService {
 

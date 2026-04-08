@@ -1,9 +1,9 @@
 package com.af.tourism.mapper;
 
-import com.af.tourism.pojo.dto.AttractionQueryDTO;
+import com.af.tourism.pojo.dto.app.AttractionQueryDTO;
 import com.af.tourism.pojo.entity.Attraction;
-import com.af.tourism.pojo.vo.AttractionCardVO;
-import com.af.tourism.pojo.vo.AttractionDetailVO;
+import com.af.tourism.pojo.vo.app.AttractionCardVO;
+import com.af.tourism.pojo.vo.app.AttractionDetailVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

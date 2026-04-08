@@ -1,7 +1,7 @@
 package com.af.tourism.mapper;
 
 import com.af.tourism.pojo.entity.DiaryComment;
-import com.af.tourism.pojo.vo.DiaryCommentVO;
+import com.af.tourism.pojo.vo.app.DiaryCommentVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.AttractionMapper">
 
-    <resultMap id="AttractionCardMap" type="com.af.tourism.pojo.vo.AttractionCardVO">
+    <resultMap id="AttractionCardMap" type="com.af.tourism.pojo.vo.app.AttractionCardVO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="summary" property="summary"/>
@@ -12,14 +12,14 @@
         <result column="longitude" property="longitude"/>
         <result column="latitude" property="latitude"/>
         <result column="created_at" property="createdAt"/>
-        <association property="category" javaType="com.af.tourism.pojo.vo.AttractionCategorySimpleVO">
+        <association property="category" javaType="com.af.tourism.pojo.vo.app.AttractionCategorySimpleVO">
             <id column="category_id" property="id"/>
             <result column="category_name" property="name"/>
             <result column="category_code" property="code"/>
         </association>
     </resultMap>
 
-    <resultMap id="AttractionDetailMap" type="com.af.tourism.pojo.vo.AttractionDetailVO">
+    <resultMap id="AttractionDetailMap" type="com.af.tourism.pojo.vo.app.AttractionDetailVO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="summary" property="summary"/>
@@ -35,7 +35,7 @@
         <result column="latitude" property="latitude"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
-        <association property="category" javaType="com.af.tourism.pojo.vo.AttractionCategorySimpleVO">
+        <association property="category" javaType="com.af.tourism.pojo.vo.app.AttractionCategorySimpleVO">
             <id column="category_id" property="id"/>
             <result column="category_name" property="name"/>
             <result column="category_code" property="code"/>

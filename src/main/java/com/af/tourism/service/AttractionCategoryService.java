@@ -1,6 +1,6 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.vo.AttractionCategoryVO;
+import com.af.tourism.pojo.vo.app.AttractionCategoryVO;
 
 import java.util.List;
 

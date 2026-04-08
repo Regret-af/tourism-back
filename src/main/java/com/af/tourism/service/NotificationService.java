@@ -1,10 +1,10 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.NotificationQueryDTO;
-import com.af.tourism.pojo.vo.NotificationReadVO;
-import com.af.tourism.pojo.vo.NotificationUnreadCountVO;
-import com.af.tourism.pojo.vo.NotificationVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.dto.app.NotificationQueryDTO;
+import com.af.tourism.pojo.vo.app.NotificationReadVO;
+import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
+import com.af.tourism.pojo.vo.app.NotificationVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
 
 public interface NotificationService {
 

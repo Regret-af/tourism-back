@@ -1,6 +1,6 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.vo.DiaryLikeVO;
+import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 
 public interface DiaryLikeService {
 

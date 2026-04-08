@@ -4,7 +4,7 @@ import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
-import com.af.tourism.pojo.vo.DiaryLikeVO;
+import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.DiaryLikeService;
 import lombok.RequiredArgsConstructor;

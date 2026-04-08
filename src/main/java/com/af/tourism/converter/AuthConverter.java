@@ -1,10 +1,10 @@
 package com.af.tourism.converter;
 
 import com.af.tourism.pojo.entity.User;
-import com.af.tourism.pojo.vo.LoginUserVO;
-import com.af.tourism.pojo.vo.LoginVO;
-import com.af.tourism.pojo.vo.RegisterVO;
-import com.af.tourism.pojo.vo.UserVO;
+import com.af.tourism.pojo.vo.common.LoginUserVO;
+import com.af.tourism.pojo.vo.common.LoginVO;
+import com.af.tourism.pojo.vo.app.RegisterVO;
+import com.af.tourism.pojo.vo.common.UserVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

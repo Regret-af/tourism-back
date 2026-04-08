@@ -2,7 +2,7 @@ package com.af.tourism.aspect;
 
 import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
-import com.af.tourism.pojo.dto.OperationLogRecordDTO;
+import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.OperationLogService;
 import lombok.RequiredArgsConstructor;

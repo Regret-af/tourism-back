@@ -1,9 +1,9 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.LoginDTO;
-import com.af.tourism.pojo.dto.RegisterDTO;
-import com.af.tourism.pojo.vo.LoginVO;
-import com.af.tourism.pojo.vo.RegisterVO;
+import com.af.tourism.pojo.dto.common.LoginDTO;
+import com.af.tourism.pojo.dto.app.RegisterDTO;
+import com.af.tourism.pojo.vo.common.LoginVO;
+import com.af.tourism.pojo.vo.app.RegisterVO;
 
 public interface AuthService {
 

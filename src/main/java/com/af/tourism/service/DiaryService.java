@@ -1,8 +1,9 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.DiaryQueryDTO;
-import com.af.tourism.pojo.dto.TravelDiaryPublishDTO;
-import com.af.tourism.pojo.vo.*;
+import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
+import com.af.tourism.pojo.dto.app.TravelDiaryPublishDTO;
+import com.af.tourism.pojo.vo.app.*;
+import com.af.tourism.pojo.vo.common.PageResponse;
 
 import javax.validation.Valid;
 

@@ -1,10 +1,10 @@
 package com.af.tourism.converter;
 
-import com.af.tourism.pojo.dto.TravelDiaryPublishDTO;
+import com.af.tourism.pojo.dto.app.TravelDiaryPublishDTO;
 import com.af.tourism.pojo.entity.DiaryComment;
 import com.af.tourism.pojo.entity.TravelDiary;
-import com.af.tourism.pojo.vo.DiaryCommentCreateVO;
-import com.af.tourism.pojo.vo.TravelDiaryPublishVO;
+import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
+import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
 import org.mapstruct.Mapper;
 
 /**

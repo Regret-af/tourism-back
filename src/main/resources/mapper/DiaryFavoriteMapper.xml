@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.DiaryFavoriteMapper">
 
-    <resultMap id="FavoriteDiaryCardMap" type="com.af.tourism.pojo.vo.FavoriteDiaryCardVO">
+    <resultMap id="FavoriteDiaryCardMap" type="com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="summary" property="summary"/>
@@ -15,7 +15,7 @@
         <result column="favorited" property="favorited"/>
         <result column="published_at" property="publishedAt"/>
         <result column="invalid" property="invalid"/>
-        <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
+        <association property="author" javaType="com.af.tourism.pojo.vo.app.UserPublicVO">
             <id column="author_id" property="id"/>
             <result column="author_nickname" property="nickname"/>
             <result column="author_avatar_url" property="avatarUrl"/>

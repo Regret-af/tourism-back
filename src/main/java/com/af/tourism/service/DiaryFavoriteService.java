@@ -1,9 +1,9 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.FavoriteDiaryQueryDTO;
-import com.af.tourism.pojo.vo.FavoriteDiaryCardVO;
-import com.af.tourism.pojo.vo.DiaryFavoriteVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.dto.app.FavoriteDiaryQueryDTO;
+import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
+import com.af.tourism.pojo.vo.app.DiaryFavoriteVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
 
 public interface DiaryFavoriteService {
 

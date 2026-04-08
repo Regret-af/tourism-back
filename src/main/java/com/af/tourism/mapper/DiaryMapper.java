@@ -1,11 +1,11 @@
 package com.af.tourism.mapper;
 
-import com.af.tourism.pojo.dto.DiaryQueryDTO;
+import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
-import com.af.tourism.pojo.vo.DiaryCardVO;
-import com.af.tourism.pojo.vo.DiaryDetailVO;
-import com.af.tourism.pojo.vo.DiaryProfileCardVO;
-import com.af.tourism.pojo.vo.MyDiaryProfileCardVO;
+import com.af.tourism.pojo.vo.app.DiaryCardVO;
+import com.af.tourism.pojo.vo.app.DiaryDetailVO;
+import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
+import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

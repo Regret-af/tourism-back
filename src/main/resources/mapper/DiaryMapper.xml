@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.DiaryMapper">
 
-    <resultMap id="DiaryCardMap" type="com.af.tourism.pojo.vo.DiaryCardVO">
+    <resultMap id="DiaryCardMap" type="com.af.tourism.pojo.vo.app.DiaryCardVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="summary" property="summary"/>
@@ -14,23 +14,23 @@
         <result column="liked" property="liked"/>
         <result column="favorited" property="favorited"/>
         <result column="published_at" property="publishedAt"/>
-        <association property="author" javaType="com.af.tourism.pojo.vo.UserPublicVO">
+        <association property="author" javaType="com.af.tourism.pojo.vo.app.UserPublicVO">
             <id column="author_id" property="id"/>
             <result column="author_nickname" property="nickname"/>
             <result column="author_avatar_url" property="avatarUrl"/>
         </association>
     </resultMap>
 
-    <resultMap id="DiaryProfileCardMap" type="com.af.tourism.pojo.vo.DiaryProfileCardVO" extends="DiaryCardMap">
+    <resultMap id="DiaryProfileCardMap" type="com.af.tourism.pojo.vo.app.DiaryProfileCardVO" extends="DiaryCardMap">
         <result column="is_top" property="isTop"/>
     </resultMap>
 
-    <resultMap id="MyDiaryProfileCardMap" type="com.af.tourism.pojo.vo.MyDiaryProfileCardVO" extends="DiaryProfileCardMap">
+    <resultMap id="MyDiaryProfileCardMap" type="com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO" extends="DiaryProfileCardMap">
         <result column="status" property="status"/>
         <result column="visibility" property="visibility"/>
     </resultMap>
 
-    <resultMap id="DiaryDetailMap" type="com.af.tourism.pojo.vo.DiaryDetailVO">
+    <resultMap id="DiaryDetailMap" type="com.af.tourism.pojo.vo.app.DiaryDetailVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="summary" property="summary"/>
@@ -46,7 +46,7 @@
         <result column="published_at" property="publishedAt"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
-        <association property="author" javaType="com.af.tourism.pojo.vo.DiaryAuthorVO">
+        <association property="author" javaType="com.af.tourism.pojo.vo.app.DiaryAuthorVO">
             <id column="author_id" property="id"/>
             <result column="author_nickname" property="nickname"/>
             <result column="author_avatar_url" property="avatarUrl"/>

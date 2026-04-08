@@ -1,10 +1,10 @@
 package com.af.tourism.service;
 
-import com.af.tourism.pojo.dto.UserPasswordUpdateDTO;
-import com.af.tourism.pojo.dto.UserProfileUpdateDTO;
+import com.af.tourism.pojo.dto.app.UserPasswordUpdateDTO;
+import com.af.tourism.pojo.dto.app.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
-import com.af.tourism.pojo.vo.UserPublicVO;
-import com.af.tourism.pojo.vo.UserVO;
+import com.af.tourism.pojo.vo.app.UserPublicVO;
+import com.af.tourism.pojo.vo.common.UserVO;
 
 import javax.validation.Valid;
 import java.util.List;

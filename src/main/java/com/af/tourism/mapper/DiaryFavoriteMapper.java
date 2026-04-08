@@ -1,8 +1,8 @@
 package com.af.tourism.mapper;
 
-import com.af.tourism.pojo.dto.FavoriteDiaryQueryDTO;
+import com.af.tourism.pojo.dto.app.FavoriteDiaryQueryDTO;
 import com.af.tourism.pojo.entity.DiaryFavorite;
-import com.af.tourism.pojo.vo.FavoriteDiaryCardVO;
+import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

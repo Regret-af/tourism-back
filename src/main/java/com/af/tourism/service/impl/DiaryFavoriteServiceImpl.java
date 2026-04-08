@@ -2,12 +2,12 @@ package com.af.tourism.service.impl;
 
 import com.af.tourism.mapper.DiaryFavoriteMapper;
 import com.af.tourism.mapper.DiaryMapper;
-import com.af.tourism.pojo.dto.FavoriteDiaryQueryDTO;
+import com.af.tourism.pojo.dto.app.FavoriteDiaryQueryDTO;
 import com.af.tourism.pojo.entity.DiaryFavorite;
 import com.af.tourism.pojo.entity.TravelDiary;
-import com.af.tourism.pojo.vo.FavoriteDiaryCardVO;
-import com.af.tourism.pojo.vo.DiaryFavoriteVO;
-import com.af.tourism.pojo.vo.PageResponse;
+import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
+import com.af.tourism.pojo.vo.app.DiaryFavoriteVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.DiaryFavoriteService;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.UserCheckService;

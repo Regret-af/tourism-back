@@ -2,6 +2,9 @@ package com.af.tourism.service.admin;
 
 import com.af.tourism.pojo.dto.admin.AttractionCategoryCreateDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryQueryDTO;
+import com.af.tourism.pojo.dto.admin.AttractionCategorySortOrderUpdateDTO;
+import com.af.tourism.pojo.dto.admin.AttractionCategoryStatusUpdateDTO;
+import com.af.tourism.pojo.dto.admin.AttractionCategoryUpdateDTO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 
@@ -32,4 +35,28 @@ public interface AdminAttractionCategoryService {
      * @return 新增后的分类详情
      */
     AttractionCategoryForAdminVO createCategory(@Valid AttractionCategoryCreateDTO request);
+
+    /**
+     * 编辑景点分类
+     * @param id 分类 id
+     * @param request 编辑请求
+     * @return 编辑后的分类详情
+     */
+    AttractionCategoryForAdminVO updateCategory(Long id, @Valid AttractionCategoryUpdateDTO request);
+
+    /**
+     * 修改景点分类状态
+     * @param id 分类 id
+     * @param request 状态修改请求
+     * @return 修改后的分类详情
+     */
+    AttractionCategoryForAdminVO updateCategoryStatus(Long id, @Valid AttractionCategoryStatusUpdateDTO request);
+
+    /**
+     * 修改景点分类排序
+     * @param id 分类 id
+     * @param request 排序修改请求
+     * @return 修改后的分类详情
+     */
+    AttractionCategoryForAdminVO updateCategorySortOrder(Long id, @Valid AttractionCategorySortOrderUpdateDTO request);
 }

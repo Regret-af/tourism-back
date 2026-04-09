@@ -1,6 +1,7 @@
 package com.af.tourism.converter;
 
 import com.af.tourism.pojo.dto.admin.AttractionCategoryCreateDTO;
+import com.af.tourism.pojo.dto.admin.AttractionCategoryUpdateDTO;
 import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.vo.app.AttractionCategoryVO;
 import org.mapstruct.Mapper;
@@ -17,5 +18,5 @@ public interface AttractionConverter {
 
     List<AttractionCategoryVO> toAttractionCategoryVOList(List<AttractionCategory> attractionCategoryList);
 
-    AttractionCategory toAttractionConverter(AttractionCategoryCreateDTO attractionCategoryCreateDTO);
+    AttractionCategory toAttractionCategory(AttractionCategoryCreateDTO attractionCategoryCreateDTO);
 }

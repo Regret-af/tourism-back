@@ -1,7 +1,9 @@
 package com.af.tourism.mapper;
 
+import com.af.tourism.pojo.dto.admin.AdminAttractionQueryDTO;
 import com.af.tourism.pojo.dto.app.AttractionQueryDTO;
 import com.af.tourism.pojo.entity.Attraction;
+import com.af.tourism.pojo.vo.admin.AttractionForAdminVO;
 import com.af.tourism.pojo.vo.app.AttractionCardVO;
 import com.af.tourism.pojo.vo.app.AttractionDetailVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -26,4 +28,11 @@ public interface AttractionMapper extends BaseMapper<Attraction> {
      * @return 景点信息
      */
     AttractionDetailVO selectAttractionDetail(@Param("attractionId") Long attractionId);
+
+    /**
+     * 管理端景点列表
+     * @param queryDTO 查询参数
+     * @return 景点列表
+     */
+    List<AttractionForAdminVO> selectAdminAttractions(@Param("queryDTO") AdminAttractionQueryDTO queryDTO);
 }

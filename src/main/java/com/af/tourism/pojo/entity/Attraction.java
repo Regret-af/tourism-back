@@ -42,6 +42,19 @@ public class Attraction {
     @TableField("view_count")
     private Integer viewCount;
 
+    private String baiduUid;
+
+    @TableField("sourceSynced_at")
+    private LocalDateTime sourceSyncedAt;
+
+    @TableField("address_detail")
+    private String addressDetail;
+
+    private String telephone;
+
+    @TableField("opening_hours")
+    private String openingHours;
+
     @TableField("created_at")
     private LocalDateTime createdAt;
 

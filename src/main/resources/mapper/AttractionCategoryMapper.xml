@@ -14,6 +14,11 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <resultMap id="AdminAttractionCategoryStatsMap" type="com.af.tourism.pojo.vo.admin.AttractionCategoryStatsForAdminVO">
+        <id property="categoryId" column="category_id"/>
+        <result property="attractionCount" column="attraction_count"/>
+    </resultMap>
+
     <select id="selectEnabledCategories" resultType="com.af.tourism.pojo.entity.AttractionCategory">
         SELECT id,
                name,
@@ -48,6 +53,17 @@
             </if>
         </where>
         ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="selectAttractionStatsByCategoryIds" resultMap="AdminAttractionCategoryStatsMap">
+        SELECT category_id,
+               COUNT(1) AS attraction_count
+        FROM attractions
+        WHERE category_id IN
+        <foreach collection="categoryIds" item="categoryId" open="(" separator="," close=")">
+            #{categoryId}
+        </foreach>
+        GROUP BY category_id
     </select>
 
 </mapper>

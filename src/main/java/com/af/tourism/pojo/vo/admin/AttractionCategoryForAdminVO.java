@@ -20,6 +20,8 @@ public class AttractionCategoryForAdminVO {
 
     private Integer status;
 
+    private Long attractionCount;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

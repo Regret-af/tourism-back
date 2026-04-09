@@ -63,6 +63,31 @@
         </association>
     </resultMap>
 
+    <resultMap id="AdminAttractionDetailMap" type="com.af.tourism.pojo.vo.admin.AttractionDetailForAdminVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="summary" property="summary"/>
+        <result column="description" property="description"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="location_text" property="locationText"/>
+        <result column="address_detail" property="addressDetail"/>
+        <result column="telephone" property="telephone"/>
+        <result column="opening_hours" property="openingHours"/>
+        <result column="baiduUid" property="baiduUid"/>
+        <result column="sourceSynced_at" property="sourceSyncedAt"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="status" property="status"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <association property="category" javaType="com.af.tourism.pojo.vo.app.AttractionCategorySimpleVO">
+            <id column="category_id" property="id"/>
+            <result column="category_name" property="name"/>
+            <result column="category_code" property="code"/>
+        </association>
+    </resultMap>
+
     <select id="selectAttractions" resultMap="AttractionCardMap">
         SELECT a.id,
                a.name,
@@ -170,6 +195,33 @@
             </if>
         </where>
         ORDER BY a.created_at DESC, a.id DESC
+    </select>
+
+    <select id="selectAdminAttractionDetail" resultMap="AdminAttractionDetailMap">
+        SELECT a.id,
+               a.name,
+               a.summary,
+               a.description,
+               a.cover_url,
+               a.location_text,
+               a.address_detail,
+               a.telephone,
+               a.opening_hours,
+               a.baiduUid,
+               a.sourceSynced_at,
+               a.longitude,
+               a.latitude,
+               a.status,
+               a.view_count,
+               a.created_at,
+               a.updated_at,
+               c.id AS category_id,
+               c.name AS category_name,
+               c.code AS category_code
+        FROM attractions a
+                 LEFT JOIN attraction_categories c ON a.category_id = c.id
+        WHERE a.id = #{attractionId}
+        LIMIT 1
     </select>
 
 </mapper>

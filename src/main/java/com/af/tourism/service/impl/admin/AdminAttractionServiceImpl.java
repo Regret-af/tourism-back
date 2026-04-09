@@ -1,7 +1,15 @@
 package com.af.tourism.service.impl.admin;
 
+import com.af.tourism.common.ErrorCode;
+import com.af.tourism.converter.AttractionConverter;
+import com.af.tourism.exception.BusinessException;
+import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.mapper.AttractionMapper;
+import com.af.tourism.pojo.dto.admin.AdminAttractionCreateDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionQueryDTO;
+import com.af.tourism.pojo.entity.Attraction;
+import com.af.tourism.pojo.entity.AttractionCategory;
+import com.af.tourism.pojo.vo.admin.AttractionDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionService;
@@ -9,6 +17,8 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -20,6 +30,9 @@ import java.util.List;
 public class AdminAttractionServiceImpl implements AdminAttractionService {
 
     private final AttractionMapper attractionMapper;
+    private final AttractionCategoryMapper attractionCategoryMapper;
+
+    private final AttractionConverter attractionConverter;
 
     /**
      * 管理端景点列表
@@ -43,5 +56,54 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         response.setTotal(pageInfo.getTotal());
 
         return response;
+    }
+
+    /**
+     * 管理端景点详情
+     * @param id 景点 id
+     * @return 景点详情信息
+     */
+    @Override
+    public AttractionDetailForAdminVO getAttractionDetail(Long id) {
+        // 1.查询景点详情
+        AttractionDetailForAdminVO detail = attractionMapper.selectAdminAttractionDetail(id);
+        if (detail == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "景点不存在");
+        }
+
+        return detail;
+    }
+
+    /**
+     * 管理端新增景点
+     * @param request 请求信息
+     * @return 新增后的景点详情
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AttractionDetailForAdminVO createAttraction(AdminAttractionCreateDTO request) {
+        // 1.校验参数
+        // 1.1.查询景点分类，判断是否存在该分类
+        AttractionCategory category = attractionCategoryMapper.selectById(request.getCategoryId());
+        if (category == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "景点分类不存在");
+        }
+
+        // 1.2.校验非空参数
+        if (!StringUtils.hasText(request.getName()) || !StringUtils.hasText(request.getAddressDetail())) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "景点名称或详细地址不能为空");
+        }
+
+        // 1.3.校验景点状态的合法性
+        Integer status = request.getStatus();
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "景点状态不合法");
+        }
+
+        // 2.插入数据
+        Attraction entity = attractionConverter.toAttraction(request);
+        attractionMapper.insert(entity);
+
+        return getAttractionDetail(entity.getId());
     }
 }

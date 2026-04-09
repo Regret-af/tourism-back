@@ -4,15 +4,12 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
+import com.af.tourism.pojo.vo.admin.UserStatusUpdateDTO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminUserService;
-import com.af.tourism.service.app.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -44,5 +41,19 @@ public class AdminUserController {
     public ApiResponse<UserDetailForAdminVO> getUserDetail(
             @PathVariable("userId") @Min(value = 1, message = "userId不能小于1") Long userId) {
         return ApiResponse.ok(adminUserService.getUserDetail(userId));
+    }
+
+    /**
+     * 修改用户状态
+     * @param userId 用户 id
+     * @param userStatusUpdateDTO 用户状态
+     * @return 成功信息
+     */
+    @PatchMapping("/users/{userId}/status")
+    public ApiResponse updateUserStatus(
+            @PathVariable("userId") @Min(value = 1, message = "userId不能小于1") Long userId,
+            @Valid @RequestBody UserStatusUpdateDTO userStatusUpdateDTO) {
+        adminUserService.updateUserStatus(userId, userStatusUpdateDTO.getStatus());
+        return ApiResponse.ok();
     }
 }

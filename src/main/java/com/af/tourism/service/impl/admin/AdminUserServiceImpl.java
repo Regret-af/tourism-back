@@ -1,14 +1,19 @@
 package com.af.tourism.service.impl.admin;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.enums.RoleCode;
+import com.af.tourism.common.enums.UserStatus;
 import com.af.tourism.exception.BusinessException;
+import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
+import com.af.tourism.pojo.entity.User;
+import com.af.tourism.pojo.entity.UserRole;
 import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
+import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.admin.AdminUserService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -17,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +30,7 @@ import java.util.List;
 public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
 
     /**
      * 获取用户列表
@@ -78,5 +85,64 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         return detail;
+    }
+
+    /**
+     * 修改用户状态
+     * @param userId 用户 id
+     * @param status 用户状态
+     */
+    @Override
+    public void updateUserStatus(Long userId, Integer status) {
+        // 1.查询用户是否存在
+        User targetUser = userMapper.selectById(userId);
+        if (targetUser == null) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "该用户不存在");
+        }
+
+        // 2. 校验状态是否合法
+        if (!UserStatus.isEnabled(status) && !UserStatus.isDisabled(status)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "用户状态不合法");
+        }
+
+        // 3. 禁止修改自己
+        Long currentUserId = AuthContext.requireCurrentUserId();
+        if (Objects.equals(currentUserId, userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "不能修改自己的状态");
+        }
+
+        // 4.查询状态是否正确，保证幂等性
+        if (Objects.equals(targetUser.getStatus(), status)) {
+            return;
+        }
+
+        // 5.查询当前用户是否有权限修改用户状态
+        int currentUserMaxRoleLevel = getUserMaxRoleLevel(currentUserId);
+        int targetUserMaxRoleLevel = getUserMaxRoleLevel(userId);
+
+        if (currentUserMaxRoleLevel <= targetUserMaxRoleLevel) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "只能修改权限低于自己的用户状态");
+        }
+
+        // 6.更新状态
+        targetUser.setStatus(status);
+        userMapper.updateById(targetUser);
+    }
+
+    /**
+     * 获取用户当前启用角色中的最大权限等级
+     */
+    private int getUserMaxRoleLevel(Long userId) {
+        List<String> roleCodes = roleMapper.selectRoleCodesByUserId(userId);
+        if (roleCodes == null || roleCodes.isEmpty()) {
+            return 0;
+        }
+
+        return roleCodes.stream()
+                .map(RoleCode::fromCode)
+                .filter(Objects::nonNull)
+                .mapToInt(RoleCode::getValue)
+                .max()
+                .orElse(0);
     }
 }

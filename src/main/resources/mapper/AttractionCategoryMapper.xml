@@ -55,6 +55,19 @@
         ORDER BY sort_order ASC, id ASC
     </select>
 
+    <select id="selectAdminCategoryDetailById" resultMap="AdminAttractionCategoryMap">
+        SELECT id,
+               name,
+               code,
+               sort_order,
+               status,
+               created_at,
+               updated_at
+        FROM attraction_categories
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
     <select id="selectAttractionStatsByCategoryIds" resultMap="AdminAttractionCategoryStatsMap">
         SELECT category_id,
                COUNT(1) AS attraction_count

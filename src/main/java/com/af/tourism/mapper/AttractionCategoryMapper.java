@@ -30,6 +30,13 @@ public interface AttractionCategoryMapper extends BaseMapper<AttractionCategory>
     List<AttractionCategoryForAdminVO> selectAdminCategoryList(@Param("queryDTO") AttractionCategoryQueryDTO queryDTO);
 
     /**
+     * 管理端景点分类详情
+     * @param id 分类 id
+     * @return 分类详情
+     */
+    AttractionCategoryForAdminVO selectAdminCategoryDetailById(@Param("id") Long id);
+
+    /**
      * 批量查询分类下景点数量
      * @param categoryIds 分类 id 列表
      * @return 分类统计列表

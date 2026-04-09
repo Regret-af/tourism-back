@@ -1,5 +1,7 @@
 package com.af.tourism.service.impl.admin;
 
+import com.af.tourism.common.ErrorCode;
+import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryQueryDTO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryForAdminVO;
@@ -36,14 +38,14 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         // 1.开启分页查询
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
-        // 2.进行查询
+        // 2.查询景点分类列表
         List<AttractionCategoryForAdminVO> list = attractionCategoryMapper.selectAdminCategoryList(queryDTO);
         PageInfo<AttractionCategoryForAdminVO> pageInfo = new PageInfo<>(list);
 
-        // 3.填充统计信息
+        // 3.填充统计字段
         fillAttractionCount(list);
 
-        // 4.封装返回值
+        // 4.构建返回值
         PageResponse<AttractionCategoryForAdminVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());
@@ -54,30 +56,43 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
     }
 
     /**
-     * 填充统计信息
-     * @param list 景点类型列表
+     * 获取管理端景点分类详情
+     * @param id 分类 id
+     * @return 分类详情
+     */
+    @Override
+    public AttractionCategoryForAdminVO getCategoryDetail(Long id) {
+        // 1.查询景点分类详情
+        AttractionCategoryForAdminVO detail = attractionCategoryMapper.selectAdminCategoryDetailById(id);
+        if (detail == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "景点分类不存在");
+        }
+
+        // 2.填充统计字段
+        fillAttractionCount(Collections.singletonList(detail));
+        return detail;
+    }
+
+    /**
+     * 填充景点数量统计
+     * @param list 分类列表
      */
     private void fillAttractionCount(List<AttractionCategoryForAdminVO> list) {
-        // 1.查看是否为空
         if (list == null || list.isEmpty()) {
             return;
         }
 
-        // 2.构建景点类型 id 集合
         List<Long> categoryIds = list.stream()
                 .map(AttractionCategoryForAdminVO::getId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-
         if (categoryIds.isEmpty()) {
             return;
         }
 
-        // 3.批量查询分类下景点数量
         List<AttractionCategoryStatsForAdminVO> statsList =
                 attractionCategoryMapper.selectAttractionStatsByCategoryIds(categoryIds);
 
-        // 4.存入VO实体
         Map<Long, Long> statsMap = (statsList == null ? Collections.<AttractionCategoryStatsForAdminVO>emptyList() : statsList)
                 .stream()
                 .collect(Collectors.toMap(

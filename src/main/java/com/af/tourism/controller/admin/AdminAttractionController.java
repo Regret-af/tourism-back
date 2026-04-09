@@ -3,6 +3,8 @@ package com.af.tourism.controller.admin;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.admin.AdminAttractionCreateDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionQueryDTO;
+import com.af.tourism.pojo.dto.admin.AdminAttractionStatusUpdateDTO;
+import com.af.tourism.pojo.dto.admin.AdminAttractionUpdateDTO;
 import com.af.tourism.pojo.vo.admin.AttractionDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -10,8 +12,10 @@ import com.af.tourism.service.admin.AdminAttractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -59,5 +63,32 @@ public class AdminAttractionController {
     @PostMapping("/attractions")
     public ApiResponse<AttractionDetailForAdminVO> createAttraction(@Valid @RequestBody AdminAttractionCreateDTO request) {
         return ApiResponse.ok(adminAttractionService.createAttraction(request));
+    }
+
+    /**
+     * 编辑景点
+     * @param id 景点 id
+     * @param request 编辑请求
+     * @return 编辑后的景点详情
+     */
+    @PutMapping("/attractions/{id}")
+    public ApiResponse<AttractionDetailForAdminVO> updateAttraction(
+            @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
+            @Valid @RequestBody AdminAttractionUpdateDTO request) {
+        return ApiResponse.ok(adminAttractionService.updateAttraction(id, request));
+    }
+
+    /**
+     * 修改景点状态
+     * @param id 景点 id
+     * @param request 状态修改请求
+     * @return 成功信息
+     */
+    @PatchMapping("/attractions/{id}/status")
+    public ApiResponse<Void> updateAttractionStatus(
+            @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
+            @Valid @RequestBody AdminAttractionStatusUpdateDTO request) {
+        adminAttractionService.updateAttractionStatus(id, request);
+        return ApiResponse.ok();
     }
 }

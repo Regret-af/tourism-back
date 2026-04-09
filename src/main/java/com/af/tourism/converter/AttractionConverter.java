@@ -1,6 +1,7 @@
 package com.af.tourism.converter;
 
 import com.af.tourism.pojo.dto.admin.AdminAttractionCreateDTO;
+import com.af.tourism.pojo.dto.admin.AdminAttractionUpdateDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryCreateDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryUpdateDTO;
 import com.af.tourism.pojo.entity.Attraction;
@@ -23,4 +24,6 @@ public interface AttractionConverter {
     AttractionCategory toAttractionCategory(AttractionCategoryCreateDTO attractionCategoryCreateDTO);
 
     Attraction toAttraction(AdminAttractionCreateDTO adminAttractionCreateDTO);
+
+    Attraction toAttraction(AdminAttractionUpdateDTO adminAttractionUpdateDTO);
 }

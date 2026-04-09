@@ -7,6 +7,8 @@ import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.pojo.dto.admin.AdminAttractionCreateDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionQueryDTO;
+import com.af.tourism.pojo.dto.admin.AdminAttractionStatusUpdateDTO;
+import com.af.tourism.pojo.dto.admin.AdminAttractionUpdateDTO;
 import com.af.tourism.pojo.entity.Attraction;
 import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.vo.admin.AttractionDetailForAdminVO;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 管理端景点服务实现
@@ -105,5 +108,78 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         attractionMapper.insert(entity);
 
         return getAttractionDetail(entity.getId());
+    }
+
+    /**
+     * 编辑景点
+     * @param id 景点 id
+     * @param request 编辑请求
+     * @return 编辑后的景点详情
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AttractionDetailForAdminVO updateAttraction(Long id, AdminAttractionUpdateDTO request) {
+        // 1.校验参数
+        // 1.1.获取景点信息，判断是否存在
+        Attraction entity = attractionMapper.selectById(id);
+        if (entity == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "景点不存在");
+        }
+
+        // 1.2.获取分类信息，判断是否存在该分类
+        AttractionCategory category = attractionCategoryMapper.selectById(request.getCategoryId());
+        if (category == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "景点分类不存在");
+        }
+
+        // 1.3.校验非空字段
+        if (!StringUtils.hasText(request.getName()) || !StringUtils.hasText(request.getAddressDetail())) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "景点名称或详细地址不能为空");
+        }
+
+        // 1.4.校验景点状态的合法性
+        Integer status = request.getStatus();
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "景点状态不合法");
+        }
+
+        // 2.更新数据
+        Attraction updateEntity = attractionConverter.toAttraction(request);
+        updateEntity.setId(id);
+        attractionMapper.updateById(updateEntity);
+
+        return getAttractionDetail(id);
+    }
+
+    /**
+     * 修改景点状态
+     * @param id 景点 id
+     * @param request 状态修改请求
+     * @return 修改后的景点详情
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateAttractionStatus(Long id, AdminAttractionStatusUpdateDTO request) {
+        // 1.校验参数
+        // 1.1.校验景点是否存在并获取景点实体
+        Attraction entity = attractionMapper.selectById(id);
+        if (entity == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "景点不存在");
+        }
+
+        // 1.2.校验景点状态的合法性
+        Integer status = request.getStatus();
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "景点状态不合法");
+        }
+
+        // 1.3.校验幂等性
+        if (Objects.equals(entity.getStatus(), request.getStatus())) {
+            return;
+        }
+
+        // 2.修改景点状态
+        entity.setStatus(status);
+        attractionMapper.updateById(entity);
     }
 }

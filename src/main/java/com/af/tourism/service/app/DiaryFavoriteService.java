@@ -1,4 +1,4 @@
-package com.af.tourism.service;
+package com.af.tourism.service.app;
 
 import com.af.tourism.pojo.dto.app.FavoriteDiaryQueryDTO;
 import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;

@@ -1,10 +1,10 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.impl.app;
 
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.vo.app.AttractionCategoryVO;
-import com.af.tourism.service.AttractionCategoryService;
+import com.af.tourism.service.app.AttractionCategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,10 @@
-package com.af.tourism.service;
+package com.af.tourism.service.app;
 
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.dto.app.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.app.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
 import com.af.tourism.pojo.vo.app.UserPublicVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -50,11 +51,4 @@ public interface UserService {
      * @return 操作结果
      */
     Boolean updatePassword(Long userId, @Valid UserPasswordUpdateDTO passwordUpdateDTO);
-
-    /**
-     * 获取用户列表
-     * @param queryDTO 查询参数
-     * @return 符合条件的用户列表
-     */
-    PageResponse<UserForAdminVO> listUsers(@Valid UserQueryDTO queryDTO);
 }

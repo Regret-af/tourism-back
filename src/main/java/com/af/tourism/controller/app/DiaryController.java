@@ -11,7 +11,7 @@ import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
 import com.af.tourism.securitylite.AuthContext;
-import com.af.tourism.service.DiaryService;
+import com.af.tourism.service.app.DiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;

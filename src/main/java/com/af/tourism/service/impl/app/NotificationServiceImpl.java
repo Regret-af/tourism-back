@@ -1,4 +1,4 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.exception.BusinessException;
@@ -9,7 +9,7 @@ import com.af.tourism.pojo.vo.app.NotificationReadVO;
 import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
 import com.af.tourism.pojo.vo.app.NotificationVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.service.NotificationService;
+import com.af.tourism.service.app.NotificationService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;

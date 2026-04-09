@@ -1,4 +1,4 @@
-package com.af.tourism.service;
+package com.af.tourism.service.app;
 
 import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.dto.app.RegisterDTO;
@@ -21,18 +21,4 @@ public interface AuthService {
      * @return 注册响应
      */
     RegisterVO register(RegisterDTO request);
-
-    /**
-     * 管理员登录
-     * @param request 登录参数
-     * @return 登录信息响应
-     */
-    LoginVO adminLogin(LoginDTO request);
-
-    /**
-     * 获取当前管理员信息
-     * @param userId 当前登录管理员 id
-     * @return 当前管理员信息
-     */
-    UserVO getCurrentAdminProfile(Long userId);
 }

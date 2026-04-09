@@ -17,49 +17,54 @@
         <result property="roleCodes" column="role_codes"/>
     </resultMap>
 
+    <resultMap id="AdminUserDetailMap" type="com.af.tourism.pojo.vo.admin.UserDetailForAdminVO" extends="AdminUserListMap">
+    </resultMap>
+
+    <resultMap id="AdminUserStatsMap" type="com.af.tourism.pojo.vo.admin.UserStatsForAdminVO">
+        <result property="commentCount" column="commentCount"/>
+        <result property="diaryCount" column="diaryCount"/>
+        <result property="uploadCount" column="uploadCount"/>
+    </resultMap>
+
+    <sql id="AdminUserBaseColumns">
+        u.id,
+    u.email,
+    u.username,
+    u.nickname,
+    u.avatar_url,
+    u.bio,
+    u.status,
+    u.created_at,
+    u.updated_at
+    </sql>
+
+    <sql id="AdminUserRoleCodesColumn">
+        GROUP_CONCAT(DISTINCT r.role_code ORDER BY r.id SEPARATOR ',') AS role_codes
+    </sql>
+
+
     <select id="selectByEmail" resultType="com.af.tourism.pojo.entity.User">
-        SELECT id,
-               email,
-               username,
-               password_hash,
-               nickname,
-               avatar_url,
-               bio,
-               status,
-               created_at,
-               updated_at
-        FROM users
+        SELECT
+            <include refid="AdminUserBaseColumns"/>,
+            u.password_hash
+        FROM users u
         WHERE email = #{email}
         LIMIT 1
     </select>
 
     <select id="selectByUsername" resultType="com.af.tourism.pojo.entity.User">
-        SELECT id,
-               email,
-               username,
-               password_hash,
-               nickname,
-               avatar_url,
-               bio,
-               status,
-               created_at,
-               updated_at
-        FROM users
+        SELECT
+            <include refid="AdminUserBaseColumns"/>,
+            u.password_hash
+        FROM users u
         WHERE username = #{username}
         LIMIT 1
     </select>
 
     <select id="selectUserList" resultMap="AdminUserListMap">
-        SELECT u.id,
-               u.email,
-               u.username,
-               u.nickname,
-               u.avatar_url,
-               u.bio,
-               u.status,
-               u.created_at,
-               u.updated_at,
-               GROUP_CONCAT(DISTINCT r.role_code ORDER BY r.id SEPARATOR ',') AS role_codes
+        SELECT
+            <include refid="AdminUserBaseColumns"/>,
+            <include refid="AdminUserRoleCodesColumn"/>
         FROM users u
         LEFT JOIN user_roles ur ON ur.user_id = u.id
         LEFT JOIN roles r ON r.id = ur.role_id AND r.status = 1
@@ -91,16 +96,38 @@
                 AND u.created_at &lt;= #{queryDTO.createdEnd}
             </if>
         </where>
-        GROUP BY u.id,
-                 u.email,
-                 u.username,
-                 u.nickname,
-                 u.avatar_url,
-                 u.bio,
-                 u.status,
-                 u.created_at,
-                 u.updated_at
+        GROUP BY <include refid="AdminUserBaseColumns"/>
         ORDER BY u.created_at DESC, u.id DESC
+    </select>
+
+    <select id="selectUserDetailById" resultMap="AdminUserDetailMap">
+        SELECT
+            <include refid="AdminUserBaseColumns"/>,
+            <include refid="AdminUserRoleCodesColumn"/>
+        FROM users u
+        LEFT JOIN user_roles ur ON ur.user_id = u.id
+        LEFT JOIN roles r ON r.id = ur.role_id AND r.status = 1
+        WHERE u.id = #{userId}
+        GROUP BY <include refid="AdminUserBaseColumns"/>
+    </select>
+
+    <select id="selectUserStatsById" resultMap="AdminUserStatsMap">
+        SELECT
+            (
+                SELECT COUNT(1)
+                FROM travel_diaries td
+                WHERE td.user_id = #{userId}
+            ) AS diaryCount,
+            (
+                SELECT COUNT(1)
+                FROM diary_comments dc
+                WHERE dc.user_id = #{userId}
+            ) AS commentCount,
+            (
+                SELECT COUNT(1)
+                FROM uploaded_files uf
+                WHERE uf.user_id = #{userId}
+            ) AS uploadCount
     </select>
 
 </mapper>

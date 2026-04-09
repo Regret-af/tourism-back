@@ -5,7 +5,7 @@ import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.common.UserVO;
 import com.af.tourism.securitylite.AuthContext;
-import com.af.tourism.service.AuthService;
+import com.af.tourism.service.admin.AdminAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,7 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class AdminAuthController {
 
-    private final AuthService authService;
+    private final AdminAuthService adminAuthService;
 
     /**
      * 管理员登录
@@ -27,7 +27,7 @@ public class AdminAuthController {
      */
     @PostMapping("/auth/login")
     public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO loginDTO) {
-        return ApiResponse.ok(authService.adminLogin(loginDTO));
+        return ApiResponse.ok(adminAuthService.adminLogin(loginDTO));
     }
 
     /**
@@ -37,7 +37,7 @@ public class AdminAuthController {
     @GetMapping("/auth/me")
     public ApiResponse<UserVO> me() {
         Long userId = AuthContext.requireCurrentUserId();
-        return ApiResponse.ok(authService.getCurrentAdminProfile(userId));
+        return ApiResponse.ok(adminAuthService.getCurrentAdminProfile(userId));
     }
 
     /**

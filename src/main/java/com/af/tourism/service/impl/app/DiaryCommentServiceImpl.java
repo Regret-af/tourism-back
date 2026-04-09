@@ -1,4 +1,4 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.converter.DiaryConverter;
@@ -13,7 +13,7 @@ import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
 import com.af.tourism.pojo.vo.app.DiaryCommentVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.service.DiaryCommentService;
+import com.af.tourism.service.app.DiaryCommentService;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.UserCheckService;
 import com.github.pagehelper.PageHelper;

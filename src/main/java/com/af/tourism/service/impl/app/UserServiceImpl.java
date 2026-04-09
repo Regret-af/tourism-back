@@ -1,4 +1,4 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.converter.AuthConverter;
@@ -10,11 +10,12 @@ import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.dto.app.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.app.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
 import com.af.tourism.pojo.vo.app.UserPublicVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.pojo.vo.common.UserVO;
-import com.af.tourism.service.UserService;
+import com.af.tourism.service.app.UserService;
 import com.af.tourism.service.helper.UserCheckService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -130,29 +131,5 @@ public class UserServiceImpl implements UserService {
         userMapper.updateById(user);
 
         return true;
-    }
-
-    /**
-     * 获取用户列表
-     * @param queryDTO 查询参数
-     * @return 符合条件的用户列表
-     */
-    @Override
-    public PageResponse<UserForAdminVO> listUsers(UserQueryDTO queryDTO) {
-        // 1.开启分页查询
-        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-
-        // 2.进行查询
-        List<UserForAdminVO> list = userMapper.selectUserList(queryDTO);
-        PageInfo<UserForAdminVO> pageInfo = new PageInfo<>(list);
-
-        // 3.封装返回值
-        PageResponse<UserForAdminVO> response = new PageResponse<>();
-        response.setList(list);
-        response.setPageNum(pageInfo.getPageNum());
-        response.setPageSize(pageInfo.getPageSize());
-        response.setTotal(pageInfo.getTotal());
-
-        return response;
     }
 }

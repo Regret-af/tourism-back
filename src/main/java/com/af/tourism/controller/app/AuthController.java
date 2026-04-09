@@ -8,7 +8,7 @@ import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.dto.app.RegisterDTO;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.app.RegisterVO;
-import com.af.tourism.service.AuthService;
+import com.af.tourism.service.app.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;

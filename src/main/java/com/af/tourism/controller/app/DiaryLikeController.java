@@ -6,7 +6,7 @@ import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.securitylite.AuthContext;
-import com.af.tourism.service.DiaryLikeService;
+import com.af.tourism.service.app.DiaryLikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;

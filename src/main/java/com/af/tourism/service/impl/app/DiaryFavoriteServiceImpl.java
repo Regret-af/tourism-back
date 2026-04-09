@@ -1,4 +1,4 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.impl.app;
 
 import com.af.tourism.mapper.DiaryFavoriteMapper;
 import com.af.tourism.mapper.DiaryMapper;
@@ -8,7 +8,7 @@ import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryFavoriteVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.service.DiaryFavoriteService;
+import com.af.tourism.service.app.DiaryFavoriteService;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.UserCheckService;
 import com.github.pagehelper.PageHelper;

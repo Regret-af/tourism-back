@@ -7,7 +7,7 @@ import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.app.FileUploadDTO;
 import com.af.tourism.pojo.vo.app.FileUploadVO;
 import com.af.tourism.securitylite.AuthContext;
-import com.af.tourism.service.FileService;
+import com.af.tourism.service.app.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;

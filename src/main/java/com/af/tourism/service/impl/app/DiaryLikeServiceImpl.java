@@ -1,11 +1,11 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.impl.app;
 
 import com.af.tourism.mapper.DiaryLikeMapper;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.entity.DiaryLike;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
-import com.af.tourism.service.DiaryLikeService;
+import com.af.tourism.service.app.DiaryLikeService;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;

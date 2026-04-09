@@ -2,7 +2,9 @@ package com.af.tourism.mapper;
 
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
+import com.af.tourism.pojo.vo.admin.UserStatsForAdminVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -35,4 +37,18 @@ public interface UserMapper extends BaseMapper<User> {
      * @return 符合条件的用户列表
      */
     List<UserForAdminVO> selectUserList(@Param("queryDTO") UserQueryDTO queryDTO);
+
+    /**
+     * 查询用户基础详情
+     * @param userId 用户 id
+     * @return 用户基础详情
+     */
+    UserDetailForAdminVO selectUserDetailById(@Param("userId") Long userId);
+
+    /**
+     * 查询用户统计详情
+     * @param userId 用户 id
+     * @return 用户统计详情
+     */
+    UserStatsForAdminVO selectUserStatsById(Long userId);
 }

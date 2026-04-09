@@ -1,4 +1,4 @@
-package com.af.tourism.service.impl;
+package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.common.enums.FileBizType;
@@ -9,7 +9,7 @@ import com.af.tourism.mapper.UploadedFileMapper;
 import com.af.tourism.pojo.dto.app.FileUploadDTO;
 import com.af.tourism.pojo.entity.UploadedFile;
 import com.af.tourism.pojo.vo.app.FileUploadVO;
-import com.af.tourism.service.FileService;
+import com.af.tourism.service.app.FileService;
 import com.af.tourism.storage.ObjectStorageService;
 import com.af.tourism.storage.StorageUploadResult;
 import lombok.RequiredArgsConstructor;

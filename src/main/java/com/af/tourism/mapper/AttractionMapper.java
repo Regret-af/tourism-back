@@ -24,7 +24,7 @@ public interface AttractionMapper extends BaseMapper<Attraction> {
 
     /**
      * 根据 id 查询启用景点的信息
-     * @param attractionId
+     * @param attractionId 景点 id
      * @return 景点信息
      */
     AttractionDetailVO selectAttractionDetail(@Param("attractionId") Long attractionId);

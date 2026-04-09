@@ -1,17 +1,24 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.AttractionCategoryMapper;
+import com.af.tourism.pojo.dto.admin.AttractionCategoryCreateDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryQueryDTO;
+import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionCategoryService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +35,8 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
 
     private final AttractionCategoryMapper attractionCategoryMapper;
 
+    private final AttractionConverter attractionConverter;
+
     /**
      * 获取管理端景点分类列表
      * @param queryDTO 查询参数
@@ -35,17 +44,13 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
      */
     @Override
     public PageResponse<AttractionCategoryForAdminVO> listCategories(AttractionCategoryQueryDTO queryDTO) {
-        // 1.开启分页查询
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
-        // 2.查询景点分类列表
         List<AttractionCategoryForAdminVO> list = attractionCategoryMapper.selectAdminCategoryList(queryDTO);
         PageInfo<AttractionCategoryForAdminVO> pageInfo = new PageInfo<>(list);
 
-        // 3.填充统计字段
         fillAttractionCount(list);
 
-        // 4.构建返回值
         PageResponse<AttractionCategoryForAdminVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());
@@ -62,15 +67,48 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
      */
     @Override
     public AttractionCategoryForAdminVO getCategoryDetail(Long id) {
-        // 1.查询景点分类详情
         AttractionCategoryForAdminVO detail = attractionCategoryMapper.selectAdminCategoryDetailById(id);
         if (detail == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "景点分类不存在");
         }
 
-        // 2.填充统计字段
         fillAttractionCount(Collections.singletonList(detail));
         return detail;
+    }
+
+    /**
+     * 新增景点分类
+     * @param request 新增请求
+     * @return 新增后的分类详情
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AttractionCategoryForAdminVO createCategory(AttractionCategoryCreateDTO request) {
+        // 1.校验参数
+        if (!StringUtils.hasText(request.getName()) || !StringUtils.hasText(request.getCode())) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "分类名称或编码不能为空");
+        }
+
+        // 2.查询 code 属性是否已经存在
+        AttractionCategory exists = attractionCategoryMapper.selectOne(
+                new LambdaQueryWrapper<AttractionCategory>()
+                        .eq(AttractionCategory::getCode, request.getCode())
+                        .last("LIMIT 1")
+        );
+        if (exists != null) {
+            throw new BusinessException(ErrorCode.CONFLICT, "分类编码已存在");
+        }
+
+        // 3.转为实体，直接插入
+        AttractionCategory entity = attractionConverter.toAttractionConverter(request);
+
+        try {
+            attractionCategoryMapper.insert(entity);
+        } catch (DuplicateKeyException ex) {
+            throw new BusinessException(ErrorCode.CONFLICT, "分类编码已存在");
+        }
+
+        return getCategoryDetail(entity.getId());
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.af.tourism.service.admin;
 
+import com.af.tourism.pojo.dto.admin.AttractionCategoryCreateDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryQueryDTO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -24,4 +25,11 @@ public interface AdminAttractionCategoryService {
      * @return 分类详情
      */
     AttractionCategoryForAdminVO getCategoryDetail(Long id);
+
+    /**
+     * 新增景点分类
+     * @param request 新增请求
+     * @return 新增后的分类详情
+     */
+    AttractionCategoryForAdminVO createCategory(@Valid AttractionCategoryCreateDTO request);
 }

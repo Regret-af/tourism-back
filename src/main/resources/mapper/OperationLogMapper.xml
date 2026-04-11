@@ -2,6 +2,24 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.OperationLogMapper">
 
+    <resultMap id="AdminOperationLogListMap" type="com.af.tourism.pojo.vo.admin.OperationLogForAdminVO">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userNickname" column="user_nickname"/>
+        <result property="module" column="module"/>
+        <result property="action" column="action"/>
+        <result property="bizId" column="biz_id"/>
+        <result property="description" column="description"/>
+        <result property="source" column="source"/>
+        <result property="requestIp" column="request_ip"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="AdminOperationLogDetailMap" type="com.af.tourism.pojo.vo.admin.OperationLogDetailForAdminVO"
+               extends="AdminOperationLogListMap">
+        <result property="userAgent" column="user_agent"/>
+    </resultMap>
+
     <select id="selectRecentByUserId" resultType="com.af.tourism.pojo.entity.OperationLog">
         SELECT id,
                user_id,
@@ -9,6 +27,7 @@
                action,
                biz_id,
                description,
+               source,
                request_ip,
                user_agent,
                created_at
@@ -17,4 +36,64 @@
         ORDER BY created_at DESC, id DESC
         LIMIT #{limit}
     </select>
+
+    <select id="selectAdminOperationLogs" resultMap="AdminOperationLogListMap">
+        SELECT
+            l.id,
+            l.user_id,
+            u.nickname AS user_nickname,
+            l.module,
+            l.action,
+            l.biz_id,
+            l.description,
+            l.source,
+            l.request_ip,
+            l.created_at
+        FROM operation_logs l
+        LEFT JOIN users u ON u.id = l.user_id
+        <where>
+            <if test="queryDTO.userId != null">
+                AND l.user_id = #{queryDTO.userId}
+            </if>
+            <if test="queryDTO.module != null">
+                AND l.module = #{queryDTO.module}
+            </if>
+            <if test="queryDTO.action != null">
+                AND l.action = #{queryDTO.action}
+            </if>
+            <if test="queryDTO.source != null">
+                AND l.source = #{queryDTO.source}
+            </if>
+            <if test="queryDTO.requestIp != null and queryDTO.requestIp != ''">
+                AND l.request_ip LIKE CONCAT('%', #{queryDTO.requestIp}, '%')
+            </if>
+            <if test="queryDTO.createdStart != null">
+                AND l.created_at &gt;= #{queryDTO.createdStart}
+            </if>
+            <if test="queryDTO.createdEnd != null">
+                AND l.created_at &lt;= #{queryDTO.createdEnd}
+            </if>
+        </where>
+        ORDER BY l.created_at DESC, l.id DESC
+    </select>
+
+    <select id="selectAdminOperationLogDetailById" resultMap="AdminOperationLogDetailMap">
+        SELECT
+            l.id,
+            l.user_id,
+            u.nickname AS user_nickname,
+            l.module,
+            l.action,
+            l.biz_id,
+            l.description,
+            l.source,
+            l.request_ip,
+            l.user_agent,
+            l.created_at
+        FROM operation_logs l
+        LEFT JOIN users u ON u.id = l.user_id
+        WHERE l.id = #{id}
+        LIMIT 1
+    </select>
+
 </mapper>

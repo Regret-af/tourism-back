@@ -6,11 +6,12 @@ import com.af.tourism.common.enums.UserStatus;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
+import com.af.tourism.pojo.dto.admin.UserOptionQueryDTO;
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.entity.User;
-import com.af.tourism.pojo.entity.UserRole;
 import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
+import com.af.tourism.pojo.vo.admin.UserOptionForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.securitylite.AuthContext;
@@ -54,6 +55,16 @@ public class AdminUserServiceImpl implements AdminUserService {
         response.setTotal(pageInfo.getTotal());
 
         return response;
+    }
+
+    /**
+     * 获取用户下拉选项
+     * @param queryDTO 查询参数
+     * @return 用户下拉选项列表
+     */
+    @Override
+    public List<UserOptionForAdminVO> listUserOptions(UserOptionQueryDTO queryDTO) {
+        return userMapper.selectUserOptions(queryDTO);
     }
 
     /**

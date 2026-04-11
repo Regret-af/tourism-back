@@ -1,9 +1,11 @@
 package com.af.tourism.mapper;
 
+import com.af.tourism.pojo.dto.admin.UserOptionQueryDTO;
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
+import com.af.tourism.pojo.vo.admin.UserOptionForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserStatsForAdminVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
@@ -12,14 +14,14 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * 用户表 Mapper。
+ * 用户表 Mapper
  */
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
     /**
      * 通过 Email 查询用户
-     * @param email  邮箱
+     * @param email 邮箱
      * @return 用户实体
      */
     User selectByEmail(@Param("email") String email);
@@ -39,6 +41,13 @@ public interface UserMapper extends BaseMapper<User> {
     List<UserForAdminVO> selectUserList(@Param("queryDTO") UserQueryDTO queryDTO);
 
     /**
+     * 查询用户下拉选项
+     * @param queryDTO 查询条件
+     * @return 用户下拉选项列表
+     */
+    List<UserOptionForAdminVO> selectUserOptions(@Param("queryDTO") UserOptionQueryDTO queryDTO);
+
+    /**
      * 查询用户基础详情
      * @param userId 用户 id
      * @return 用户基础详情
@@ -50,5 +59,5 @@ public interface UserMapper extends BaseMapper<User> {
      * @param userId 用户 id
      * @return 用户统计详情
      */
-    UserStatsForAdminVO selectUserStatsById(Long userId);
+    UserStatsForAdminVO selectUserStatsById(@Param("userId") Long userId);
 }

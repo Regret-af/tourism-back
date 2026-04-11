@@ -88,10 +88,10 @@ public class OperationLogServiceImpl implements OperationLogService {
         }
 
         if (requestURI.startsWith("/api/v1/admin")) {
-            return OperationLogSource.ADMIN.name();
+            return OperationLogSource.ADMIN.getValue();
         }
 
-        return OperationLogSource.APP.name();
+        return OperationLogSource.APP.getValue();
     }
 
     /**

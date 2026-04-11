@@ -35,8 +35,8 @@ public class OperationLogAspect {
 
         // 2.构造返回值，填充业务模块和操作
         OperationLogRecordDTO request = new OperationLogRecordDTO();
-        request.setModule(operationLogRecord.module().name());
-        request.setAction(operationLogRecord.action().name());
+        request.setModule(operationLogRecord.module().getValue());
+        request.setAction(operationLogRecord.action().getValue());
         request.setDescription(operationLogRecord.description());
 
         // 3.获取操作用户 id

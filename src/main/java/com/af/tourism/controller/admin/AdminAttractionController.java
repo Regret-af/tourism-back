@@ -1,6 +1,9 @@
 package com.af.tourism.controller.admin;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.admin.AdminAttractionCreateDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionQueryDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionStatusUpdateDTO;
@@ -65,6 +68,12 @@ public class AdminAttractionController {
      * @return 新增后的景点详情
      */
     @PostMapping("/attractions")
+    @OperationLogRecord(
+            module = OperationLogModule.ATTRACTION,
+            action = OperationLogAction.CREATE_ATTRACTION,
+            description = "新增景点",
+            bizIdField = "data.id"
+    )
     public ApiResponse<AttractionDetailForAdminVO> createAttraction(@Valid @RequestBody AdminAttractionCreateDTO request) {
         return ApiResponse.ok(adminAttractionService.createAttraction(request));
     }
@@ -76,6 +85,12 @@ public class AdminAttractionController {
      * @return 编辑后的景点详情
      */
     @PutMapping("/attractions/{id}")
+    @OperationLogRecord(
+            module = OperationLogModule.ATTRACTION,
+            action = OperationLogAction.UPDATE_ATTRACTION,
+            description = "编辑景点",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<AttractionDetailForAdminVO> updateAttraction(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody AdminAttractionUpdateDTO request) {
@@ -89,6 +104,12 @@ public class AdminAttractionController {
      * @return 成功信息
      */
     @PatchMapping("/attractions/{id}/status")
+    @OperationLogRecord(
+            module = OperationLogModule.ATTRACTION,
+            action = OperationLogAction.UPDATE_ATTRACTION_STATUS,
+            description = "修改景点状态",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<Void> updateAttractionStatus(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody AdminAttractionStatusUpdateDTO request) {

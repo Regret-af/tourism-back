@@ -7,6 +7,9 @@ public enum OperationLogModule {
     USER,
     ATTRACTION,
     DIARY,
-    FILE
+    FILE,
+    COMMENT,
+    ROLE,
+    ATTRACTION_CATEGORY
 
 }

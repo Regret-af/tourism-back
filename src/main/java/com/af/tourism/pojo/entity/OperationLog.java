@@ -29,6 +29,8 @@ public class OperationLog {
 
     private String description;
 
+    private String source;
+
     @TableField("request_ip")
     private String requestIp;
 

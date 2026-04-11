@@ -1,6 +1,9 @@
 package com.af.tourism.controller.admin;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.admin.AdminDiaryCommentQueryDTO;
 import com.af.tourism.pojo.dto.admin.DiaryCommentStatusUpdateDTO;
 import com.af.tourism.pojo.vo.admin.DiaryCommentForAdminVO;
@@ -46,6 +49,12 @@ public class AdminDiaryCommentController {
      * @return 成功信息
      */
     @PatchMapping("/diary-comments/{id}/status")
+    @OperationLogRecord(
+            module = OperationLogModule.COMMENT,
+            action = OperationLogAction.UPDATE_DIARY_COMMENT_STATUS,
+            description = "修改评论状态",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<Void> updateCommentStatus(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody DiaryCommentStatusUpdateDTO request) {

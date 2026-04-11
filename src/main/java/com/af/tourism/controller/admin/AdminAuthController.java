@@ -1,6 +1,9 @@
 package com.af.tourism.controller.admin;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.common.UserVO;
@@ -26,6 +29,12 @@ public class AdminAuthController {
      * @return 登录信息响应
      */
     @PostMapping("/auth/login")
+    @OperationLogRecord(
+            module = OperationLogModule.USER,
+            action = OperationLogAction.ADMIN_LOGIN,
+            description = "管理员登录",
+            userIdField = "data.user.id"
+    )
     public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO loginDTO) {
         return ApiResponse.ok(adminAuthService.adminLogin(loginDTO));
     }
@@ -45,6 +54,11 @@ public class AdminAuthController {
      * @return 退出登录信息
      */
     @PostMapping("/auth/logout")
+    @OperationLogRecord(
+            module = OperationLogModule.USER,
+            action = OperationLogAction.ADMIN_LOGOUT,
+            description = "管理员退出登录"
+    )
     public ApiResponse<Void> logout() {
         // 获取当前登录管理员信息，确保真实登录
         Long userId = AuthContext.requireCurrentUserId();

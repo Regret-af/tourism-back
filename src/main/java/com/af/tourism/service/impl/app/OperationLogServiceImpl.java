@@ -1,5 +1,6 @@
 package com.af.tourism.service.impl.app;
 
+import com.af.tourism.common.enums.OperationLogSource;
 import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.app.OperationLogService;
@@ -68,6 +69,29 @@ public class OperationLogServiceImpl implements OperationLogService {
         if (!StringUtils.hasText(request.getUserAgent())) {
             request.setUserAgent(httpServletRequest.getHeader("User-Agent"));
         }
+
+        // 5.填充来源端
+        if (!StringUtils.hasText(request.getSource())) {
+            request.setSource(resolveSource(httpServletRequest));
+        }
+    }
+
+    /**
+     * 填充来源段
+     * @param request Http请求对象
+     * @return 来源端
+     */
+    private String resolveSource(HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        if (!StringUtils.hasText(requestURI)) {
+            return null;
+        }
+
+        if (requestURI.startsWith("/api/v1/admin")) {
+            return OperationLogSource.ADMIN.name();
+        }
+
+        return OperationLogSource.APP.name();
     }
 
     /**

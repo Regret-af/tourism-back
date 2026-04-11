@@ -1,6 +1,9 @@
 package com.af.tourism.controller.admin;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
 import com.af.tourism.pojo.dto.admin.DiaryDeletedUpdateDTO;
 import com.af.tourism.pojo.dto.admin.DiaryStatusUpdateDTO;
@@ -59,6 +62,12 @@ public class AdminDiaryController {
      * @return 成功信息
      */
     @PatchMapping("/travel-diaries/{id}/status")
+    @OperationLogRecord(
+            module = OperationLogModule.DIARY,
+            action = OperationLogAction.UPDATE_DIARY_STATUS,
+            description = "修改日记状态",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<Void> updateDiaryStatus(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody DiaryStatusUpdateDTO request) {
@@ -73,6 +82,12 @@ public class AdminDiaryController {
      * @return 成功信息
      */
     @PatchMapping("/travel-diaries/{id}/deleted")
+    @OperationLogRecord(
+            module = OperationLogModule.DIARY,
+            action = OperationLogAction.UPDATE_DIARY_DELETED,
+            description = "修改日记逻辑删除状态",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<Void> updateDiaryDeleted(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody DiaryDeletedUpdateDTO request) {

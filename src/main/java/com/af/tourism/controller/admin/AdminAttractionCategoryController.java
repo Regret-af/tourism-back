@@ -1,6 +1,9 @@
 package com.af.tourism.controller.admin;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.admin.*;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -51,6 +54,12 @@ public class AdminAttractionCategoryController {
      * @return 新增后的景点分类详情
      */
     @PostMapping("/attraction-categories")
+    @OperationLogRecord(
+            module = OperationLogModule.ATTRACTION_CATEGORY,
+            action = OperationLogAction.CREATE_ATTRACTION_CATEGORY,
+            description = "新增景点分类",
+            bizIdField = "data.id"
+    )
     public ApiResponse<AttractionCategoryForAdminVO> createCategory(
             @Valid @RequestBody AttractionCategoryCreateDTO request) {
         return ApiResponse.ok(adminAttractionCategoryService.createCategory(request));
@@ -63,6 +72,12 @@ public class AdminAttractionCategoryController {
      * @return 编辑后的景点分类详情
      */
     @PutMapping("/attraction-categories/{id}")
+    @OperationLogRecord(
+            module = OperationLogModule.ATTRACTION_CATEGORY,
+            action = OperationLogAction.UPDATE_ATTRACTION_CATEGORY,
+            description = "编辑景点分类",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<AttractionCategoryForAdminVO> updateCategory(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody AttractionCategoryUpdateDTO request) {
@@ -76,6 +91,12 @@ public class AdminAttractionCategoryController {
      * @return 修改后的景点分类详情
      */
     @PatchMapping("/attraction-categories/{id}/status")
+    @OperationLogRecord(
+            module = OperationLogModule.ATTRACTION_CATEGORY,
+            action = OperationLogAction.UPDATE_ATTRACTION_CATEGORY_STATUS,
+            description = "修改景点分类状态",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<AttractionCategoryForAdminVO> updateCategoryStatus(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody AttractionCategoryStatusUpdateDTO request) {
@@ -89,6 +110,12 @@ public class AdminAttractionCategoryController {
      * @return 修改后的景点分类详情
      */
     @PatchMapping("/attraction-categories/{id}/sort-order")
+    @OperationLogRecord(
+            module = OperationLogModule.ATTRACTION_CATEGORY,
+            action = OperationLogAction.UPDATE_ATTRACTION_CATEGORY_SORT_ORDER,
+            description = "修改景点分类排序",
+            bizIdArgIndex = 0
+    )
     public ApiResponse<AttractionCategoryForAdminVO> updateCategorySortOrder(
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody AttractionCategorySortOrderUpdateDTO request) {

@@ -13,6 +13,7 @@ public class OperationLogRecordDTO {
     private String action;
     private Long bizId;
     private String description;
+    private String source;
     private String requestIp;
     private String userAgent;
 }

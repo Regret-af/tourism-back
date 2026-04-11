@@ -1,6 +1,9 @@
 package com.af.tourism.controller.admin;
 
+import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.enums.OperationLogAction;
+import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserForAdminVO;
@@ -50,6 +53,12 @@ public class AdminUserController {
      * @return 成功信息
      */
     @PatchMapping("/users/{userId}/status")
+    @OperationLogRecord(
+            module = OperationLogModule.USER,
+            action = OperationLogAction.UPDATE_USER_STATUS,
+            description = "修改用户状态",
+            bizIdArgIndex = 0
+    )
     public ApiResponse updateUserStatus(
             @PathVariable("userId") @Min(value = 1, message = "userId不能小于1") Long userId,
             @Valid @RequestBody UserStatusUpdateDTO userStatusUpdateDTO) {

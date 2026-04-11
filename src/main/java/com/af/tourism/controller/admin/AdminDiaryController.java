@@ -2,16 +2,19 @@ package com.af.tourism.controller.admin;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
+import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminDiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 
 /**
  * 管理端日记接口
@@ -33,5 +36,16 @@ public class AdminDiaryController {
     @GetMapping("/travel-diaries")
     public ApiResponse<PageResponse<DiaryForAdminVO>> listDiaries(@Valid AdminDiaryQueryDTO queryDTO) {
         return ApiResponse.ok(adminDiaryService.listDiaries(queryDTO));
+    }
+
+    /**
+     * 获取管理端日记详情
+     * @param id 日记 id
+     * @return 日记详情
+     */
+    @GetMapping("/travel-diaries/{id}")
+    public ApiResponse<DiaryDetailForAdminVO> getDiaryDetail(
+            @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id) {
+        return ApiResponse.ok(adminDiaryService.getDiaryDetail(id));
     }
 }

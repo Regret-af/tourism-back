@@ -1,6 +1,7 @@
 package com.af.tourism.service.admin;
 
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
+import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 
@@ -18,4 +19,11 @@ public interface AdminDiaryService {
      * @return 日记分页列表
      */
     PageResponse<DiaryForAdminVO> listDiaries(@Valid AdminDiaryQueryDTO queryDTO);
+
+    /**
+     * 获取管理端日记详情
+     * @param id 日记 id
+     * @return 日记详情
+     */
+    DiaryDetailForAdminVO getDiaryDetail(Long id);
 }

@@ -26,6 +26,31 @@
         </association>
     </resultMap>
 
+    <resultMap id="AdminDiaryDetailMap" type="com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="content_type_name" property="contentType"/>
+        <result column="visibility" property="visibility"/>
+        <result column="is_top" property="isTop"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <association property="author" javaType="com.af.tourism.pojo.vo.admin.DiaryAuthorForAdminVO">
+            <id column="author_id" property="id"/>
+            <result column="author_nickname" property="nickname"/>
+            <result column="author_avatar_url" property="avatarUrl"/>
+        </association>
+    </resultMap>
+
     <resultMap id="DiaryCardMap" type="com.af.tourism.pojo.vo.app.DiaryCardVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
@@ -244,6 +269,34 @@
             </if>
         </where>
         ORDER BY d.created_at DESC, d.id DESC
+    </select>
+
+    <select id="selectAdminDiaryDetail" resultMap="AdminDiaryDetailMap">
+        SELECT
+            d.id,
+            d.title,
+            d.summary,
+            d.cover_url,
+            d.content,
+            d.status,
+            d.is_deleted,
+            dc.name AS content_type_name,
+            d.visibility,
+            d.is_top,
+            d.view_count,
+            d.like_count,
+            d.favorite_count,
+            d.comment_count,
+            d.published_at,
+            d.created_at,
+            d.updated_at,
+            u.id AS author_id,
+            u.nickname AS author_nickname
+        FROM travel_diaries d
+        LEFT JOIN users u ON d.user_id = u.id
+        LEFT JOIN diary_category dc ON d.content_type = dc.id
+        WHERE d.id = #{diaryId}
+        LIMIT 1
     </select>
 
     <update id="updateCommentCount">

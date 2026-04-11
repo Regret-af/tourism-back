@@ -2,6 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.DiaryCommentMapper">
 
+    <resultMap id="AdminDiaryCommentMap" type="com.af.tourism.pojo.vo.admin.DiaryCommentForAdminVO">
+        <id column="id" property="id"/>
+        <result column="diary_id" property="diaryId"/>
+        <result column="diary_title" property="diaryTitle"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_nickname" property="userNickname"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="reply_to_user_id" property="replyToUserId"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
     <resultMap id="DiaryCommentMap" type="com.af.tourism.pojo.vo.app.DiaryCommentVO">
         <id column="id" property="id"/>
         <result column="content" property="content"/>
@@ -35,5 +49,45 @@
         WHERE diary_id = #{diaryId}
           AND status = 1
           AND parent_id IS NULL
+    </select>
+
+    <select id="selectAdminCommentList" resultMap="AdminDiaryCommentMap">
+        SELECT
+            c.id,
+            c.diary_id,
+            d.title AS diary_title,
+            c.user_id,
+            u.nickname AS user_nickname,
+            c.parent_id,
+            c.reply_to_user_id,
+            c.content,
+            c.status,
+            c.created_at,
+            c.updated_at
+        FROM diary_comments c
+        LEFT JOIN travel_diaries d ON c.diary_id = d.id
+        LEFT JOIN users u ON c.user_id = u.id
+        <where>
+            c.parent_id IS NULL
+            <if test="queryDTO.keyword != null and queryDTO.keyword != ''">
+                AND c.content LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+            </if>
+            <if test="queryDTO.diaryId != null">
+                AND c.diary_id = #{queryDTO.diaryId}
+            </if>
+            <if test="queryDTO.userId != null">
+                AND c.user_id = #{queryDTO.userId}
+            </if>
+            <if test="queryDTO.status != null">
+                AND c.status = #{queryDTO.status}
+            </if>
+            <if test="queryDTO.createdStart != null">
+                AND c.created_at &gt;= #{queryDTO.createdStart}
+            </if>
+            <if test="queryDTO.createdEnd != null">
+                AND c.created_at &lt;= #{queryDTO.createdEnd}
+            </if>
+        </where>
+        ORDER BY c.created_at DESC, c.id DESC
     </select>
 </mapper>

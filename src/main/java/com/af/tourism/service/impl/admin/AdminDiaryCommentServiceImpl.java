@@ -1,0 +1,93 @@
+package com.af.tourism.service.impl.admin;
+
+import com.af.tourism.common.ErrorCode;
+import com.af.tourism.exception.BusinessException;
+import com.af.tourism.mapper.DiaryCommentMapper;
+import com.af.tourism.mapper.DiaryMapper;
+import com.af.tourism.pojo.dto.admin.AdminDiaryCommentQueryDTO;
+import com.af.tourism.pojo.entity.DiaryComment;
+import com.af.tourism.pojo.vo.admin.DiaryCommentForAdminVO;
+import com.af.tourism.pojo.vo.common.PageResponse;
+import com.af.tourism.service.admin.AdminDiaryCommentService;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * 管理端评论服务实现
+ */
+@Service
+@RequiredArgsConstructor
+public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
+
+    private final DiaryCommentMapper diaryCommentMapper;
+    private final DiaryMapper diaryMapper;
+
+    /**
+     * 获取评论列表
+     * @param queryDTO 查询参数
+     * @return 评论分页列表
+     */
+    @Override
+    public PageResponse<DiaryCommentForAdminVO> listComments(AdminDiaryCommentQueryDTO queryDTO) {
+        // 1.开启分页查询
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+
+        // 2.进行查询
+        List<DiaryCommentForAdminVO> list = diaryCommentMapper.selectAdminCommentList(queryDTO);
+        PageInfo<DiaryCommentForAdminVO> pageInfo = new PageInfo<>(list);
+
+        // 3.封装返回值
+        PageResponse<DiaryCommentForAdminVO> response = new PageResponse<>();
+        response.setList(list);
+        response.setPageNum(pageInfo.getPageNum());
+        response.setPageSize(pageInfo.getPageSize());
+        response.setTotal(pageInfo.getTotal());
+
+        return response;
+    }
+
+    /**
+     * 修改评论状态
+     * @param id 评论 id
+     * @param status 目标状态
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateCommentStatus(Long id, Integer status) {
+        // 1.获取评论实体并进行非空校验
+        DiaryComment comment = diaryCommentMapper.selectById(id);
+        if (comment == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "评论不存在");
+        }
+
+        // 2.校验状态值的合法性
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "评论状态不合法");
+        }
+
+        // 3.进行幂等性校验
+        if (Objects.equals(comment.getStatus(), status)) {
+            return;
+        }
+
+        // 4.进行状态修改
+        Integer oldStatus = comment.getStatus();
+        comment.setStatus(status);
+        diaryCommentMapper.updateById(comment);
+
+        // 5.同步维护日记评论数，仅对一级评论生效
+        if (comment.getParentId() == null) {
+            if (Objects.equals(oldStatus, 1) && Objects.equals(status, 0)) {
+                diaryMapper.updateCommentCount(comment.getDiaryId(), -1);
+            } else if (Objects.equals(oldStatus, 0) && Objects.equals(status, 1)) {
+                diaryMapper.updateCommentCount(comment.getDiaryId(), 1);
+            }
+        }
+    }
+}

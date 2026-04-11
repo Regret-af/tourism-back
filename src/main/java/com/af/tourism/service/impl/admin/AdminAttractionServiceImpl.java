@@ -3,6 +3,10 @@ package com.af.tourism.service.impl.admin;
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.exception.BusinessException;
+import com.af.tourism.integration.baidu.map.BaiduMapClient;
+import com.af.tourism.integration.baidu.map.converter.BaiduMapConverter;
+import com.af.tourism.integration.baidu.map.dto.BaiduMapDetailResponse;
+import com.af.tourism.integration.baidu.map.dto.BaiduMapSuggestionResponse;
 import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.pojo.dto.admin.AdminAttractionCreateDTO;
@@ -13,11 +17,14 @@ import com.af.tourism.pojo.entity.Attraction;
 import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.vo.admin.AttractionDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionForAdminVO;
+import com.af.tourism.pojo.vo.admin.MapDetailVO;
+import com.af.tourism.pojo.vo.admin.MapSuggestionVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,12 +37,16 @@ import java.util.Objects;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminAttractionServiceImpl implements AdminAttractionService {
 
     private final AttractionMapper attractionMapper;
     private final AttractionCategoryMapper attractionCategoryMapper;
 
     private final AttractionConverter attractionConverter;
+    private final BaiduMapConverter baiduMapConverter;
+
+    private final BaiduMapClient baiduMapClient;
 
     /**
      * 管理端景点列表
@@ -181,5 +192,40 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         // 2.修改景点状态
         entity.setStatus(status);
         attractionMapper.updateById(entity);
+    }
+
+    /**
+     * 百度地点搜索
+     * @param keyword 关键词
+     * @return 地点信息列表
+     */
+    @Override
+    public List<MapSuggestionVO> getMapSuggestion(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "关键词不能为空！");
+        }
+
+        BaiduMapSuggestionResponse response = baiduMapClient.getSuggestion(keyword);
+
+        List<MapSuggestionVO> list = baiduMapConverter.toMapSuggestionVOList(response.getResults());
+
+        return list;
+    }
+
+    /**
+     * 百度地点详情回填
+     * @param uid 百度UID
+     * @return 地点详细信息
+     */
+    @Override
+    public MapDetailVO getMapDetail(String uid) {
+        if (!StringUtils.hasText(uid)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "UID不能为空！");
+        }
+
+        BaiduMapDetailResponse response = baiduMapClient.getDetail(uid);
+        List<MapDetailVO> voList = baiduMapConverter.toMapDetailVOList(response.getResults());
+
+        return voList != null && !voList.isEmpty() ? voList.get(0) : null;
     }
 }

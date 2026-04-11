@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
@@ -84,7 +85,7 @@ public class RestClientHelper {
             });
         }
 
-        return builder.build(true).toUriString();
+        return builder.build().toUriString();
     }
 
     protected HttpHeaders defaultHeaders() {

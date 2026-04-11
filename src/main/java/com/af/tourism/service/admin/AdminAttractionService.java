@@ -6,9 +6,13 @@ import com.af.tourism.pojo.dto.admin.AdminAttractionStatusUpdateDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionUpdateDTO;
 import com.af.tourism.pojo.vo.admin.AttractionDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionForAdminVO;
+import com.af.tourism.pojo.vo.admin.MapDetailVO;
+import com.af.tourism.pojo.vo.admin.MapSuggestionVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 /**
  * 管理端景点服务
@@ -51,4 +55,18 @@ public interface AdminAttractionService {
      * @return 修改后的景点详情
      */
     void updateAttractionStatus(Long id, @Valid AdminAttractionStatusUpdateDTO request);
+
+    /**
+     * 百度地点搜索
+     * @param keyword 关键词
+     * @return 地点信息列表
+     */
+    List<MapSuggestionVO> getMapSuggestion(@Valid @NotBlank String keyword);
+
+    /**
+     * 百度地点详情回填
+     * @param uid 百度UID
+     * @return 地点详细信息
+     */
+    MapDetailVO getMapDetail(@Valid @NotBlank String uid);
 }

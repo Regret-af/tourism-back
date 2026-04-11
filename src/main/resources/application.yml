@@ -63,6 +63,10 @@ app:
     qweather:
       base-url: ${qweather.base-url:https://devapi.qweather.com}
       token: ${qweather.token}
+  baidu:
+    map:
+      base-url: ${baidu.map.base-url:https://api.map.baidu.com}
+      ak: ${baidu.map.ak}
 
 logging:
   level:

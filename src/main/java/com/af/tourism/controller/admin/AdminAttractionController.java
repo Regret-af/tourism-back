@@ -7,6 +7,8 @@ import com.af.tourism.pojo.dto.admin.AdminAttractionStatusUpdateDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionUpdateDTO;
 import com.af.tourism.pojo.vo.admin.AttractionDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionForAdminVO;
+import com.af.tourism.pojo.vo.admin.MapDetailVO;
+import com.af.tourism.pojo.vo.admin.MapSuggestionVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 /**
  * 管理端景点接口
@@ -90,5 +94,25 @@ public class AdminAttractionController {
             @Valid @RequestBody AdminAttractionStatusUpdateDTO request) {
         adminAttractionService.updateAttractionStatus(id, request);
         return ApiResponse.ok();
+    }
+
+    /**
+     * 百度地点搜索
+     * @param keyword 关键词
+     * @return 地点信息列表
+     */
+    @GetMapping("/attractions/poi-search")
+    public ApiResponse<List<MapSuggestionVO>> getMapSuggestion(@Valid @NotBlank String keyword) {
+        return ApiResponse.ok(adminAttractionService.getMapSuggestion(keyword));
+    }
+
+    /**
+     * 百度地点详情回填
+     * @param uid 百度UID
+     * @return 地点详细信息
+     */
+    @GetMapping("/attractions/poi-fill")
+    public ApiResponse<MapDetailVO> getMapDetail(@Valid @NotBlank String uid) {
+        return ApiResponse.ok(adminAttractionService.getMapDetail(uid));
     }
 }

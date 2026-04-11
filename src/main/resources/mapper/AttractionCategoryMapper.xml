@@ -49,7 +49,7 @@
                 )
             </if>
             <if test="queryDTO.status != null">
-                AND status = #{queryDTO.status}
+                AND status = #{queryDTO.status.value}
             </if>
         </where>
         ORDER BY sort_order ASC, id ASC

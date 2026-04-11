@@ -1,5 +1,6 @@
 package com.af.tourism.pojo.dto.admin;
 
+import com.af.tourism.common.enums.DiaryCommentStatus;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -28,9 +29,7 @@ public class AdminDiaryCommentQueryDTO {
     @Min(value = 1, message = "userId不能小于1")
     private Long userId;
 
-    @Min(value = 0, message = "status不能小于0")
-    @Max(value = 1, message = "status不能大于1")
-    private Integer status;
+    private DiaryCommentStatus status;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdStart;

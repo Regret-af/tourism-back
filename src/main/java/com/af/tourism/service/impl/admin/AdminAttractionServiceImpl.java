@@ -109,8 +109,7 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         }
 
         // 1.3.校验景点状态的合法性
-        Integer status = request.getStatus();
-        if (status == null || (status != 0 && status != 1)) {
+        if (request.getStatus() == null) {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "景点状态不合法");
         }
 
@@ -149,8 +148,7 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         }
 
         // 1.4.校验景点状态的合法性
-        Integer status = request.getStatus();
-        if (status == null || (status != 0 && status != 1)) {
+        if (request.getStatus() == null) {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "景点状态不合法");
         }
 
@@ -179,13 +177,13 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         }
 
         // 1.2.校验景点状态的合法性
-        Integer status = request.getStatus();
-        if (status == null || (status != 0 && status != 1)) {
+        if (request.getStatus() == null) {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "景点状态不合法");
         }
 
         // 1.3.校验幂等性
-        if (Objects.equals(entity.getStatus(), request.getStatus())) {
+        Integer status = request.getStatus().getValue();
+        if (Objects.equals(entity.getStatus(), status)) {
             return;
         }
 
@@ -207,9 +205,7 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
 
         BaiduMapSuggestionResponse response = baiduMapClient.getSuggestion(keyword);
 
-        List<MapSuggestionVO> list = baiduMapConverter.toMapSuggestionVOList(response.getResults());
-
-        return list;
+        return baiduMapConverter.toMapSuggestionVOList(response.getResults());
     }
 
     /**

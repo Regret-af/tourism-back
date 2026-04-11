@@ -1,4 +1,4 @@
-package com.af.tourism.converter;
+package com.af.tourism.config.converter;
 
 import com.af.tourism.common.enums.SortType;
 import org.springframework.core.convert.converter.Converter;

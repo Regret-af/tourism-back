@@ -247,19 +247,19 @@
                 AND d.user_id = #{queryDTO.authorId}
             </if>
             <if test="queryDTO.status != null">
-                AND d.status = #{queryDTO.status}
+                AND d.status = #{queryDTO.status.value}
             </if>
             <if test="queryDTO.contentType != null">
                 AND d.content_type = #{queryDTO.contentType}
             </if>
             <if test="queryDTO.visibility != null">
-                AND d.visibility = #{queryDTO.visibility}
+                AND d.visibility = #{queryDTO.visibility.value}
             </if>
             <if test="queryDTO.isTop != null">
-                AND d.is_top = #{queryDTO.isTop}
+                AND d.is_top = #{queryDTO.isTop.value}
             </if>
             <if test="queryDTO.isDeleted != null">
-                AND d.is_deleted = #{queryDTO.isDeleted}
+                AND d.is_deleted = #{queryDTO.isDeleted.value}
             </if>
             <if test="queryDTO.publishedStart != null">
                 AND d.published_at &gt;= #{queryDTO.publishedStart}

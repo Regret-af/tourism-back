@@ -1,5 +1,6 @@
 package com.af.tourism.pojo.dto.admin;
 
+import com.af.tourism.common.enums.AttractionStatus;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -24,9 +25,7 @@ public class AdminAttractionQueryDTO {
 
     private Long categoryId;
 
-    @Min(value = 0, message = "status不能小于0")
-    @Max(value = 1, message = "status不能大于1")
-    private Integer status;
+    private AttractionStatus status;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate createdStart;

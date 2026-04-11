@@ -1,5 +1,7 @@
 package com.af.tourism.service.admin;
 
+import com.af.tourism.common.enums.DiaryDeletedStatus;
+import com.af.tourism.common.enums.DiaryStatus;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
@@ -31,13 +33,12 @@ public interface AdminDiaryService {
      * @param id 日记 id
      * @param status 目标状态
      */
-    void updateDiaryStatus(Long id, Integer status);
+    void updateDiaryStatus(Long id, DiaryStatus status);
 
     /**
      * 修改日记逻辑删除状态
-     *
      * @param id 日记 id
      * @param isDeleted 目标逻辑删除状态
      */
-    void updateDiaryDeleted(Long id, Integer isDeleted);
+    void updateDiaryDeleted(Long id, DiaryDeletedStatus isDeleted);
 }

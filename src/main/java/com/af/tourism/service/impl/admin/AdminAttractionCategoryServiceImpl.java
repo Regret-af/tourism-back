@@ -1,10 +1,11 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.enums.AttractionStatus;
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.exception.BusinessException;
-import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.mapper.AttractionCategoryMapper;
+import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryCreateDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryQueryDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategorySortOrderUpdateDTO;
@@ -156,18 +157,18 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
             throw new BusinessException(ErrorCode.NOT_FOUND, "景点分类不存在");
         }
 
-        // 2.校验参数合法性
-        Integer status = request.getStatus();
-        if (status == null || (status != 0 && status != 1)) {
+        // 2.校验状态参数合法性
+        if (request.getStatus() == null) {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "分类状态不合法");
         }
 
         // 3.如果该分类下存在上架景点，不允许停用
-        if (status == 0) {
+        Integer status = request.getStatus().getValue();
+        if (AttractionStatus.OFFLINE.getValue().equals(status)) {
             Long enabledAttractionCount = attractionMapper.selectCount(
                     new LambdaQueryWrapper<Attraction>()
                             .eq(Attraction::getCategoryId, id)
-                            .eq(Attraction::getStatus, 1)
+                            .eq(Attraction::getStatus, AttractionStatus.ONLINE.getValue())
             );
             if (enabledAttractionCount != null && enabledAttractionCount > 0) {
                 throw new BusinessException(ErrorCode.BUSINESS_ERROR, "该分类下仍存在上架景点，不能直接停用");

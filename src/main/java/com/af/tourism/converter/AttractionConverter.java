@@ -1,5 +1,7 @@
 package com.af.tourism.converter;
 
+import com.af.tourism.common.enums.AttractionCategoryStatus;
+import com.af.tourism.common.enums.AttractionStatus;
 import com.af.tourism.pojo.dto.admin.AdminAttractionCreateDTO;
 import com.af.tourism.pojo.dto.admin.AdminAttractionUpdateDTO;
 import com.af.tourism.pojo.dto.admin.AttractionCategoryCreateDTO;
@@ -26,4 +28,13 @@ public interface AttractionConverter {
     Attraction toAttraction(AdminAttractionCreateDTO adminAttractionCreateDTO);
 
     Attraction toAttraction(AdminAttractionUpdateDTO adminAttractionUpdateDTO);
+
+    default Integer map(AttractionStatus status) {
+        return status == null ? null : status.getValue();
+    }
+
+    default Integer map(AttractionCategoryStatus status) {
+        return status == null ? null : status.getValue();
+    }
+
 }

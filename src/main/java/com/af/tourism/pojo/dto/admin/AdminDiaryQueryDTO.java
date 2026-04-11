@@ -1,5 +1,9 @@
 package com.af.tourism.pojo.dto.admin;
 
+import com.af.tourism.common.enums.DiaryDeletedStatus;
+import com.af.tourism.common.enums.DiaryStatus;
+import com.af.tourism.common.enums.DiaryTopStatus;
+import com.af.tourism.common.enums.DiaryVisibility;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -25,19 +29,15 @@ public class AdminDiaryQueryDTO {
     @Min(value = 1, message = "authorId不能小于1")
     private Long authorId;
 
-    private Integer status;
+    private DiaryStatus status;
 
     private Integer contentType;
 
-    private Integer visibility;
+    private DiaryVisibility visibility;
 
-    @Min(value = 0, message = "isTop不能小于0")
-    @Max(value = 1, message = "isTop不能大于1")
-    private Integer isTop;
+    private DiaryTopStatus isTop;
 
-    @Min(value = 0, message = "isDeleted不能小于0")
-    @Max(value = 1, message = "isDeleted不能大于1")
-    private Integer isDeleted;
+    private DiaryDeletedStatus isDeleted;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedStart;

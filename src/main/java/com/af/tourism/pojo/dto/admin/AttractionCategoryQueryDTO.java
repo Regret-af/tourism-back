@@ -1,5 +1,6 @@
 package com.af.tourism.pojo.dto.admin;
 
+import com.af.tourism.common.enums.AttractionCategoryStatus;
 import lombok.Data;
 
 import javax.validation.constraints.Max;
@@ -20,5 +21,5 @@ public class AttractionCategoryQueryDTO {
 
     private String keyword;
 
-    private Integer status;
+    private AttractionCategoryStatus status;
 }

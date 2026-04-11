@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.enums.DiaryDeletedStatus;
 import com.af.tourism.common.enums.DiaryStatus;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryMapper;
@@ -78,7 +79,7 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateDiaryStatus(Long id, Integer status) {
+    public void updateDiaryStatus(Long id, DiaryStatus status) {
         // 1.获取日记实体并进行非空校验
         TravelDiary diary = diaryMapper.selectById(id);
         if (diary == null) {
@@ -91,12 +92,13 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
         }
 
         // 3.进行幂等性校验
-        if (Objects.equals(diary.getStatus(), status)) {
+        Integer targetStatus = status.getValue();
+        if (Objects.equals(diary.getStatus(), targetStatus)) {
             return;
         }
 
         // 4.进行状态修改
-        diary.setStatus(status);
+        diary.setStatus(targetStatus);
         diaryMapper.updateById(diary);
     }
 
@@ -107,7 +109,7 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateDiaryDeleted(Long id, Integer isDeleted) {
+    public void updateDiaryDeleted(Long id, DiaryDeletedStatus isDeleted) {
         // 1.获取日记实体并进行非空校验
         TravelDiary diary = diaryMapper.selectById(id);
         if (diary == null) {
@@ -115,17 +117,18 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
         }
 
         // 2.校验逻辑删除状态值的合法性
-        if (isDeleted == null || (isDeleted != 0 && isDeleted != 1)) {
+        if (isDeleted == null) {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "日记逻辑删除状态不合法");
         }
 
         // 3.进行幂等性校验
-        if (Objects.equals(diary.getIsDeleted(), isDeleted)) {
+        Integer targetDeletedStatus = isDeleted.getValue();
+        if (Objects.equals(diary.getIsDeleted(), targetDeletedStatus)) {
             return;
         }
 
         // 4.进行逻辑删除状态修改
-        diary.setIsDeleted(isDeleted);
+        diary.setIsDeleted(targetDeletedStatus);
         diaryMapper.updateById(diary);
     }
 }

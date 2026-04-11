@@ -6,18 +6,16 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 
 /**
- * 日记状态枚举
+ * 景点分类状态
  */
-public enum DiaryStatus implements OptionProvider<Integer> {
-    OFFLINE(0, "下线"),
-    PUBLIC(1, "公开"),
-    PENDING(2, "待审核"),
-    REJECTED(3, "未通过审核");
+public enum AttractionCategoryStatus implements OptionProvider<Integer> {
+    DISABLED(0, "停用"),
+    ENABLED(1, "启用");
 
     private final Integer value;
     private final String label;
 
-    DiaryStatus(Integer value, String label) {
+    AttractionCategoryStatus(Integer value, String label) {
         this.value = value;
         this.label = label;
     }
@@ -33,12 +31,8 @@ public enum DiaryStatus implements OptionProvider<Integer> {
         return label;
     }
 
-    public Integer getCode() {
-        return value;
-    }
-
     @JsonCreator
-    public static DiaryStatus fromValue(Integer value) {
+    public static AttractionCategoryStatus fromValue(Integer value) {
         if (value == null) {
             return null;
         }
@@ -46,17 +40,5 @@ public enum DiaryStatus implements OptionProvider<Integer> {
                 .filter(item -> item.value.equals(value))
                 .findFirst()
                 .orElse(null);
-    }
-
-    public static DiaryStatus fromCode(Integer code) {
-        return fromValue(code);
-    }
-
-    public static boolean isValid(Integer code) {
-        return fromValue(code) != null;
-    }
-
-    public static boolean isValid(DiaryStatus status) {
-        return status != null;
     }
 }

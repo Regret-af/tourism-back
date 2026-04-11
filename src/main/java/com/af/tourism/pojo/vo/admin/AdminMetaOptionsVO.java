@@ -16,4 +16,18 @@ public class AdminMetaOptionsVO {
     private List<OptionVO<String>> operationLogActions;
 
     private List<OptionVO<String>> operationLogSources;
+
+    private List<OptionVO<Integer>> attractionCategoryStatuses;
+
+    private List<OptionVO<Integer>> attractionStatuses;
+
+    private List<OptionVO<Integer>> diaryStatuses;
+
+    private List<OptionVO<Integer>> diaryDeletedStatuses;
+
+    private List<OptionVO<Integer>> diaryVisibilities;
+
+    private List<OptionVO<Integer>> diaryTopStatuses;
+
+    private List<OptionVO<Integer>> diaryCommentStatuses;
 }

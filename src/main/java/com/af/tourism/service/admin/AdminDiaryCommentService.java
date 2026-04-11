@@ -1,5 +1,6 @@
 package com.af.tourism.service.admin;
 
+import com.af.tourism.common.enums.DiaryCommentStatus;
 import com.af.tourism.pojo.dto.admin.AdminDiaryCommentQueryDTO;
 import com.af.tourism.pojo.vo.admin.DiaryCommentForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -23,5 +24,5 @@ public interface AdminDiaryCommentService {
      * @param id 评论 id
      * @param status 目标状态
      */
-    void updateCommentStatus(Long id, Integer status);
+    void updateCommentStatus(Long id, DiaryCommentStatus status);
 }

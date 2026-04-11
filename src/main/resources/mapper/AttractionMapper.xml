@@ -185,7 +185,7 @@
                 AND a.category_id = #{queryDTO.categoryId}
             </if>
             <if test="queryDTO.status != null">
-                AND a.status = #{queryDTO.status}
+                AND a.status = #{queryDTO.status.value}
             </if>
             <if test="queryDTO.createdStart != null">
                 AND a.created_at &gt;= #{queryDTO.createdStart}

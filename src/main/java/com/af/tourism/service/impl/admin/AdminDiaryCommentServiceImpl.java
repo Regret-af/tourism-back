@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.enums.DiaryCommentStatus;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryCommentMapper;
 import com.af.tourism.mapper.DiaryMapper;
@@ -59,7 +60,7 @@ public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateCommentStatus(Long id, Integer status) {
+    public void updateCommentStatus(Long id, DiaryCommentStatus status) {
         // 1.获取评论实体并进行非空校验
         DiaryComment comment = diaryCommentMapper.selectById(id);
         if (comment == null) {
@@ -67,25 +68,28 @@ public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
         }
 
         // 2.校验状态值的合法性
-        if (status == null || (status != 0 && status != 1)) {
+        if (status == null) {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "评论状态不合法");
         }
 
         // 3.进行幂等性校验
-        if (Objects.equals(comment.getStatus(), status)) {
+        Integer targetStatus = status.getValue();
+        if (Objects.equals(comment.getStatus(), targetStatus)) {
             return;
         }
 
         // 4.进行状态修改
         Integer oldStatus = comment.getStatus();
-        comment.setStatus(status);
+        comment.setStatus(targetStatus);
         diaryCommentMapper.updateById(comment);
 
         // 5.同步维护日记评论数，仅对一级评论生效
         if (comment.getParentId() == null) {
-            if (Objects.equals(oldStatus, 1) && Objects.equals(status, 0)) {
+            if (Objects.equals(oldStatus, DiaryCommentStatus.NORMAL.getValue())
+                    && Objects.equals(targetStatus, DiaryCommentStatus.HIDDEN.getValue())) {
                 diaryMapper.updateCommentCount(comment.getDiaryId(), -1);
-            } else if (Objects.equals(oldStatus, 0) && Objects.equals(status, 1)) {
+            } else if (Objects.equals(oldStatus, DiaryCommentStatus.HIDDEN.getValue())
+                    && Objects.equals(targetStatus, DiaryCommentStatus.NORMAL.getValue())) {
                 diaryMapper.updateCommentCount(comment.getDiaryId(), 1);
             }
         }

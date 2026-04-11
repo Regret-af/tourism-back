@@ -2,6 +2,30 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.af.tourism.mapper.DiaryMapper">
 
+    <resultMap id="AdminDiaryListMap" type="com.af.tourism.pojo.vo.admin.DiaryForAdminVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="content_type_name" property="contentType"/>
+        <result column="visibility" property="visibility"/>
+        <result column="is_top" property="isTop"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <association property="author" javaType="com.af.tourism.pojo.vo.admin.DiaryAuthorForAdminVO">
+            <id column="author_id" property="id"/>
+            <result column="author_nickname" property="nickname"/>
+            <result column="author_avatar_url" property="avatarUrl"/>
+        </association>
+    </resultMap>
+
     <resultMap id="DiaryCardMap" type="com.af.tourism.pojo.vo.app.DiaryCardVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
@@ -162,6 +186,64 @@
         WHERE d.id = #{diaryId}
           AND d.status = 1
         LIMIT 1
+    </select>
+
+    <select id="selectAdminDiaryList" resultMap="AdminDiaryListMap">
+        SELECT
+            d.id,
+            d.title,
+            d.summary,
+            d.cover_url,
+            d.status,
+            d.is_deleted,
+            dc.name AS content_type_name,
+            d.visibility,
+            d.is_top,
+            d.view_count,
+            d.like_count,
+            d.favorite_count,
+            d.comment_count,
+            d.published_at,
+            d.created_at,
+            d.updated_at,
+            u.id AS author_id,
+            u.nickname AS author_nickname
+        FROM travel_diaries d
+        LEFT JOIN users u ON d.user_id = u.id
+        LEFT JOIN diary_category dc ON d.content_type = dc.id
+        <where>
+            <if test="queryDTO.keyword != null and queryDTO.keyword != ''">
+                AND (
+                    d.title LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+                    OR d.summary LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+                )
+            </if>
+            <if test="queryDTO.authorId != null">
+                AND d.user_id = #{queryDTO.authorId}
+            </if>
+            <if test="queryDTO.status != null">
+                AND d.status = #{queryDTO.status}
+            </if>
+            <if test="queryDTO.contentType != null">
+                AND d.content_type = #{queryDTO.contentType}
+            </if>
+            <if test="queryDTO.visibility != null">
+                AND d.visibility = #{queryDTO.visibility}
+            </if>
+            <if test="queryDTO.isTop != null">
+                AND d.is_top = #{queryDTO.isTop}
+            </if>
+            <if test="queryDTO.isDeleted != null">
+                AND d.is_deleted = #{queryDTO.isDeleted}
+            </if>
+            <if test="queryDTO.publishedStart != null">
+                AND d.published_at &gt;= #{queryDTO.publishedStart}
+            </if>
+            <if test="queryDTO.publishedEnd != null">
+                AND d.published_at &lt;= #{queryDTO.publishedEnd}
+            </if>
+        </where>
+        ORDER BY d.created_at DESC, d.id DESC
     </select>
 
     <update id="updateCommentCount">

@@ -32,4 +32,12 @@ public interface AdminDiaryService {
      * @param status 目标状态
      */
     void updateDiaryStatus(Long id, Integer status);
+
+    /**
+     * 修改日记逻辑删除状态
+     *
+     * @param id 日记 id
+     * @param isDeleted 目标逻辑删除状态
+     */
+    void updateDiaryDeleted(Long id, Integer isDeleted);
 }

@@ -99,4 +99,33 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
         diary.setStatus(status);
         diaryMapper.updateById(diary);
     }
+
+    /**
+     * 修改日记逻辑删除状态
+     * @param id 日记 id
+     * @param isDeleted 目标逻辑删除状态
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateDiaryDeleted(Long id, Integer isDeleted) {
+        // 1.获取日记实体并进行非空校验
+        TravelDiary diary = diaryMapper.selectById(id);
+        if (diary == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "日记不存在");
+        }
+
+        // 2.校验逻辑删除状态值的合法性
+        if (isDeleted == null || (isDeleted != 0 && isDeleted != 1)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "日记逻辑删除状态不合法");
+        }
+
+        // 3.进行幂等性校验
+        if (Objects.equals(diary.getIsDeleted(), isDeleted)) {
+            return;
+        }
+
+        // 4.进行逻辑删除状态修改
+        diary.setIsDeleted(isDeleted);
+        diaryMapper.updateById(diary);
+    }
 }

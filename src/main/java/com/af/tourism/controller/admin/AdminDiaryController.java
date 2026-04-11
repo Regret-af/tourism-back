@@ -2,6 +2,7 @@ package com.af.tourism.controller.admin;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
+import com.af.tourism.pojo.dto.admin.DiaryDeletedUpdateDTO;
 import com.af.tourism.pojo.dto.admin.DiaryStatusUpdateDTO;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
@@ -62,6 +63,20 @@ public class AdminDiaryController {
             @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
             @Valid @RequestBody DiaryStatusUpdateDTO request) {
         adminDiaryService.updateDiaryStatus(id, request.getStatus());
+        return ApiResponse.ok();
+    }
+
+    /**
+     * 修改日记逻辑删除状态
+     * @param id 日记 id
+     * @param request 逻辑删除状态修改请求
+     * @return 成功信息
+     */
+    @PatchMapping("/travel-diaries/{id}/deleted")
+    public ApiResponse<Void> updateDiaryDeleted(
+            @PathVariable("id") @Min(value = 1, message = "id不能小于1") Long id,
+            @Valid @RequestBody DiaryDeletedUpdateDTO request) {
+        adminDiaryService.updateDiaryDeleted(id, request.getIsDeleted());
         return ApiResponse.ok();
     }
 }

@@ -31,6 +31,9 @@ public class TravelDiary {
 
     private Integer status;
 
+    @TableField("is_deleted")
+    private Integer isDeleted;
+
     @TableField("view_count")
     private Integer viewCount;
 

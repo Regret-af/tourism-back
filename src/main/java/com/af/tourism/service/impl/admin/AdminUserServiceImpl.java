@@ -104,7 +104,7 @@ public class AdminUserServiceImpl implements AdminUserService {
      * @param status 用户状态
      */
     @Override
-    public void updateUserStatus(Long userId, Integer status) {
+    public void updateUserStatus(Long userId, UserStatus status) {
         // 1.查询用户是否存在
         User targetUser = userMapper.selectById(userId);
         if (targetUser == null) {
@@ -112,7 +112,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         // 2. 校验状态是否合法
-        if (!UserStatus.isEnabled(status) && !UserStatus.isDisabled(status)) {
+        if (status == null) {
             throw new BusinessException(ErrorCode.PARAM_INVALID, "用户状态不合法");
         }
 
@@ -123,7 +123,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         // 4.查询状态是否正确，保证幂等性
-        if (Objects.equals(targetUser.getStatus(), status)) {
+        Integer targetStatus = status.getValue();
+        if (Objects.equals(targetUser.getStatus(), targetStatus)) {
             return;
         }
 
@@ -136,7 +137,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         // 6.更新状态
-        targetUser.setStatus(status);
+        targetUser.setStatus(targetStatus);
         userMapper.updateById(targetUser);
     }
 
@@ -152,7 +153,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         return roleCodes.stream()
                 .map(RoleCode::fromCode)
                 .filter(Objects::nonNull)
-                .mapToInt(RoleCode::getValue)
+                .mapToInt(RoleCode::getLevel)
                 .max()
                 .orElse(0);
     }

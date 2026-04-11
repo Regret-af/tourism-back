@@ -6,7 +6,6 @@ import com.af.tourism.common.enums.RoleCode;
 import com.af.tourism.converter.AuthConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
-import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.common.LoginVO;
@@ -89,7 +88,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
      * @param roles 用户角色
      */
     private void requireAdminRole(Long userId, List<String> roles) {
-        if (roles == null || !roles.contains(RoleCode.ADMIN.name())) {
+        if (roles == null || !roles.contains(RoleCode.ADMIN.getValue())) {
             log.warn("管理员登录失败，账号无管理员权限，userId={}", userId);
             throw new BusinessException(ErrorCode.FORBIDDEN, "无管理端访问权限");
         }

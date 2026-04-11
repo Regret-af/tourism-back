@@ -1,6 +1,7 @@
 package com.af.tourism.pojo.dto.admin;
 
 import com.af.tourism.common.enums.RoleCode;
+import com.af.tourism.common.enums.UserStatus;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -23,7 +24,7 @@ public class UserQueryDTO {
 
     private String keyword;
 
-    private Integer status;
+    private UserStatus status;
 
     private RoleCode roleCode;
 

@@ -3,8 +3,8 @@ package com.af.tourism.securitylite;
 import com.af.tourism.common.enums.RoleCode;
 import com.af.tourism.exception.ForbiddenException;
 import com.af.tourism.exception.UnauthorizedException;
-import com.af.tourism.service.helper.UserCheckService;
 import com.af.tourism.mapper.RoleMapper;
+import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -42,7 +42,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
         List<String> roleCodes = roleMapper.selectRoleCodesByUserId(userId);
 
         // 4.判断当前用户是否有管理权限
-        if (roleCodes == null || !roleCodes.contains(RoleCode.ADMIN.name())) {
+        if (roleCodes == null || !roleCodes.contains(RoleCode.ADMIN.getValue())) {
             log.warn("管理端接口访问失败，无管理员权限，userId={}, uri={}, method={}",
                     userId, request.getRequestURI(), request.getMethod());
             throw new ForbiddenException("无管理端访问权限");

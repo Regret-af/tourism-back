@@ -7,6 +7,8 @@ import com.af.tourism.config.converter.DiaryDeletedStatusConverter;
 import com.af.tourism.config.converter.DiaryStatusConverter;
 import com.af.tourism.config.converter.DiaryTopStatusConverter;
 import com.af.tourism.config.converter.DiaryVisibilityConverter;
+import com.af.tourism.config.converter.RoleCodeConverter;
+import com.af.tourism.config.converter.UserStatusConverter;
 import com.af.tourism.securitylite.AdminAuthInterceptor;
 import com.af.tourism.securitylite.AuthInterceptor;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final DiaryVisibilityConverter diaryVisibilityConverter;
     private final DiaryTopStatusConverter diaryTopStatusConverter;
     private final DiaryCommentStatusConverter diaryCommentStatusConverter;
+    private final UserStatusConverter userStatusConverter;
+    private final RoleCodeConverter roleCodeConverter;
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
@@ -41,6 +45,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addConverter(diaryVisibilityConverter);
         registry.addConverter(diaryTopStatusConverter);
         registry.addConverter(diaryCommentStatusConverter);
+        registry.addConverter(userStatusConverter);
+        registry.addConverter(roleCodeConverter);
     }
 
     @Override

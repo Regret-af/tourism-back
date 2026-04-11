@@ -11,6 +11,8 @@ import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.common.enums.OperationLogSource;
 import com.af.tourism.common.enums.OptionProvider;
+import com.af.tourism.common.enums.RoleCode;
+import com.af.tourism.common.enums.UserStatus;
 import com.af.tourism.pojo.vo.admin.AdminMetaOptionsVO;
 import com.af.tourism.pojo.vo.common.OptionVO;
 import com.af.tourism.service.admin.AdminMetaService;
@@ -39,7 +41,8 @@ public class AdminMetaServiceImpl implements AdminMetaService {
         vo.setDiaryVisibilities(toOptions(DiaryVisibility.values()));
         vo.setDiaryTopStatuses(toOptions(DiaryTopStatus.values()));
         vo.setDiaryCommentStatuses(toOptions(DiaryCommentStatus.values()));
-
+        vo.setUserStatuses(toOptions(UserStatus.values()));
+        vo.setRoleCodes(toOptions(RoleCode.values()));
         return vo;
     }
 

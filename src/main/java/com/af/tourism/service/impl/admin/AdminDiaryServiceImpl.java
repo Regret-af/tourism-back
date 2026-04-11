@@ -1,9 +1,11 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.enums.DiaryStatus;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
+import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -13,8 +15,10 @@ import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 管理端日记服务实现
@@ -28,7 +32,6 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
 
     /**
      * 获取管理端日记列表
-     *
      * @param queryDTO 查询参数
      * @return 日记分页列表
      */
@@ -66,5 +69,34 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
         }
 
         return detail;
+    }
+
+    /**
+     * 修改日记状态
+     * @param id 日记 id
+     * @param status 目标状态
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateDiaryStatus(Long id, Integer status) {
+        // 1.获取日记实体并进行非空校验
+        TravelDiary diary = diaryMapper.selectById(id);
+        if (diary == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "日记不存在");
+        }
+
+        // 2.校验状态值的合法性
+        if (!DiaryStatus.isValid(status)) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "日记状态不合法");
+        }
+
+        // 3.进行幂等性校验
+        if (Objects.equals(diary.getStatus(), status)) {
+            return;
+        }
+
+        // 4.进行状态修改
+        diary.setStatus(status);
+        diaryMapper.updateById(diary);
     }
 }

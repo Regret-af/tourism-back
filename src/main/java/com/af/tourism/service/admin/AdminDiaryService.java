@@ -14,7 +14,6 @@ public interface AdminDiaryService {
 
     /**
      * 获取管理端日记列表
-     *
      * @param queryDTO 查询参数
      * @return 日记分页列表
      */
@@ -26,4 +25,11 @@ public interface AdminDiaryService {
      * @return 日记详情
      */
     DiaryDetailForAdminVO getDiaryDetail(Long id);
+
+    /**
+     * 修改日记状态
+     * @param id 日记 id
+     * @param status 目标状态
+     */
+    void updateDiaryStatus(Long id, Integer status);
 }

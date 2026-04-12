@@ -4,6 +4,7 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.admin.DashboardRangeQueryDTO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryDistributionVO;
 import com.af.tourism.pojo.vo.admin.DashboardOverviewVO;
+import com.af.tourism.pojo.vo.admin.DashboardTrendPointVO;
 import com.af.tourism.pojo.vo.admin.DashboardTrendsVO;
 import com.af.tourism.service.admin.AdminDashboardService;
 import lombok.RequiredArgsConstructor;
@@ -50,5 +51,15 @@ public class AdminDashboardController {
     @GetMapping("/attraction-category-distribution")
     public ApiResponse<List<AttractionCategoryDistributionVO>> getAttractionCategoryDistribution() {
         return ApiResponse.ok(adminDashboardService.getAttractionCategoryDistribution());
+    }
+
+    /**
+     * 获取操作日志活跃趋势
+     * @param queryDTO 查询参数
+     * @return 操作日志活跃趋势
+     */
+    @GetMapping("/operation-log-trends")
+    public ApiResponse<List<DashboardTrendPointVO>> getOperationLogTrends(@Valid DashboardRangeQueryDTO queryDTO) {
+        return ApiResponse.ok(adminDashboardService.getOperationLogTrends(queryDTO));
     }
 }

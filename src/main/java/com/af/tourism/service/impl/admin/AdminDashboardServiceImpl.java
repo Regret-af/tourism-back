@@ -10,10 +10,12 @@ import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.mapper.DiaryCommentMapper;
 import com.af.tourism.mapper.DiaryMapper;
+import com.af.tourism.mapper.OperationLogMapper;
 import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.entity.Attraction;
 import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.entity.DiaryComment;
+import com.af.tourism.pojo.entity.OperationLog;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryDistributionVO;
@@ -50,6 +52,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final AttractionCategoryMapper attractionCategoryMapper;
     private final DiaryMapper diaryMapper;
     private final DiaryCommentMapper diaryCommentMapper;
+    private final OperationLogMapper operationLogMapper;
 
     /**
      * 获取看板总览
@@ -147,6 +150,19 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         }
 
         return result;
+    }
+
+    /**
+     * 获取操作日志活跃趋势
+     * @param queryDTO 查询参数
+     * @return 操作日志活跃趋势
+     */
+    @Override
+    public List<DashboardTrendPointVO> getOperationLogTrends(DashboardRangeQueryDTO queryDTO) {
+        int days = "30d".equals(queryDTO.getRangeType()) ? 30 : 7;
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days - 1L);
+        return buildOperationLogTrend(startDate, endDate);
     }
 
     /**
@@ -287,6 +303,26 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             // 查找一天中新增评论数量
             Long count = countFirstLevelComments(null, start, end);
             // 添加到返回值
+            result.add(new DashboardTrendPointVO(date.format(DATE_FORMATTER), count));
+        }
+
+        return result;
+    }
+
+    /**
+     * 构建操作日志活跃趋势
+     * @param startDate 开始时间
+     * @param endDate 结束时间
+     * @return 操作日志活跃趋势
+     */
+    private List<DashboardTrendPointVO> buildOperationLogTrend(LocalDate startDate, LocalDate endDate) {
+        List<DashboardTrendPointVO> result = new ArrayList<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.plusDays(1).atStartOfDay();
+            Long count = operationLogMapper.selectCount(new LambdaQueryWrapper<OperationLog>()
+                    .ge(OperationLog::getCreatedAt, start)
+                    .lt(OperationLog::getCreatedAt, end));
             result.add(new DashboardTrendPointVO(date.format(DATE_FORMATTER), count));
         }
 

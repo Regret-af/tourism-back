@@ -51,6 +51,18 @@
         </association>
     </resultMap>
 
+    <resultMap id="DashboardTopDiaryMap" type="com.af.tourism.pojo.vo.admin.DashboardTopDiaryVO">
+        <id column="diary_id" property="diaryId"/>
+        <result column="title" property="title"/>
+        <result column="author_id" property="authorId"/>
+        <result column="author_nickname" property="authorNickname"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="comment_count" property="commentCount"/>
+    </resultMap>
+
     <resultMap id="DiaryCardMap" type="com.af.tourism.pojo.vo.app.DiaryCardVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
@@ -297,6 +309,34 @@
         LEFT JOIN diary_category dc ON d.content_type = dc.id
         WHERE d.id = #{diaryId}
         LIMIT 1
+    </select>
+
+    <select id="selectAdminTopDiaries" resultMap="DashboardTopDiaryMap">
+        SELECT
+            d.id AS diary_id,
+            d.title,
+            d.user_id AS author_id,
+            u.nickname AS author_nickname,
+            d.cover_url,
+            d.view_count,
+            d.like_count,
+            d.favorite_count,
+            d.comment_count
+        FROM travel_diaries d
+        LEFT JOIN users u ON d.user_id = u.id
+        WHERE d.status = 1
+          AND d.is_deleted = 0
+          AND d.published_at &gt;= #{startTime}
+          AND d.published_at &lt; #{endTime}
+        ORDER BY (
+            COALESCE(d.view_count, 0)
+            + COALESCE(d.like_count, 0) * 5
+            + COALESCE(d.favorite_count, 0) * 8
+            + COALESCE(d.comment_count, 0) * 6
+        ) DESC,
+        d.published_at DESC,
+        d.id DESC
+        LIMIT #{limit}
     </select>
 
     <update id="updateCommentCount">

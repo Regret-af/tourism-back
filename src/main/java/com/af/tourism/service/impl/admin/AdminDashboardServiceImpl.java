@@ -6,6 +6,7 @@ import com.af.tourism.common.enums.DiaryDeletedStatus;
 import com.af.tourism.common.enums.DiaryStatus;
 import com.af.tourism.common.enums.UserStatus;
 import com.af.tourism.pojo.dto.admin.DashboardRangeQueryDTO;
+import com.af.tourism.pojo.dto.admin.DashboardTopDiaryQueryDTO;
 import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.mapper.DiaryCommentMapper;
@@ -21,6 +22,7 @@ import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryDistributionVO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryStatsForAdminVO;
 import com.af.tourism.pojo.vo.admin.DashboardOverviewVO;
+import com.af.tourism.pojo.vo.admin.DashboardTopDiaryVO;
 import com.af.tourism.pojo.vo.admin.DashboardTrendPointVO;
 import com.af.tourism.pojo.vo.admin.DashboardTrendsVO;
 import com.af.tourism.service.admin.AdminDashboardService;
@@ -163,6 +165,23 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(days - 1L);
         return buildOperationLogTrend(startDate, endDate);
+    }
+
+    /**
+     * 获取热门日记排行
+     * @param queryDTO 查询参数
+     * @return 热门日记排行
+     */
+    @Override
+    public List<DashboardTopDiaryVO> getTopDiaries(DashboardTopDiaryQueryDTO queryDTO) {
+        // 1.获取参数
+        int days = "30d".equals(queryDTO.getRangeType()) ? 30 : 7;
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days - 1L);
+        LocalDateTime startTime = startDate.atStartOfDay();
+        LocalDateTime endTime = endDate.plusDays(1).atStartOfDay();
+
+        return diaryMapper.selectAdminTopDiaries(startTime, endTime, queryDTO.getLimit());
     }
 
     /**

@@ -2,8 +2,10 @@ package com.af.tourism.controller.admin;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.admin.DashboardRangeQueryDTO;
+import com.af.tourism.pojo.dto.admin.DashboardTopDiaryQueryDTO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryDistributionVO;
 import com.af.tourism.pojo.vo.admin.DashboardOverviewVO;
+import com.af.tourism.pojo.vo.admin.DashboardTopDiaryVO;
 import com.af.tourism.pojo.vo.admin.DashboardTrendPointVO;
 import com.af.tourism.pojo.vo.admin.DashboardTrendsVO;
 import com.af.tourism.service.admin.AdminDashboardService;
@@ -61,5 +63,15 @@ public class AdminDashboardController {
     @GetMapping("/operation-log-trends")
     public ApiResponse<List<DashboardTrendPointVO>> getOperationLogTrends(@Valid DashboardRangeQueryDTO queryDTO) {
         return ApiResponse.ok(adminDashboardService.getOperationLogTrends(queryDTO));
+    }
+
+    /**
+     * 获取热门日记排行
+     * @param queryDTO 查询参数
+     * @return 热门日记排行
+     */
+    @GetMapping("/top-diaries")
+    public ApiResponse<List<DashboardTopDiaryVO>> getTopDiaries(@Valid DashboardTopDiaryQueryDTO queryDTO) {
+        return ApiResponse.ok(adminDashboardService.getTopDiaries(queryDTO));
     }
 }

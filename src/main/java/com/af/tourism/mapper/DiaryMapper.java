@@ -5,6 +5,7 @@ import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
+import com.af.tourism.pojo.vo.admin.DashboardTopDiaryVO;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
@@ -13,6 +14,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -99,4 +101,15 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @return 日记详情
      */
     DiaryDetailForAdminVO selectAdminDiaryDetail(@Param("diaryId") Long diaryId);
+
+    /**
+     * 查询热门日记排行
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 返回条数
+     * @return 热门日记排行
+     */
+    List<DashboardTopDiaryVO> selectAdminTopDiaries(@Param("startTime") LocalDateTime startTime,
+                                                    @Param("endTime") LocalDateTime endTime,
+                                                    @Param("limit") Integer limit);
 }

@@ -20,6 +20,8 @@ public class DashboardOverviewVO {
 
     private Long attractionOfflineCount;
 
+    private Long categoryTotal;
+
     private Long diaryTotal;
 
     private Long diaryOnlineCount;
@@ -31,4 +33,10 @@ public class DashboardOverviewVO {
     private Long diaryRejectedCount;
 
     private Long diaryDeletedCount;
+
+    private Long commentTotal;
+
+    private Long commentVisibleCount;
+
+    private Long commentHiddenCount;
 }

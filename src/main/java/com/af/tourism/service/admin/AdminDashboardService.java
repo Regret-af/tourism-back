@@ -1,6 +1,12 @@
 package com.af.tourism.service.admin;
 
+import com.af.tourism.pojo.dto.admin.DashboardRangeQueryDTO;
+import com.af.tourism.pojo.vo.admin.AttractionCategoryDistributionVO;
 import com.af.tourism.pojo.vo.admin.DashboardOverviewVO;
+import com.af.tourism.pojo.vo.admin.DashboardTrendsVO;
+
+import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 管理端统计看板服务
@@ -12,4 +18,17 @@ public interface AdminDashboardService {
      * @return 看板总览
      */
     DashboardOverviewVO getOverview();
+
+    /**
+     * 获取趋势统计
+     * @param queryDTO 查询参数
+     * @return 趋势统计
+     */
+    DashboardTrendsVO getTrends(@Valid DashboardRangeQueryDTO queryDTO);
+
+    /**
+     * 获取景点分类分布
+     * @return 景点分类分布
+     */
+    List<AttractionCategoryDistributionVO> getAttractionCategoryDistribution();
 }

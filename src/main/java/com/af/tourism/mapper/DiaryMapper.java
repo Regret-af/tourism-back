@@ -1,11 +1,13 @@
 package com.af.tourism.mapper;
 
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
+import com.af.tourism.pojo.dto.admin.DiaryOptionQueryDTO;
 import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
+import com.af.tourism.pojo.vo.admin.DashboardTopDiaryVO;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
-import com.af.tourism.pojo.vo.admin.DashboardTopDiaryVO;
+import com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
@@ -94,6 +96,13 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @return 日记分页列表
      */
     List<DiaryForAdminVO> selectAdminDiaryList(@Param("queryDTO") AdminDiaryQueryDTO queryDTO);
+
+    /**
+     * 日记下拉选项
+     * @param queryDTO 搜索参数
+     * @return 日记下拉列表
+     */
+    List<DiaryOptionForAdminVO> selectAdminDiaryOptions(@Param("queryDTO") DiaryOptionQueryDTO queryDTO);
 
     /**
      * 查询管理端日记详情

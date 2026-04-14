@@ -51,6 +51,19 @@
         </association>
     </resultMap>
 
+    <resultMap id="AdminDiaryOptionMap" type="com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <association property="author" javaType="com.af.tourism.pojo.vo.admin.DiaryAuthorForAdminVO">
+            <id column="author_id" property="id"/>
+            <result column="author_nickname" property="nickname"/>
+        </association>
+    </resultMap>
+
     <resultMap id="DashboardTopDiaryMap" type="com.af.tourism.pojo.vo.admin.DashboardTopDiaryVO">
         <id column="diary_id" property="diaryId"/>
         <result column="title" property="title"/>
@@ -309,6 +322,27 @@
         LEFT JOIN diary_category dc ON d.content_type = dc.id
         WHERE d.id = #{diaryId}
         LIMIT 1
+    </select>
+
+    <select id="selectAdminDiaryOptions" resultMap="AdminDiaryOptionMap">
+        SELECT
+            d.id,
+            d.title,
+            d.cover_url,
+            u.id AS author_id,
+            u.nickname AS author_nickname
+        FROM travel_diaries d
+        LEFT JOIN users u ON d.user_id = u.id
+        <where>
+            <if test="queryDTO.keyword != null and queryDTO.keyword != ''">
+                AND d.title LIKE CONCAT('%', #{queryDTO.keyword}, '%')
+            </if>
+            <if test="queryDTO.authorId != null">
+                AND d.user_id = #{queryDTO.authorId}
+            </if>
+        </where>
+        ORDER BY d.published_at DESC, d.id DESC
+        LIMIT #{queryDTO.pageSize}
     </select>
 
     <select id="selectAdminTopDiaries" resultMap="DashboardTopDiaryMap">

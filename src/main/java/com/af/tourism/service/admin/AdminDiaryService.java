@@ -3,11 +3,14 @@ package com.af.tourism.service.admin;
 import com.af.tourism.common.enums.DiaryDeletedStatus;
 import com.af.tourism.common.enums.DiaryStatus;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
+import com.af.tourism.pojo.dto.admin.DiaryOptionQueryDTO;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
+import com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 管理端日记服务
@@ -20,6 +23,13 @@ public interface AdminDiaryService {
      * @return 日记分页列表
      */
     PageResponse<DiaryForAdminVO> listDiaries(@Valid AdminDiaryQueryDTO queryDTO);
+
+    /**
+     * 日记下拉选项
+     * @param queryDTO 搜索参数
+     * @return 日记下拉列表
+     */
+    List<DiaryOptionForAdminVO> listDiaryOptions(@Valid DiaryOptionQueryDTO queryDTO);
 
     /**
      * 获取管理端日记详情

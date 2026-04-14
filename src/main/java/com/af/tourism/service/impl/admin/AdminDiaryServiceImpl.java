@@ -6,9 +6,11 @@ import com.af.tourism.common.enums.DiaryStatus;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
+import com.af.tourism.pojo.dto.admin.DiaryOptionQueryDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
+import com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminDiaryService;
 import com.github.pagehelper.PageHelper;
@@ -53,6 +55,16 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
         response.setTotal(pageInfo.getTotal());
 
         return response;
+    }
+
+    /**
+     * 日记下拉选项
+     * @param queryDTO 搜索参数
+     * @return 日记下拉列表
+     */
+    @Override
+    public List<DiaryOptionForAdminVO> listDiaryOptions(DiaryOptionQueryDTO queryDTO) {
+        return diaryMapper.selectAdminDiaryOptions(queryDTO);
     }
 
     /**

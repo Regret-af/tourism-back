@@ -6,9 +6,11 @@ import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.admin.AdminDiaryQueryDTO;
 import com.af.tourism.pojo.dto.admin.DiaryDeletedUpdateDTO;
+import com.af.tourism.pojo.dto.admin.DiaryOptionQueryDTO;
 import com.af.tourism.pojo.dto.admin.DiaryStatusUpdateDTO;
 import com.af.tourism.pojo.vo.admin.DiaryDetailForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
+import com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminDiaryService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import java.util.List;
 
 /**
  * 管理端日记接口
@@ -42,6 +45,16 @@ public class AdminDiaryController {
     @GetMapping("/travel-diaries")
     public ApiResponse<PageResponse<DiaryForAdminVO>> listDiaries(@Valid AdminDiaryQueryDTO queryDTO) {
         return ApiResponse.ok(adminDiaryService.listDiaries(queryDTO));
+    }
+
+    /**
+     * 日记下拉选项
+     * @param queryDTO 搜索参数
+     * @return 日记下拉列表
+     */
+    @GetMapping("/travel-diaries/options")
+    public ApiResponse<List<DiaryOptionForAdminVO>> listDiaryOptions(@Valid DiaryOptionQueryDTO queryDTO) {
+        return ApiResponse.ok(adminDiaryService.listDiaryOptions(queryDTO));
     }
 
     /**

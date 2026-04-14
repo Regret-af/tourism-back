@@ -73,7 +73,7 @@
         <result column="address_detail" property="addressDetail"/>
         <result column="telephone" property="telephone"/>
         <result column="opening_hours" property="openingHours"/>
-        <result column="baiduUid" property="baiduUid"/>
+        <result column="baidu_uid" property="baiduUid"/>
         <result column="sourceSynced_at" property="sourceSyncedAt"/>
         <result column="longitude" property="longitude"/>
         <result column="latitude" property="latitude"/>
@@ -207,7 +207,7 @@
                a.address_detail,
                a.telephone,
                a.opening_hours,
-               a.baiduUid,
+               a.baidu_uid,
                a.sourceSynced_at,
                a.longitude,
                a.latitude,

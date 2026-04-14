@@ -13,9 +13,11 @@ import com.af.tourism.common.enums.OperationLogSource;
 import com.af.tourism.common.enums.OptionProvider;
 import com.af.tourism.common.enums.RoleCode;
 import com.af.tourism.common.enums.UserStatus;
+import com.af.tourism.mapper.DiaryCategoryMapper;
 import com.af.tourism.pojo.vo.admin.AdminMetaOptionsVO;
 import com.af.tourism.pojo.vo.common.OptionVO;
 import com.af.tourism.service.admin.AdminMetaService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -26,11 +28,15 @@ import java.util.stream.Collectors;
  * 管理端通用元数据服务实现
  */
 @Service
+@RequiredArgsConstructor
 public class AdminMetaServiceImpl implements AdminMetaService {
+
+    private final DiaryCategoryMapper diaryCategoryMapper;
 
     @Override
     public AdminMetaOptionsVO getOptions() {
         AdminMetaOptionsVO vo = new AdminMetaOptionsVO();
+
         vo.setOperationLogModules(toOptions(OperationLogModule.values()));
         vo.setOperationLogActions(toOptions(OperationLogAction.values()));
         vo.setOperationLogSources(toOptions(OperationLogSource.values()));
@@ -43,6 +49,8 @@ public class AdminMetaServiceImpl implements AdminMetaService {
         vo.setDiaryCommentStatuses(toOptions(DiaryCommentStatus.values()));
         vo.setUserStatuses(toOptions(UserStatus.values()));
         vo.setRoleCodes(toOptions(RoleCode.values()));
+
+        vo.setDiaryContentTypes(diaryCategoryMapper.selectAdminDiaryContentTypes());
         return vo;
     }
 

@@ -31,6 +31,8 @@ public class AdminMetaOptionsVO {
 
     private List<OptionVO<Integer>> diaryCommentStatuses;
 
+    private List<DiaryContentTypeOptionVO> diaryContentTypes;
+
     private List<OptionVO<Integer>> userStatuses;
 
     private List<OptionVO<String>> roleCodes;

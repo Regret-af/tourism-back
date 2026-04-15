@@ -12,6 +12,7 @@ public enum OperationLogAction implements OptionProvider<String> {
     COMMENT("COMMENT", "发表评论"),
     CREATE_DIARY("CREATE_DIARY", "创建日记"),
     UPDATE_DIARY("UPDATE_DIARY", "编辑日记"),
+    DELETE_DIARY("DELETE_DIARY", "删除日记"),
     FAVORITE("FAVORITE", "收藏"),
     UNFAVORITE("UNFAVORITE", "取消收藏"),
     LIKE("LIKE", "点赞"),

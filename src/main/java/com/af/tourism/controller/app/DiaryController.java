@@ -15,6 +15,7 @@ import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.app.DiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -72,6 +73,25 @@ public class DiaryController {
         // 获取用户id，若 id 为空，直接抛出异常
         Long userId = AuthContext.requireCurrentUserId();
         diaryService.updateDiary(diaryId, request, userId);
+        return ApiResponse.ok();
+    }
+
+    /**
+     * 删除旅行日记
+     * @param diaryId 日记 id
+     * @return 删除结果
+     */
+    @DeleteMapping("/travel-diaries/{diaryId}")
+    @OperationLogRecord(
+            module = OperationLogModule.DIARY,
+            action = OperationLogAction.DELETE_DIARY,
+            description = "删除旅行日记",
+            bizIdArgIndex = 0
+    )
+    public ApiResponse<Void> deleteDiary(@PathVariable("diaryId") Long diaryId) {
+        // 获取用户id，若 id 为空，直接抛出异常
+        Long userId = AuthContext.requireCurrentUserId();
+        diaryService.deleteDiary(diaryId, userId);
         return ApiResponse.ok();
     }
 

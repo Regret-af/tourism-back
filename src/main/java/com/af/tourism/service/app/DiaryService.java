@@ -26,6 +26,13 @@ public interface DiaryService {
     void updateDiary(Long diaryId, TravelDiaryUpdateDTO request, Long userId);
 
     /**
+     * 删除旅行日记
+     * @param diaryId 日记 id
+     * @param userId 用户 id
+     */
+    void deleteDiary(Long diaryId, Long userId);
+
+    /**
      * 旅行日记列表
      * @param queryDTO 请求参数
      * @return 日记列表

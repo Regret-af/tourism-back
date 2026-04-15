@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.enums.DiaryDeletedStatus;
 import com.af.tourism.converter.DiaryConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryMapper;
@@ -100,6 +101,37 @@ public class DiaryServiceImpl implements DiaryService {
         int rows = diaryMapper.updateById(diary);
         if (rows <= 0) {
             log.error("编辑旅行日记失败，数据库更新失败，diaryId={}, userId={}", diaryId, userId);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库更新失败");
+        }
+    }
+
+    /**
+     * 删除旅行日记
+     * @param diaryId 日记 id
+     * @param userId 用户 id
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteDiary(Long diaryId, Long userId) {
+        TravelDiary diary = diaryMapper.selectById(diaryId);
+        if (diary == null) {
+            log.warn("删除旅行日记失败，日记不存在，diaryId={}, userId={}", diaryId, userId);
+            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
+        }
+        if (!Objects.equals(diary.getUserId(), userId)) {
+            log.warn("删除旅行日记失败，非作者无权限，diaryId={}, userId={}, authorId={}",
+                    diaryId, userId, diary.getUserId());
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限删除该日记");
+        }
+        if (Objects.equals(diary.getIsDeleted(), DiaryDeletedStatus.DELETED.getValue())) {
+            log.warn("删除旅行日记失败，日记已删除，diaryId={}, userId={}", diaryId, userId);
+            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
+        }
+
+        diary.setIsDeleted(DiaryDeletedStatus.DELETED.getValue());
+        int rows = diaryMapper.updateById(diary);
+        if (rows <= 0) {
+            log.error("删除旅行日记失败，数据库更新失败，diaryId={}, userId={}", diaryId, userId);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库更新失败");
         }
     }

@@ -30,14 +30,16 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @param queryDTO 查询条件
      * @return 旅行日记列表
      */
-    List<DiaryCardVO> selectDiaryList(@Param("queryDTO") DiaryQueryDTO queryDTO);
+    List<DiaryCardVO> selectDiaryList(@Param("queryDTO") DiaryQueryDTO queryDTO,
+                                      @Param("currentUserId") Long currentUserId);
 
     /**
      * 查询旅行日记详情
      * @param diaryId 日记 id
      * @return 旅行日记详情
      */
-    DiaryDetailVO selectDiaryDetail(@Param("diaryId") Long diaryId);
+    DiaryDetailVO selectDiaryDetail(@Param("diaryId") Long diaryId,
+                                    @Param("currentUserId") Long currentUserId);
 
     /**
      * 更新旅行日记评论数量
@@ -69,7 +71,9 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @param queryDTO 排序分页参数
      * @return 分页后的当前用户日记列表
      */
-    List<MyDiaryProfileCardVO> selectMyDiaryProfileList(@Param("userId") Long userId, @Param("queryDTO") DiaryQueryDTO queryDTO);
+    List<MyDiaryProfileCardVO> selectMyDiaryProfileList(@Param("userId") Long userId,
+                                                        @Param("queryDTO") DiaryQueryDTO queryDTO,
+                                                        @Param("currentUserId") Long currentUserId);
 
     /**
      * 查询作者更多创作列表
@@ -80,7 +84,8 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      */
     List<DiaryCardVO> selectMoreDiariesByAuthor(@Param("userId") Long userId,
                                                 @Param("excludeDiaryId") Long excludeDiaryId,
-                                                @Param("queryDTO") DiaryQueryDTO queryDTO);
+                                                @Param("queryDTO") DiaryQueryDTO queryDTO,
+                                                @Param("currentUserId") Long currentUserId);
 
     /**
      * 在主页获取其他人的日记
@@ -88,7 +93,9 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      * @param queryDTO 查询参数
      * @return 日记列表
      */
-    List<DiaryProfileCardVO> selectUserDiaryProfileList(@Param("userId") Long userId, @Param("queryDTO") DiaryQueryDTO queryDTO);
+    List<DiaryProfileCardVO> selectUserDiaryProfileList(@Param("userId") Long userId,
+                                                        @Param("queryDTO") DiaryQueryDTO queryDTO,
+                                                        @Param("currentUserId") Long currentUserId);
 
     /**
      * 查询管理端日记列表

@@ -138,8 +138,7 @@
     d.favorite_count,
     d.comment_count,
     d.published_at,
-    0 AS liked,
-    0 AS favorited,
+    <include refid="CurrentUserInteractColumns"/>,
     u.id AS author_id,
     u.nickname AS author_nickname,
     u.avatar_url AS author_avatar_url
@@ -182,6 +181,21 @@
         </choose>
     </sql>
 
+    <sql id="CurrentUserInteractColumns">
+        CASE WHEN dl.id IS NULL THEN 0 ELSE 1 END AS liked,
+    CASE WHEN df.id IS NULL THEN 0 ELSE 1 END AS favorited
+    </sql>
+
+    <sql id="CurrentUserInteractJoins">
+        LEFT JOIN diary_likes dl
+        ON dl.diary_id = d.id
+       AND dl.user_id = #{currentUserId}
+        LEFT JOIN diary_favorites df
+        ON df.diary_id = d.id
+        AND df.user_id = #{currentUserId}
+    </sql>
+
+
     <select id="selectMyDiaryProfileList" resultMap="MyDiaryProfileCardMap">
         SELECT
         <include refid="BaseDiaryCardColumns"/>
@@ -189,6 +203,7 @@
         <include refid="MyProfileDiaryExtraColumns"/>
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
+        <include refid="CurrentUserInteractJoins"/>
         WHERE d.user_id = #{userId}
         <include refid="ProfileDiaryOrderBy"/>
     </select>
@@ -199,6 +214,7 @@
         <include refid="ProfileDiaryExtraColumns"/>
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
+        <include refid="CurrentUserInteractJoins"/>
         WHERE d.user_id = #{userId}
         AND <include refid="PublicDiaryConditions"/>
         <include refid="ProfileDiaryOrderBy"/>
@@ -209,6 +225,7 @@
         <include refid="BaseDiaryCardColumns"/>
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
+        <include refid="CurrentUserInteractJoins"/>
         WHERE d.user_id = #{userId}
         AND <include refid="PublicDiaryConditions"/>
         AND d.id != #{excludeDiaryId}
@@ -220,6 +237,7 @@
         <include refid="BaseDiaryCardColumns"/>
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
+        <include refid="CurrentUserInteractJoins"/>
         WHERE <include refid="PublicDiaryConditions"/>
         <include refid="CommonDiaryOrderBy"/>
     </select>
@@ -234,6 +252,7 @@
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
         LEFT JOIN diary_category dc ON d.content_type = dc.id
+        <include refid="CurrentUserInteractJoins"/>
         WHERE d.id = #{diaryId}
           AND <include refid="PublicDiaryConditions"/>
         LIMIT 1

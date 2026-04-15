@@ -49,8 +49,8 @@
             CASE WHEN t.invalid = 1 THEN 0 ELSE t.like_count END AS like_count,
             CASE WHEN t.invalid = 1 THEN 0 ELSE t.favorite_count END AS favorite_count,
             CASE WHEN t.invalid = 1 THEN 0 ELSE t.comment_count END AS comment_count,
-            0 AS liked,
-            1 AS favorited,
+            CASE WHEN t.invalid = 1 THEN 0 ELSE t.liked END AS liked,
+            CASE WHEN t.invalid = 1 THEN 0 ELSE t.favorited END AS favorited,
             CASE WHEN t.invalid = 1 THEN NULL ELSE t.published_at END AS published_at,
             t.invalid,
             CASE WHEN t.invalid = 1 THEN NULL ELSE t.author_id END AS author_id,
@@ -72,17 +72,25 @@
                 u.avatar_url AS author_avatar_url,
                 CASE
                     WHEN d.id IS NULL
-                        OR d.status <> 1
-                        OR d.is_deleted <> 0
-                        OR d.visibility <> 1
+                        OR d.status != 1
+                        OR d.is_deleted != 0
+                        OR d.visibility != 1
                     THEN 1
                     ELSE 0
                 END AS invalid,
+                CASE WHEN dl.id IS NULL THEN 0 ELSE 1 END AS liked,
+                CASE WHEN mf.id IS NULL THEN 0 ELSE 1 END AS favorited,
                 f.created_at,
                 f.id AS favorite_id
             FROM diary_favorites f
             LEFT JOIN travel_diaries d ON f.diary_id = d.id
             LEFT JOIN users u ON d.user_id = u.id
+            LEFT JOIN diary_likes dl
+                ON dl.diary_id = f.diary_id
+                AND dl.user_id = #{userId}
+            LEFT JOIN diary_favorites mf
+                ON mf.diary_id = f.diary_id
+                AND mf.user_id = #{userId}
             WHERE f.user_id = #{userId}
             ) t
         ORDER BY t.created_at DESC, t.favorite_id DESC

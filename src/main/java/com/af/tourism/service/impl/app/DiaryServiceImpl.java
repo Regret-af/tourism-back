@@ -69,9 +69,8 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 2.进行查询操作
-        log.debug("查询日记列表，pageNum={}, pageSize={}, sort={}",
-                queryDTO.getPageNum(), queryDTO.getPageSize(), queryDTO.getSort());
-        List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO);
+        Long userId = AuthContext.getCurrentUserId();
+        List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO, userId);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
         // 3.填充返回值
@@ -92,7 +91,8 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     public DiaryDetailVO getDiaryDetail(Long diaryId) {
         // 1.查询旅行日记详情
-        DiaryDetailVO detailVO = diaryMapper.selectDiaryDetail(diaryId);
+        Long userId = AuthContext.getCurrentUserId();
+        DiaryDetailVO detailVO = diaryMapper.selectDiaryDetail(diaryId, userId);
 
         // 2.若为空，抛出异常
         if (detailVO == null) {
@@ -120,7 +120,7 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 3.进行查询操作
-        List<MyDiaryProfileCardVO> list = diaryMapper.selectMyDiaryProfileList(userId, queryDTO);
+        List<MyDiaryProfileCardVO> list = diaryMapper.selectMyDiaryProfileList(userId, queryDTO, userId);
         PageInfo<MyDiaryProfileCardVO> pageInfo = new PageInfo<>(list);
 
         // 4.填充返回值
@@ -145,7 +145,8 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 2.进行查询操作
-        List<DiaryProfileCardVO> list = diaryMapper.selectUserDiaryProfileList(userId, queryDTO);
+        Long currentUserId = AuthContext.getCurrentUserId();
+        List<DiaryProfileCardVO> list = diaryMapper.selectUserDiaryProfileList(userId, queryDTO, currentUserId);
         PageInfo<DiaryProfileCardVO> pageInfo = new PageInfo<>(list);
 
         // 3.填充返回值
@@ -173,7 +174,8 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 3.进行查询
-        List<DiaryCardVO> list = diaryMapper.selectMoreDiariesByAuthor(travelDiary.getUserId(), diaryId, queryDTO);
+        Long userId = AuthContext.getCurrentUserId();
+        List<DiaryCardVO> list = diaryMapper.selectMoreDiariesByAuthor(travelDiary.getUserId(), diaryId, queryDTO, userId);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
         // 4.封装返回信息

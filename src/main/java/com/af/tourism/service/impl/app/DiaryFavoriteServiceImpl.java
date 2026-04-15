@@ -1,8 +1,10 @@
 package com.af.tourism.service.impl.app;
 
+import com.af.tourism.common.enums.NotificationType;
 import com.af.tourism.mapper.DiaryFavoriteMapper;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.app.FavoriteDiaryQueryDTO;
+import com.af.tourism.pojo.dto.common.DiaryInteractionNotifyCommand;
 import com.af.tourism.pojo.entity.DiaryFavorite;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
@@ -10,6 +12,7 @@ import com.af.tourism.pojo.vo.app.DiaryFavoriteVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.DiaryFavoriteService;
 import com.af.tourism.service.helper.DiaryCheckService;
+import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -33,6 +36,7 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
+    private final DiaryInteractionNotificationService diaryInteractionNotificationService;
 
     /**
      * 收藏旅行日记
@@ -55,7 +59,17 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             favorite.setDiaryId(diaryId);
             favorite.setUserId(userId);
             diaryFavoriteMapper.insert(favorite);
+
+            // 4.执行旅行日记收藏数量更新操作
             diaryMapper.updateFavoriteCount(diaryId, 1);
+
+            // 5.添加通知列表
+            diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
+                    .type(NotificationType.FAVORITE)
+                    .triggerUserId(userId)
+                    .recipientUserId(diary.getUserId())
+                    .relatedDiaryId(diaryId)
+                    .build());
             diary = diaryMapper.selectById(diaryId);
             log.info("收藏日记成功，diaryId={}, userId={}", diaryId, userId);
         } else {

@@ -1,12 +1,15 @@
 package com.af.tourism.service.impl.app;
 
+import com.af.tourism.common.enums.NotificationType;
 import com.af.tourism.mapper.DiaryLikeMapper;
 import com.af.tourism.mapper.DiaryMapper;
+import com.af.tourism.pojo.dto.common.DiaryInteractionNotifyCommand;
 import com.af.tourism.pojo.entity.DiaryLike;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.service.app.DiaryLikeService;
 import com.af.tourism.service.helper.DiaryCheckService;
+import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
+    private final DiaryInteractionNotificationService diaryInteractionNotificationService;
 
     /**
      * 点赞旅行日记
@@ -48,7 +52,17 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             like.setDiaryId(diaryId);
             like.setUserId(userId);
             diaryLikeMapper.insert(like);
+
+            // 4.执行旅行日记评论数量更新操作
             diaryMapper.updateLikeCount(diaryId, 1);
+
+            // 5.添加通知列表
+            diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
+                    .type(NotificationType.LIKE)
+                    .triggerUserId(userId)
+                    .recipientUserId(diary.getUserId())
+                    .relatedDiaryId(diaryId)
+                    .build());
             diary = diaryMapper.selectById(diaryId);
             log.info("点赞日记成功，diaryId={}, userId={}", diaryId, userId);
         } else {

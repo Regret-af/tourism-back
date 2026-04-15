@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.enums.NotificationType;
 import com.af.tourism.converter.DiaryConverter;
 import com.af.tourism.converter.UserConverter;
 import com.af.tourism.exception.BusinessException;
@@ -8,13 +9,16 @@ import com.af.tourism.mapper.DiaryCommentMapper;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.app.DiaryCommentCreateDTO;
 import com.af.tourism.pojo.dto.app.DiaryCommentQueryDTO;
+import com.af.tourism.pojo.dto.common.DiaryInteractionNotifyCommand;
 import com.af.tourism.pojo.entity.DiaryComment;
+import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
 import com.af.tourism.pojo.vo.app.DiaryCommentVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.DiaryCommentService;
 import com.af.tourism.service.helper.DiaryCheckService;
+import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -42,6 +46,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
+    private final DiaryInteractionNotificationService diaryInteractionNotificationService;
 
     /**
      * 查询旅行日记评论列表
@@ -83,7 +88,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
     @Transactional(rollbackFor = Exception.class)
     public DiaryCommentCreateVO createComment(Long diaryId, Long userId, DiaryCommentCreateDTO request) {
         // 1.校验旅行日记是否存在
-        diaryCheckService.requirePublicDiary(diaryId);
+        TravelDiary diary = diaryCheckService.requirePublicDiary(diaryId);
         User user = userCheckService.requireActiveUser(userId);
 
         // 2.填充发布评论时的初始值和业务默认值
@@ -101,9 +106,18 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         }
         // 4.执行旅行日记评论数量更新操作
         diaryMapper.updateCommentCount(diaryId, 1);
+
+        // 5.添加通知列表
+        diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
+                .type(NotificationType.COMMENT)
+                .triggerUserId(userId)
+                .recipientUserId(diary.getUserId())
+                .relatedDiaryId(diaryId)
+                .relatedCommentId(comment.getId())
+                .build());
         log.info("发表评论成功，diaryId={}, commentId={}, userId={}", diaryId, comment.getId(), userId);
 
-        // 5.返回评论信息
+        // 6.返回评论信息
         DiaryCommentCreateVO response = diaryConverter.toDiaryCommentCreateVO(comment);
         response.setAuthor(userConverter.toUserPublicVO(user));
 

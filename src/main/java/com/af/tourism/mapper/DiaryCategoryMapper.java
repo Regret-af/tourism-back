@@ -2,6 +2,7 @@ package com.af.tourism.mapper;
 
 import com.af.tourism.pojo.entity.DiaryCategory;
 import com.af.tourism.pojo.vo.admin.DiaryContentTypeOptionVO;
+import com.af.tourism.pojo.vo.common.OptionVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -18,4 +19,6 @@ public interface DiaryCategoryMapper extends BaseMapper<DiaryCategory> {
      * @return 日记类型选项列表
      */
     List<DiaryContentTypeOptionVO> selectAdminDiaryContentTypes();
+
+    List<OptionVO<Long>> selectDiaryCategoryOptions();
 }

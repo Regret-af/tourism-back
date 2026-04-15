@@ -7,7 +7,20 @@
         <result column="label" property="label"/>
     </resultMap>
 
+    <resultMap id="DiaryCategoryOptionMap" type="com.af.tourism.pojo.vo.common.OptionVO">
+        <id column="value" property="value"/>
+        <result column="label" property="label"/>
+    </resultMap>
+
     <select id="selectAdminDiaryContentTypes" resultMap="DiaryContentTypeOptionMap">
+        SELECT
+            dc.id AS value,
+            dc.name AS label
+        FROM diary_category dc
+        ORDER BY dc.id ASC
+    </select>
+
+    <select id="selectDiaryCategoryOptions" resultMap="DiaryCategoryOptionMap">
         SELECT
             dc.id AS value,
             dc.name AS label

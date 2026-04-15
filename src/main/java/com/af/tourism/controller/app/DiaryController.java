@@ -10,8 +10,10 @@ import com.af.tourism.pojo.dto.app.TravelDiaryUpdateDTO;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
+import com.af.tourism.pojo.vo.common.OptionVO;
 import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
 import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.service.app.DiaryCategoryService;
 import com.af.tourism.service.app.DiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 旅行日记相关接口。
@@ -35,6 +38,7 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class DiaryController {
 
+    private final DiaryCategoryService diaryCategoryService;
     private final DiaryService diaryService;
 
     /**
@@ -93,6 +97,15 @@ public class DiaryController {
         Long userId = AuthContext.requireCurrentUserId();
         diaryService.deleteDiary(diaryId, userId);
         return ApiResponse.ok();
+    }
+
+    /**
+     * 日记分类选项
+     * @return 日记分类选项列表
+     */
+    @GetMapping("/diary-categories/options")
+    public ApiResponse<List<OptionVO<Long>>> listDiaryCategoryOptions() {
+        return ApiResponse.ok(diaryCategoryService.listCategoryOptions());
     }
 
     /**

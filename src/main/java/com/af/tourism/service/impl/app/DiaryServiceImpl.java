@@ -203,7 +203,6 @@ public class DiaryServiceImpl implements DiaryService {
         diary.setFavoriteCount(0);
         diary.setCommentCount(0);
         diary.setIsDeleted(0);
-        diary.setVisibility(1);
         diary.setIsTop(0);
         diary.setPublishedAt(LocalDateTime.now());
     }

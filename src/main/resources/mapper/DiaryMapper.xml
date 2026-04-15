@@ -101,6 +101,7 @@
 
     <resultMap id="MyDiaryProfileCardMap" type="com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO" extends="DiaryProfileCardMap">
         <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="visibility" property="visibility"/>
     </resultMap>
 
@@ -150,7 +151,8 @@
 
     <sql id="MyProfileDiaryExtraColumns">
         , d.status
-    , d.visibility
+        , d.is_deleted
+        , d.visibility
     </sql>
 
     <sql id="PublicDiaryConditions">

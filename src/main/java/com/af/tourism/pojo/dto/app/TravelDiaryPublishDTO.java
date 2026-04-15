@@ -21,6 +21,10 @@ public class TravelDiaryPublishDTO {
     @Size(max = 500, message = "封面地址长度不能超过500")
     private String coverUrl;
 
+    private Integer contentType;
+
+    private Integer visibility;
+
     @NotBlank(message = "正文不能为空")
     private String content;
 }

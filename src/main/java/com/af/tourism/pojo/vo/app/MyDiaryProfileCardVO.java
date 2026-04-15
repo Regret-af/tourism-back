@@ -20,6 +20,7 @@ public class MyDiaryProfileCardVO {
     private Integer likeCount;
     private Integer favoriteCount;
     private Integer commentCount;
+    private Integer isDeleted;
     private Integer visibility;
     private Boolean isTop;
     private Boolean liked;

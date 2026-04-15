@@ -42,6 +42,7 @@ public class Attraction {
     @TableField("view_count")
     private Integer viewCount;
 
+    @TableField("baidu_uid")
     private String baiduUid;
 
     @TableField("sourceSynced_at")

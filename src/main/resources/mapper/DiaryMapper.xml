@@ -157,6 +157,7 @@
     <sql id="PublicDiaryConditions">
         d.status = 1
     AND d.visibility = 1
+    AND d.is_deleted = 0
     </sql>
 
     <sql id="ProfileDiaryOrderBy">
@@ -234,7 +235,7 @@
         INNER JOIN users u ON d.user_id = u.id
         LEFT JOIN diary_category dc ON d.content_type = dc.id
         WHERE d.id = #{diaryId}
-          AND d.status = 1
+          AND <include refid="PublicDiaryConditions"/>
         LIMIT 1
     </select>
 

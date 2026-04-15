@@ -31,9 +31,6 @@ public class TravelDiary {
 
     private Integer status;
 
-    @TableField("is_deleted")
-    private Integer isDeleted;
-
     @TableField("view_count")
     private Integer viewCount;
 
@@ -45,6 +42,17 @@ public class TravelDiary {
 
     @TableField("comment_count")
     private Integer commentCount;
+
+    @TableField("is_deleted")
+    private Integer isDeleted;
+
+    @TableField("content_type")
+    private Integer contentType;
+
+    private Integer visibility;
+
+    @TableField("is_top")
+    private Integer isTop;
 
     @TableField("published_at")
     private LocalDateTime publishedAt;

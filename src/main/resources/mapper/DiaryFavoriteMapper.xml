@@ -41,61 +41,50 @@
 
     <select id="selectFavoriteDiaryList" resultMap="FavoriteDiaryCardMap">
         SELECT
-            f.diary_id AS id,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN '日记已失效'
-                ELSE d.title
-            END AS title,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN NULL
-                ELSE d.summary
-            END AS summary,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN NULL
-                ELSE d.cover_url
-            END AS cover_url,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN NULL
-                ELSE d.view_count
-            END AS view_count,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN 0
-                ELSE d.like_count
-            END AS like_count,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN 0
-                ELSE d.favorite_count
-            END AS favorite_count,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN 0
-                ELSE d.comment_count
-            END AS comment_count,
+            t.id,
+            CASE WHEN t.invalid = 1 THEN '日记已失效' ELSE t.title END AS title,
+            CASE WHEN t.invalid = 1 THEN NULL ELSE t.summary END AS summary,
+            CASE WHEN t.invalid = 1 THEN NULL ELSE t.cover_url END AS cover_url,
+            CASE WHEN t.invalid = 1 THEN NULL ELSE t.view_count END AS view_count,
+            CASE WHEN t.invalid = 1 THEN 0 ELSE t.like_count END AS like_count,
+            CASE WHEN t.invalid = 1 THEN 0 ELSE t.favorite_count END AS favorite_count,
+            CASE WHEN t.invalid = 1 THEN 0 ELSE t.comment_count END AS comment_count,
             0 AS liked,
             1 AS favorited,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN NULL
-                ELSE d.published_at
-            END AS published_at,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN 1
-                ELSE 0
-            END AS invalid,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN NULL
-                ELSE u.id
-            END AS author_id,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN NULL
-                ELSE u.nickname
-            END AS author_nickname,
-            CASE
-                WHEN d.id IS NULL OR d.status != 1 THEN NULL
-                ELSE u.avatar_url
-            END AS author_avatar_url
-        FROM diary_favorites f
-        LEFT JOIN travel_diaries d ON f.diary_id = d.id
-        LEFT JOIN users u ON d.user_id = u.id
-        WHERE f.user_id = #{userId}
-        ORDER BY f.created_at DESC, f.id DESC
+            CASE WHEN t.invalid = 1 THEN NULL ELSE t.published_at END AS published_at,
+            t.invalid,
+            CASE WHEN t.invalid = 1 THEN NULL ELSE t.author_id END AS author_id,
+            CASE WHEN t.invalid = 1 THEN NULL ELSE t.author_nickname END AS author_nickname,
+            CASE WHEN t.invalid = 1 THEN NULL ELSE t.author_avatar_url END AS author_avatar_url
+        FROM (
+            SELECT
+                f.diary_id AS id,
+                d.title,
+                d.summary,
+                d.cover_url,
+                d.view_count,
+                d.like_count,
+                d.favorite_count,
+                d.comment_count,
+                d.published_at,
+                u.id AS author_id,
+                u.nickname AS author_nickname,
+                u.avatar_url AS author_avatar_url,
+                CASE
+                    WHEN d.id IS NULL
+                        OR d.status <> 1
+                        OR d.is_deleted <> 0
+                        OR d.visibility <> 1
+                    THEN 1
+                    ELSE 0
+                END AS invalid,
+                f.created_at,
+                f.id AS favorite_id
+            FROM diary_favorites f
+            LEFT JOIN travel_diaries d ON f.diary_id = d.id
+            LEFT JOIN users u ON d.user_id = u.id
+            WHERE f.user_id = #{userId}
+            ) t
+        ORDER BY t.created_at DESC, t.favorite_id DESC
     </select>
 </mapper>

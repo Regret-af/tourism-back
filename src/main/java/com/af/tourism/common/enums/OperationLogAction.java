@@ -11,6 +11,7 @@ public enum OperationLogAction implements OptionProvider<String> {
     UPDATE_PASSWORD("UPDATE_PASSWORD", "修改密码"),
     COMMENT("COMMENT", "发表评论"),
     CREATE_DIARY("CREATE_DIARY", "创建日记"),
+    UPDATE_DIARY("UPDATE_DIARY", "编辑日记"),
     FAVORITE("FAVORITE", "收藏"),
     UNFAVORITE("UNFAVORITE", "取消收藏"),
     LIKE("LIKE", "点赞"),

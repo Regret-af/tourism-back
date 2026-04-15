@@ -2,6 +2,7 @@ package com.af.tourism.service.app;
 
 import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.app.TravelDiaryPublishDTO;
+import com.af.tourism.pojo.dto.app.TravelDiaryUpdateDTO;
 import com.af.tourism.pojo.vo.app.*;
 import com.af.tourism.pojo.vo.common.PageResponse;
 
@@ -15,6 +16,14 @@ public interface DiaryService {
      * @return 返回值
      */
     TravelDiaryPublishVO publishDiary(TravelDiaryPublishDTO request, Long userId);
+
+    /**
+     * 编辑旅行日记
+     * @param diaryId 日记 id
+     * @param request 编辑内容
+     * @param userId 用户 id
+     */
+    void updateDiary(Long diaryId, TravelDiaryUpdateDTO request, Long userId);
 
     /**
      * 旅行日记列表

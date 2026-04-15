@@ -6,6 +6,7 @@ import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.app.TravelDiaryPublishDTO;
+import com.af.tourism.pojo.dto.app.TravelDiaryUpdateDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.*;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -56,6 +57,51 @@ public class DiaryServiceImpl implements DiaryService {
         log.info("旅行日记发布成功，diaryId={}, userId={}", diary.getId(), userId);
 
         return diaryConverter.toTravelDiaryPublishVO(diary);
+    }
+
+    /**
+     * 编辑旅行日记
+     * @param diaryId 日记 id
+     * @param request 编辑内容
+     * @param userId 用户 id
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateDiary(Long diaryId, TravelDiaryUpdateDTO request, Long userId) {
+        // 1.校验参数与权限
+        TravelDiary diary = diaryMapper.selectById(diaryId);
+        if (diary == null) {
+            log.warn("编辑旅行日记失败，日记不存在，diaryId={}, userId={}", diaryId, userId);
+            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
+        }
+        if (!Objects.equals(diary.getUserId(), userId)) {
+            log.warn("编辑旅行日记失败，非作者无权限，diaryId={}, userId={}, authorId={}",
+                    diaryId, userId, diary.getUserId());
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限编辑该日记");
+        }
+        if (Objects.equals(diary.getIsDeleted(), 1)) {
+            log.warn("编辑旅行日记失败，日记已删除，diaryId={}, userId={}", diaryId, userId);
+            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
+        }
+
+        // 2.更新新数据
+        diary.setTitle(request.getTitle());
+        diary.setSummary(request.getSummary());
+        diary.setCoverUrl(request.getCoverUrl());
+        diary.setContent(request.getContent());
+        if (request.getContentType() != null) {
+            diary.setContentType(request.getContentType());
+        }
+        if (request.getVisibility() != null) {
+            diary.setVisibility(request.getVisibility());
+        }
+
+        // 3.进行更新
+        int rows = diaryMapper.updateById(diary);
+        if (rows <= 0) {
+            log.error("编辑旅行日记失败，数据库更新失败，diaryId={}, userId={}", diaryId, userId);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库更新失败");
+        }
     }
 
     /**

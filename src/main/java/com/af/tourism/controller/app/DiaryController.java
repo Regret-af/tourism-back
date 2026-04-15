@@ -6,6 +6,7 @@ import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.app.TravelDiaryPublishDTO;
+import com.af.tourism.pojo.dto.app.TravelDiaryUpdateDTO;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -17,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,11 +42,37 @@ public class DiaryController {
      * @return 返回值
      */
     @PostMapping("/travel-diaries")
-    @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.CREATE_DIARY, description = "发布旅行日记", bizIdField = "data.id")
+    @OperationLogRecord(
+            module = OperationLogModule.DIARY,
+            action = OperationLogAction.CREATE_DIARY,
+            description = "发布旅行日记",
+            bizIdField = "data.id"
+    )
     public ApiResponse<TravelDiaryPublishVO> publishDiary(@Valid @RequestBody TravelDiaryPublishDTO request) {
         // 获取用户id，若 id 为空，直接抛出异常
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryService.publishDiary(request, userId));
+    }
+
+    /**
+     * 编辑旅行日记
+     * @param diaryId 日记 id
+     * @param request 编辑信息
+     * @return 编辑结果
+     */
+    @PutMapping("/travel-diaries/{diaryId}")
+    @OperationLogRecord(
+            module = OperationLogModule.DIARY,
+            action = OperationLogAction.UPDATE_DIARY,
+            description = "编辑旅行日记",
+            bizIdArgIndex = 0
+    )
+    public ApiResponse<Void> updateDiary(@PathVariable("diaryId") Long diaryId,
+                                         @Valid @RequestBody TravelDiaryUpdateDTO request) {
+        // 获取用户id，若 id 为空，直接抛出异常
+        Long userId = AuthContext.requireCurrentUserId();
+        diaryService.updateDiary(diaryId, request, userId);
+        return ApiResponse.ok();
     }
 
     /**

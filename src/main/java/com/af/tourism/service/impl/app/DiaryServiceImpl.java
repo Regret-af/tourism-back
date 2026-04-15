@@ -137,6 +137,22 @@ public class DiaryServiceImpl implements DiaryService {
     }
 
     /**
+     * 查询我自己的单篇日记详情
+     * @param diaryId 日记 id
+     * @param userId 当前用户 id
+     * @return 我的日记详情
+     */
+    @Override
+    public MyDiaryDetailVO getMyDiaryDetail(Long diaryId, Long userId) {
+        MyDiaryDetailVO detailVO = diaryMapper.selectMyDiaryDetail(diaryId, userId);
+        if (detailVO == null) {
+            log.warn("查询我的日记详情失败，日记不存在或无权限，diaryId={}, userId={}", diaryId, userId);
+            throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
+        }
+        return detailVO;
+    }
+
+    /**
      * 旅行日记列表
      * @param queryDTO 请求参数
      * @return 日记列表

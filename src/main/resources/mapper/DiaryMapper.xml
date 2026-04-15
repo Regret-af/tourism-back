@@ -105,6 +105,26 @@
         <result column="visibility" property="visibility"/>
     </resultMap>
 
+    <resultMap id="MyDiaryDetailMap" type="com.af.tourism.pojo.vo.app.MyDiaryDetailVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="content_type" property="contentType"/>
+        <result column="visibility" property="visibility"/>
+        <result column="is_top" property="isTop"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
     <resultMap id="DiaryDetailMap" type="com.af.tourism.pojo.vo.app.DiaryDetailVO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
@@ -257,6 +277,31 @@
         <include refid="CurrentUserInteractJoins"/>
         WHERE d.id = #{diaryId}
           AND <include refid="PublicDiaryConditions"/>
+        LIMIT 1
+    </select>
+
+    <select id="selectMyDiaryDetail" resultMap="MyDiaryDetailMap">
+        SELECT
+            d.id,
+            d.title,
+            d.summary,
+            d.cover_url,
+            d.content,
+            d.status,
+            d.is_deleted,
+            d.content_type,
+            d.visibility,
+            d.is_top,
+            d.view_count,
+            d.like_count,
+            d.favorite_count,
+            d.comment_count,
+            d.published_at,
+            d.created_at,
+            d.updated_at
+        FROM travel_diaries d
+        WHERE d.id = #{diaryId}
+          AND d.user_id = #{userId}
         LIMIT 1
     </select>
 

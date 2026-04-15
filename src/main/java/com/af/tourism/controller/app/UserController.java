@@ -10,6 +10,7 @@ import com.af.tourism.pojo.dto.app.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.app.UserProfileUpdateDTO;
 import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
 import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
+import com.af.tourism.pojo.vo.app.MyDiaryDetailVO;
 import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
 import com.af.tourism.pojo.vo.app.UserPublicVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
@@ -80,6 +81,17 @@ public class UserController {
     public ApiResponse<PageResponse<MyDiaryProfileCardVO>> getTravelDiaries(@Valid DiaryQueryDTO queryDTO) {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryService.listMyDiaries(userId, queryDTO));
+    }
+
+    /**
+     * 查询我的单篇日记详情
+     * @param diaryId 日记 id
+     * @return 我的日记详情
+     */
+    @GetMapping("me/travel-diaries/{diaryId}")
+    public ApiResponse<MyDiaryDetailVO> getMyDiaryDetail(@PathVariable("diaryId") Long diaryId) {
+        Long userId = AuthContext.requireCurrentUserId();
+        return ApiResponse.ok(diaryService.getMyDiaryDetail(diaryId, userId));
     }
 
     /**

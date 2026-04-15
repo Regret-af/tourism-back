@@ -11,6 +11,7 @@ import com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
+import com.af.tourism.pojo.vo.app.MyDiaryDetailVO;
 import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
@@ -40,6 +41,15 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      */
     DiaryDetailVO selectDiaryDetail(@Param("diaryId") Long diaryId,
                                     @Param("currentUserId") Long currentUserId);
+
+    /**
+     * 查询我自己的单篇日记详情
+     * @param diaryId 日记 id
+     * @param userId 当前用户 id
+     * @return 我的日记详情
+     */
+    MyDiaryDetailVO selectMyDiaryDetail(@Param("diaryId") Long diaryId,
+                                        @Param("userId") Long userId);
 
     /**
      * 浏览量自增

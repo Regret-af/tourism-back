@@ -153,6 +153,15 @@
         LIMIT 1
     </select>
 
+    <update id="increaseViewCount">
+        UPDATE attractions a
+                 INNER JOIN attraction_categories c ON a.category_id = c.id
+        SET a.view_count = COALESCE(a.view_count, 0) + 1
+        WHERE a.id = #{attractionId}
+          AND a.status = 1
+          AND c.status = 1
+    </update>
+
     <select id="selectAdminAttractions" resultMap="AdminAttractionMap">
         SELECT a.id,
                a.name,

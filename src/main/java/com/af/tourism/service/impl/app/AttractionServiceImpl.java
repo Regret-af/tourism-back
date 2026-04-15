@@ -20,6 +20,7 @@ import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -77,8 +78,10 @@ public class AttractionServiceImpl implements AttractionService {
      * @return 景点详情信息
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public AttractionDetailVO getAttractionDetail(Long attractionId) {
         // 1.查询景点信息
+        attractionMapper.increaseViewCount(attractionId);
         AttractionDetailVO detailVO = attractionMapper.selectAttractionDetail(attractionId);
         // 2.若为空，抛出异常
         if (detailVO == null) {

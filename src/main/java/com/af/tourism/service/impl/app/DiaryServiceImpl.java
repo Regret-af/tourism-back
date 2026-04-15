@@ -89,7 +89,9 @@ public class DiaryServiceImpl implements DiaryService {
      * @return 旅行日记详细信息
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public DiaryDetailVO getDiaryDetail(Long diaryId) {
+        diaryMapper.increaseViewCount(diaryId);
         // 1.查询旅行日记详情
         Long userId = AuthContext.getCurrentUserId();
         DiaryDetailVO detailVO = diaryMapper.selectDiaryDetail(diaryId, userId);

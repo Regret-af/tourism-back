@@ -31,6 +31,13 @@ public interface AttractionMapper extends BaseMapper<Attraction> {
     AttractionDetailVO selectAttractionDetail(@Param("attractionId") Long attractionId);
 
     /**
+     * 景点浏览量自增
+     * @param attractionId 景点 id
+     * @return 更新条数
+     */
+    int increaseViewCount(@Param("attractionId") Long attractionId);
+
+    /**
      * 管理端景点列表
      * @param queryDTO 查询参数
      * @return 景点列表

@@ -42,6 +42,13 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
                                     @Param("currentUserId") Long currentUserId);
 
     /**
+     * 浏览量自增
+     * @param diaryId 日记 id
+     * @return 更新条数
+     */
+    int increaseViewCount(@Param("diaryId") Long diaryId);
+
+    /**
      * 更新旅行日记评论数量
      * @param diaryId 旅行日记 id
      * @param delta 评论数量差值

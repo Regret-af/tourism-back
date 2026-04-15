@@ -258,6 +258,15 @@
         LIMIT 1
     </select>
 
+    <update id="increaseViewCount">
+        UPDATE travel_diaries
+        SET view_count = COALESCE(view_count, 0) + 1
+        WHERE id = #{diaryId}
+          AND status = 1
+          AND visibility = 1
+          AND is_deleted = 0
+    </update>
+
     <select id="selectAdminDiaryList" resultMap="AdminDiaryListMap">
         SELECT
             d.id,

@@ -3,6 +3,7 @@ package com.af.tourism.pojo.dto.app;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
@@ -21,6 +22,7 @@ public class TravelDiaryPublishDTO {
     @Size(max = 500, message = "封面地址长度不能超过500")
     private String coverUrl;
 
+    @NotNull(message = "日记类型不能为空")
     private Integer contentType;
 
     private Integer visibility;

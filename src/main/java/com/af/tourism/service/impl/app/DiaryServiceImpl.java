@@ -2,14 +2,21 @@ package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.common.enums.DiaryDeletedStatus;
+import com.af.tourism.common.enums.DiaryVisibility;
 import com.af.tourism.converter.DiaryConverter;
 import com.af.tourism.exception.BusinessException;
+import com.af.tourism.mapper.DiaryCategoryMapper;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.app.DiaryQueryDTO;
 import com.af.tourism.pojo.dto.app.TravelDiaryPublishDTO;
 import com.af.tourism.pojo.dto.app.TravelDiaryUpdateDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
-import com.af.tourism.pojo.vo.app.*;
+import com.af.tourism.pojo.vo.app.DiaryCardVO;
+import com.af.tourism.pojo.vo.app.DiaryDetailVO;
+import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
+import com.af.tourism.pojo.vo.app.MyDiaryDetailVO;
+import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
+import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.app.DiaryService;
@@ -33,6 +40,7 @@ import java.util.Objects;
 public class DiaryServiceImpl implements DiaryService {
 
     private final DiaryMapper diaryMapper;
+    private final DiaryCategoryMapper diaryCategoryMapper;
     private final DiaryConverter diaryConverter;
 
     /**
@@ -43,13 +51,21 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TravelDiaryPublishVO publishDiary(TravelDiaryPublishDTO request, Long userId) {
-        // 1.将信息解析到实体
+        // 1.校验参数
+        if (diaryCategoryMapper.selectById(request.getContentType()) == null) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "日记类型错误");
+        }
+        if (request.getVisibility() != null && DiaryVisibility.fromValue(request.getVisibility()) == null) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "日记可见性参数错误");
+        }
+
+        // 2.将信息解析到实体
         TravelDiary diary = diaryConverter.toTravelDiary(request);
 
-        // 2.填充发布旅行日记时的业务默认值
+        // 3.填充发布旅行日记时的业务默认值
         fillPublishDefault(diary, userId);
 
-        // 3.执行插入操作
+        // 4.执行插入操作
         int rows = diaryMapper.insert(diary);
         if (rows <= 0) {
             log.error("旅行日记发布失败，数据库插入失败，userId={}", userId);
@@ -80,7 +96,7 @@ public class DiaryServiceImpl implements DiaryService {
                     diaryId, userId, diary.getUserId());
             throw new BusinessException(ErrorCode.FORBIDDEN, "无权限编辑该日记");
         }
-        if (Objects.equals(diary.getIsDeleted(), 1)) {
+        if (Objects.equals(diary.getIsDeleted(), DiaryDeletedStatus.DELETED.getValue())) {
             log.warn("编辑旅行日记失败，日记已删除，diaryId={}, userId={}", diaryId, userId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
         }
@@ -91,9 +107,15 @@ public class DiaryServiceImpl implements DiaryService {
         diary.setCoverUrl(request.getCoverUrl());
         diary.setContent(request.getContent());
         if (request.getContentType() != null) {
+            if (diaryCategoryMapper.selectById(request.getContentType()) == null) {
+                throw new BusinessException(ErrorCode.PARAM_INVALID, "日记类型参数错误");
+            }
             diary.setContentType(request.getContentType());
         }
         if (request.getVisibility() != null) {
+            if (DiaryVisibility.fromValue(request.getVisibility()) == null) {
+                throw new BusinessException(ErrorCode.PARAM_INVALID, "日记可见性参数错误");
+            }
             diary.setVisibility(request.getVisibility());
         }
 
@@ -292,6 +314,9 @@ public class DiaryServiceImpl implements DiaryService {
     private void fillPublishDefault(TravelDiary diary, Long userId) {
         diary.setUserId(userId);
         diary.setStatus(1);
+        if (diary.getVisibility() == null) {
+            diary.setVisibility(DiaryVisibility.PUBLIC.getValue());
+        }
         diary.setViewCount(0);
         diary.setLikeCount(0);
         diary.setFavoriteCount(0);

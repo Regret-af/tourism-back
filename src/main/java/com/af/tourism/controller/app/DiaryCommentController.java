@@ -12,6 +12,7 @@ import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.app.DiaryCommentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,6 +54,7 @@ public class DiaryCommentController {
      * @return 评论详情内容
      */
     @PostMapping("/travel-diaries/{diaryId}/comments")
+    @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.COMMENT, description = "发表评论", bizIdField = "data.id")
     public ApiResponse<DiaryCommentCreateVO> createComment(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId,
                                                            @Valid @RequestBody DiaryCommentCreateDTO request) {

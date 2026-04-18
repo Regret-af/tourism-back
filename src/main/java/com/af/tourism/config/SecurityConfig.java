@@ -6,7 +6,6 @@ import com.af.tourism.security.RestAuthenticationEntryPoint;
 import com.af.tourism.security.SecurityUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -70,54 +69,11 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .antMatchers(
-                                HttpMethod.GET,
                                 "/api/v1/ping",
-                                "/api/v1/attraction-categories",
-                                "/api/v1/attractions",
-                                "/api/v1/attractions/*",
-                                "/api/v1/attractions/*/weather",
-                                "/api/v1/diary-categories/options",
-                                "/api/v1/travel-diaries",
-                                "/api/v1/travel-diaries/*",
-                                "/api/v1/travel-diaries/*/more-from-author",
-                                "/api/v1/travel-diaries/*/comments",
-                                "/api/v1/users/*/travel-diaries"
-                        ).permitAll()
-                        .antMatchers(
-                                HttpMethod.POST,
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register",
                                 "/api/v1/admin/auth/login"
                         ).permitAll()
-                        .antMatchers(
-                                HttpMethod.POST,
-                                "/api/v1/travel-diaries",
-                                "/api/v1/travel-diaries/*/comments",
-                                "/api/v1/travel-diaries/*/likes",
-                                "/api/v1/travel-diaries/*/favorites"
-                        ).authenticated()
-                        .antMatchers(
-                                HttpMethod.PUT,
-                                "/api/v1/users/me/profile",
-                                "/api/v1/users/me/password",
-                                "/api/v1/travel-diaries/*"
-                        ).authenticated()
-                        .antMatchers(
-                                HttpMethod.DELETE,
-                                "/api/v1/travel-diaries/*",
-                                "/api/v1/travel-diaries/*/likes",
-                                "/api/v1/travel-diaries/*/favorites"
-                        ).authenticated()
-                        .antMatchers(
-                                HttpMethod.PATCH,
-                                "/api/v1/notifications/*/read"
-                        ).authenticated()
-                        .antMatchers(
-                                "/api/v1/users/me",
-                                "/api/v1/users/me/**",
-                                "/api/v1/files/**",
-                                "/api/v1/notifications/**"
-                        ).authenticated()
                         .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )

@@ -16,6 +16,7 @@ import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.app.DiaryCategoryService;
 import com.af.tourism.service.app.DiaryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,6 +48,7 @@ public class DiaryController {
      * @return 返回值
      */
     @PostMapping("/travel-diaries")
+    @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(
             module = OperationLogModule.DIARY,
             action = OperationLogAction.CREATE_DIARY,
@@ -66,6 +68,7 @@ public class DiaryController {
      * @return 编辑结果
      */
     @PutMapping("/travel-diaries/{diaryId}")
+    @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(
             module = OperationLogModule.DIARY,
             action = OperationLogAction.UPDATE_DIARY,
@@ -86,6 +89,7 @@ public class DiaryController {
      * @return 删除结果
      */
     @DeleteMapping("/travel-diaries/{diaryId}")
+    @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(
             module = OperationLogModule.DIARY,
             action = OperationLogAction.DELETE_DIARY,

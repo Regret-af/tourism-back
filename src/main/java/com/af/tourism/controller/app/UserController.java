@@ -20,6 +20,7 @@ import com.af.tourism.service.app.DiaryFavoriteService;
 import com.af.tourism.service.app.DiaryService;
 import com.af.tourism.service.app.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +44,7 @@ public class UserController {
      * @return 当前用户信息
      */
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<UserVO> me() {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(userService.getCurrentUserProfile(userId));
@@ -54,6 +56,7 @@ public class UserController {
      * @return 更新后的用户信息
      */
     @PutMapping("/me/profile")
+    @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.UPDATE_PROFILE, description = "用户修改个人信息", userIdField = "data.id")
     public ApiResponse<UserPublicVO> updateProfile(@Valid @RequestBody UserProfileUpdateDTO profileUpdateDTO) {
         Long userId = AuthContext.requireCurrentUserId();
@@ -66,6 +69,7 @@ public class UserController {
      * @return 操作结果
      */
     @PutMapping("/me/password")
+    @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.UPDATE_PASSWORD, description = "用户修改密码")
     public ApiResponse<Boolean> updatePassword(@Valid @RequestBody UserPasswordUpdateDTO passwordUpdateDTO) {
         Long userId = AuthContext.requireCurrentUserId();
@@ -78,6 +82,7 @@ public class UserController {
      * @return 分页后的当前用户日记列表
      */
     @GetMapping("me/travel-diaries")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<MyDiaryProfileCardVO>> getTravelDiaries(@Valid DiaryQueryDTO queryDTO) {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryService.listMyDiaries(userId, queryDTO));
@@ -89,6 +94,7 @@ public class UserController {
      * @return 我的日记详情
      */
     @GetMapping("me/travel-diaries/{diaryId}")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<MyDiaryDetailVO> getMyDiaryDetail(@PathVariable("diaryId") Long diaryId) {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryService.getMyDiaryDetail(diaryId, userId));
@@ -100,6 +106,7 @@ public class UserController {
      * @return 分页后的当前用户收藏日记列表
      */
     @GetMapping("me/favorite-diaries")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<FavoriteDiaryCardVO>> getFavoriteDiaries(@Valid FavoriteDiaryQueryDTO queryDTO) {
         Long userId = AuthContext.requireCurrentUserId();
         return ApiResponse.ok(diaryFavoriteService.listFavoriteDiaries(userId, queryDTO));

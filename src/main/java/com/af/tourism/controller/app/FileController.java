@@ -9,6 +9,7 @@ import com.af.tourism.pojo.vo.app.FileUploadVO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.app.FileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class FileController {
 
     private final FileService fileService;

@@ -8,6 +8,7 @@ import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.securitylite.AuthContext;
 import com.af.tourism.service.app.DiaryLikeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ import javax.validation.constraints.Min;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class DiaryLikeController {
 
     private final DiaryLikeService diaryLikeService;

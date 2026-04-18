@@ -9,12 +9,9 @@ import com.af.tourism.config.converter.DiaryTopStatusConverter;
 import com.af.tourism.config.converter.DiaryVisibilityConverter;
 import com.af.tourism.config.converter.RoleCodeConverter;
 import com.af.tourism.config.converter.UserStatusConverter;
-import com.af.tourism.securitylite.AdminAuthInterceptor;
-import com.af.tourism.securitylite.AuthInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -24,8 +21,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    private final AuthInterceptor authInterceptor;
-    private final AdminAuthInterceptor adminAuthInterceptor;
     private final AttractionCategoryStatusConverter attractionCategoryStatusConverter;
     private final AttractionStatusConverter attractionStatusConverter;
     private final DiaryStatusConverter diaryStatusConverter;
@@ -47,16 +42,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addConverter(diaryCommentStatusConverter);
         registry.addConverter(userStatusConverter);
         registry.addConverter(roleCodeConverter);
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/v1/ping", "/auth/**", "/api/v1/auth/**", "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**");
-
-        registry.addInterceptor(adminAuthInterceptor)
-                .addPathPatterns("/api/v1/admin/**")
-                .excludePathPatterns("/api/v1/admin/auth/login", "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**");
     }
 }

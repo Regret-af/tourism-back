@@ -1,9 +1,14 @@
 package com.af.tourism.config;
 
+import com.af.tourism.security.JwtAuthenticationFilter;
+import com.af.tourism.security.RestAccessDeniedHandler;
+import com.af.tourism.security.RestAuthenticationEntryPoint;
 import com.af.tourism.security.SecurityUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,12 +17,14 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Spring Security 基础配置。
- * 当前阶段仅接入安全过滤器链，不改变现有 securitylite 的鉴权行为。
+ * 当前阶段接管 JWT 认证、接口授权和统一安全异常响应。
  */
 @Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -36,7 +43,10 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
+                                                   DaoAuthenticationProvider daoAuthenticationProvider,
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   RestAuthenticationEntryPoint restAuthenticationEntryPoint,
+                                                   RestAccessDeniedHandler restAccessDeniedHandler) throws Exception {
         http
                 // 前后端分离 + JWT 场景，不使用服务端 Session
                 .csrf(AbstractHttpConfigurer::disable)
@@ -46,11 +56,73 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .rememberMe(AbstractHttpConfigurer::disable)
-                // 第一步先全部放行，后续再逐步迁移到 Security 的认证授权体系
-                .authorizeHttpRequests(authorize -> authorize
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler)
+                )
+                .authorizeRequests(authorize -> authorize
+                        .antMatchers(
+                                "/",
+                                "/index.html",
+                                "/error",
+                                "/swagger-resources/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        .antMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/ping",
+                                "/api/v1/attraction-categories",
+                                "/api/v1/attractions",
+                                "/api/v1/attractions/*",
+                                "/api/v1/attractions/*/weather",
+                                "/api/v1/diary-categories/options",
+                                "/api/v1/travel-diaries",
+                                "/api/v1/travel-diaries/*",
+                                "/api/v1/travel-diaries/*/more-from-author",
+                                "/api/v1/travel-diaries/*/comments",
+                                "/api/v1/users/*/travel-diaries"
+                        ).permitAll()
+                        .antMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/register",
+                                "/api/v1/admin/auth/login"
+                        ).permitAll()
+                        .antMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/travel-diaries",
+                                "/api/v1/travel-diaries/*/comments",
+                                "/api/v1/travel-diaries/*/likes",
+                                "/api/v1/travel-diaries/*/favorites"
+                        ).authenticated()
+                        .antMatchers(
+                                HttpMethod.PUT,
+                                "/api/v1/users/me/profile",
+                                "/api/v1/users/me/password",
+                                "/api/v1/travel-diaries/*"
+                        ).authenticated()
+                        .antMatchers(
+                                HttpMethod.DELETE,
+                                "/api/v1/travel-diaries/*",
+                                "/api/v1/travel-diaries/*/likes",
+                                "/api/v1/travel-diaries/*/favorites"
+                        ).authenticated()
+                        .antMatchers(
+                                HttpMethod.PATCH,
+                                "/api/v1/notifications/*/read"
+                        ).authenticated()
+                        .antMatchers(
+                                "/api/v1/users/me",
+                                "/api/v1/users/me/**",
+                                "/api/v1/files/**",
+                                "/api/v1/notifications/**"
+                        ).authenticated()
+                        .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )
                 .authenticationProvider(daoAuthenticationProvider)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .anonymous(Customizer.withDefaults());
 
         return http.build();

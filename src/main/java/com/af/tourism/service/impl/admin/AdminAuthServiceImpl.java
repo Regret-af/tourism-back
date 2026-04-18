@@ -13,7 +13,7 @@ import com.af.tourism.pojo.vo.common.UserVO;
 import com.af.tourism.security.SecurityAuthenticationService;
 import com.af.tourism.security.SecurityConverter;
 import com.af.tourism.security.SecurityUser;
-import com.af.tourism.securitylite.JwtService;
+import com.af.tourism.security.JwtService;
 import com.af.tourism.service.admin.AdminAuthService;
 import com.af.tourism.service.helper.AuthHelperService;
 import com.af.tourism.service.helper.UserCheckService;

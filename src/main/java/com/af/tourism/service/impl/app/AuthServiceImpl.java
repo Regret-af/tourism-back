@@ -20,7 +20,7 @@ import com.af.tourism.pojo.vo.app.RegisterVO;
 import com.af.tourism.security.SecurityAuthenticationService;
 import com.af.tourism.security.SecurityConverter;
 import com.af.tourism.security.SecurityUser;
-import com.af.tourism.securitylite.JwtService;
+import com.af.tourism.security.JwtService;
 import com.af.tourism.service.app.AuthService;
 import com.af.tourism.service.helper.AuthHelperService;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.af.tourism.securitylite;
+package com.af.tourism.security;
 
 import com.af.tourism.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
@@ -16,7 +16,7 @@ import java.security.MessageDigest;
 import java.util.Date;
 
 /**
- * 轻量 JWT 服务，仅负责生成和解析当前登录用户标识。
+ * JWT 服务，负责生成和解析当前登录用户标识。
  */
 @Component
 @Slf4j
@@ -59,26 +59,17 @@ public class JwtService {
      * @param token 令牌
      * @return 当前登录用户上下文对象
      */
-    public LoginUser parseLoginUser(String token) {
+    public Long parseUserId(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return new LoginUser(Long.valueOf(claims.getSubject()));
+            return Long.valueOf(claims.getSubject());
         } catch (Exception ex) {
             throw new UnauthorizedException("Token无效");
         }
-    }
-
-    /**
-     * 解析用户 id
-     * @param token 令牌
-     * @return 登录用户 id
-     */
-    public Long parseUserId(String token) {
-        return parseLoginUser(token).getUserId();
     }
 
     /**

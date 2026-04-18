@@ -10,6 +10,9 @@ import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.common.UserVO;
+import com.af.tourism.security.SecurityAuthenticationService;
+import com.af.tourism.security.SecurityConverter;
+import com.af.tourism.security.SecurityUser;
 import com.af.tourism.securitylite.JwtService;
 import com.af.tourism.service.admin.AdminAuthService;
 import com.af.tourism.service.helper.AuthHelperService;
@@ -29,10 +32,12 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     private final JwtService jwtService;
 
     private final AuthHelperService authHelperService;
+    private final SecurityAuthenticationService securityAuthenticationService;
 
     private final RoleMapper roleMapper;
 
     private final AuthConverter authConverter;
+    private final SecurityConverter securityConverter;
 
     /**
      * 管理员登录
@@ -48,19 +53,18 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         // 2.验证登录请求参数格式
         authHelperService.validateLoginRequest(email, password);
 
-        // 3.验证用户信息与状态
-        User user = authHelperService.validateUser(email, password);
+        // 3.使用 Spring Security 认证器完成账号密码校验
+        SecurityUser securityUser = securityAuthenticationService.authenticate(email, password);
 
-        // 4.查询该用户角色
-        List<String> roles = roleMapper.selectRoleCodesByUserId(user.getId());
+        List<String> roles = securityUser.getRoleCodes();
 
-        // 5.判断是否有管理权限
-        requireAdminRole(user.getId(), roles);
+        // 4.判断是否有管理权限
+        requireAdminRole(securityUser.getUserId(), roles);
 
-        // 6.为该用户生成 token 令牌
-        String token = jwtService.generateToken(user.getId());
+        // 5.为该用户生成 token 令牌
+        String token = jwtService.generateToken(securityUser.getUserId());
 
-        return authConverter.toLoginVO(user, roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
+        return authConverter.toLoginVO(securityConverter.toUser(securityUser), roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
     }
 
     /**
@@ -93,4 +97,5 @@ public class AdminAuthServiceImpl implements AdminAuthService {
             throw new BusinessException(ErrorCode.FORBIDDEN, "无管理端访问权限");
         }
     }
+
 }

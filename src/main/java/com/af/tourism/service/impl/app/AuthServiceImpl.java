@@ -17,11 +17,12 @@ import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.entity.UserRole;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.app.RegisterVO;
-import com.af.tourism.pojo.vo.common.UserVO;
+import com.af.tourism.security.SecurityAuthenticationService;
+import com.af.tourism.security.SecurityConverter;
+import com.af.tourism.security.SecurityUser;
 import com.af.tourism.securitylite.JwtService;
 import com.af.tourism.service.app.AuthService;
 import com.af.tourism.service.helper.AuthHelperService;
-import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -46,12 +47,14 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
 
     private final AuthHelperService authHelperService;
+    private final SecurityAuthenticationService securityAuthenticationService;
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
     private final UserRoleMapper userRoleMapper;
 
     private final AuthConverter authConverter;
+    private final SecurityConverter securityConverter;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -69,16 +72,14 @@ public class AuthServiceImpl implements AuthService {
         // 2.验证登录请求参数格式
         authHelperService.validateLoginRequest(email, password);
 
-        // 3.验证用户信息与状态
-        User user = authHelperService.validateUser(email, password);
+        // 3.使用 Spring Security 认证器完成账号密码校验
+        SecurityUser securityUser = securityAuthenticationService.authenticate(email, password);
 
         // 4.封装返回值
-        // 4.1.查询该用户角色
-        List<String> roles = roleMapper.selectRoleCodesByUserId(user.getId());
-        // 4.2.为该用户生成JWT令牌
-        String token = jwtService.generateToken(user.getId());
+        List<String> roles = securityUser.getRoleCodes();
+        String token = jwtService.generateToken(securityUser.getUserId());
 
-        return authConverter.toLoginVO(user, roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
+        return authConverter.toLoginVO(securityConverter.toUser(securityUser), roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
     }
 
     /**
@@ -167,4 +168,5 @@ public class AuthServiceImpl implements AuthService {
     private String generateDefaultNickname() {
         return "用户" + RandomUtil.randomNumbers(6);
     }
+
 }

@@ -14,7 +14,7 @@ import com.af.tourism.pojo.vo.admin.UserForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserOptionForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.admin.AdminUserService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -117,7 +117,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         // 3. 禁止修改自己
-        Long currentUserId = AuthContext.requireCurrentUserId();
+        Long currentUserId = SecurityUtils.requireCurrentUserId();
         if (Objects.equals(currentUserId, userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "不能修改自己的状态");
         }

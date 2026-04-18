@@ -9,7 +9,7 @@ import com.af.tourism.pojo.dto.app.DiaryCommentQueryDTO;
 import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
 import com.af.tourism.pojo.vo.app.DiaryCommentVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.DiaryCommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,7 +58,7 @@ public class DiaryCommentController {
     @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.COMMENT, description = "发表评论", bizIdField = "data.id")
     public ApiResponse<DiaryCommentCreateVO> createComment(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId,
                                                            @Valid @RequestBody DiaryCommentCreateDTO request) {
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryCommentService.createComment(diaryId, userId, request));
     }
 }

@@ -18,7 +18,7 @@ import com.af.tourism.pojo.vo.app.MyDiaryDetailVO;
 import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
 import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.DiaryService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -185,7 +185,7 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 2.进行查询操作
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = SecurityUtils.getCurrentUserId();
         List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO, userId);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
@@ -209,7 +209,7 @@ public class DiaryServiceImpl implements DiaryService {
     public DiaryDetailVO getDiaryDetail(Long diaryId) {
         diaryMapper.increaseViewCount(diaryId);
         // 1.查询旅行日记详情
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = SecurityUtils.getCurrentUserId();
         DiaryDetailVO detailVO = diaryMapper.selectDiaryDetail(diaryId, userId);
 
         // 2.若为空，抛出异常
@@ -230,7 +230,7 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     public PageResponse<MyDiaryProfileCardVO> listMyDiaries(Long userId, DiaryQueryDTO queryDTO) {
         // 1.判断查询的是否是已登录用户日记，防止信息泄露
-        if (!Objects.equals(userId, AuthContext.requireCurrentUserId())) {
+        if (!Objects.equals(userId, SecurityUtils.requireCurrentUserId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "暂无权限查询他人日记");
         }
 
@@ -263,7 +263,7 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 2.进行查询操作
-        Long currentUserId = AuthContext.getCurrentUserId();
+        Long currentUserId = SecurityUtils.getCurrentUserId();
         List<DiaryProfileCardVO> list = diaryMapper.selectUserDiaryProfileList(userId, queryDTO, currentUserId);
         PageInfo<DiaryProfileCardVO> pageInfo = new PageInfo<>(list);
 
@@ -292,7 +292,7 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 3.进行查询
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = SecurityUtils.getCurrentUserId();
         List<DiaryCardVO> list = diaryMapper.selectMoreDiariesByAuthor(travelDiary.getUserId(), diaryId, queryDTO, userId);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 

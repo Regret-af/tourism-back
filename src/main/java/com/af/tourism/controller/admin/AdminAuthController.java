@@ -7,9 +7,11 @@ import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.common.UserVO;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUser;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.admin.AdminAuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,9 +46,8 @@ public class AdminAuthController {
      * @return 当前管理员信息
      */
     @GetMapping("/auth/me")
-    public ApiResponse<UserVO> me() {
-        Long userId = AuthContext.requireCurrentUserId();
-        return ApiResponse.ok(adminAuthService.getCurrentAdminProfile(userId));
+    public ApiResponse<UserVO> me(@AuthenticationPrincipal SecurityUser currentUser) {
+        return ApiResponse.ok(adminAuthService.getCurrentAdminProfile(currentUser.getUserId()));
     }
 
     /**
@@ -61,7 +62,7 @@ public class AdminAuthController {
     )
     public ApiResponse<Void> logout() {
         // 获取当前登录管理员信息，确保真实登录
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         // 暂无业务处理，直接返回
         return ApiResponse.ok();
     }

@@ -2,7 +2,7 @@ package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.enums.OperationLogSource;
 import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.OperationLogService;
 import com.af.tourism.service.helper.OperationLogAsyncService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class OperationLogServiceImpl implements OperationLogService {
         }
 
         if (request.getUserId() == null) {
-            request.setUserId(AuthContext.getCurrentUserId());
+            request.setUserId(SecurityUtils.getCurrentUserId());
         }
 
         fillRequestMeta(request);

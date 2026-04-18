@@ -12,7 +12,7 @@ import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.pojo.vo.common.OptionVO;
 import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.DiaryCategoryService;
 import com.af.tourism.service.app.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +57,7 @@ public class DiaryController {
     )
     public ApiResponse<TravelDiaryPublishVO> publishDiary(@Valid @RequestBody TravelDiaryPublishDTO request) {
         // 获取用户id，若 id 为空，直接抛出异常
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryService.publishDiary(request, userId));
     }
 
@@ -78,7 +78,7 @@ public class DiaryController {
     public ApiResponse<Void> updateDiary(@PathVariable("diaryId") Long diaryId,
                                          @Valid @RequestBody TravelDiaryUpdateDTO request) {
         // 获取用户id，若 id 为空，直接抛出异常
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         diaryService.updateDiary(diaryId, request, userId);
         return ApiResponse.ok();
     }
@@ -98,7 +98,7 @@ public class DiaryController {
     )
     public ApiResponse<Void> deleteDiary(@PathVariable("diaryId") Long diaryId) {
         // 获取用户id，若 id 为空，直接抛出异常
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         diaryService.deleteDiary(diaryId, userId);
         return ApiResponse.ok();
     }

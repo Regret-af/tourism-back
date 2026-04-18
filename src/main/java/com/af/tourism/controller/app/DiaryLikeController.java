@@ -5,7 +5,7 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.DiaryLikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,7 +39,7 @@ public class DiaryLikeController {
     @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.LIKE, description = "点赞旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryLikeVO> likeDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
         // 查看是否登录，未登录报错
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryLikeService.likeDiary(diaryId, userId));
     }
 
@@ -52,7 +52,7 @@ public class DiaryLikeController {
     @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.UNLIKE, description = "取消点赞旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryLikeVO> unlikeDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
         // 查看是否登录，未登录报错
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryLikeService.unlikeDiary(diaryId, userId));
     }
 }

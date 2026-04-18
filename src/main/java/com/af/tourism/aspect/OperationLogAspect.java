@@ -3,7 +3,7 @@ package com.af.tourism.aspect;
 import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.OperationLogService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
@@ -40,7 +40,7 @@ public class OperationLogAspect {
         request.setDescription(operationLogRecord.description());
 
         // 3.获取操作用户 id
-        Long currentUserId = AuthContext.getCurrentUserId();
+        Long currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId != null) {
             request.setUserId(currentUserId);
         } else if (StringUtils.hasText(operationLogRecord.userIdField())) {

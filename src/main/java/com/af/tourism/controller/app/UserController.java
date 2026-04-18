@@ -15,12 +15,14 @@ import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
 import com.af.tourism.pojo.vo.app.UserPublicVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.pojo.vo.common.UserVO;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUser;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.DiaryFavoriteService;
 import com.af.tourism.service.app.DiaryService;
 import com.af.tourism.service.app.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,9 +47,8 @@ public class UserController {
      */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<UserVO> me() {
-        Long userId = AuthContext.requireCurrentUserId();
-        return ApiResponse.ok(userService.getCurrentUserProfile(userId));
+    public ApiResponse<UserVO> me(@AuthenticationPrincipal SecurityUser currentUser) {
+        return ApiResponse.ok(userService.getCurrentUserProfile(currentUser.getUserId()));
     }
 
     /**
@@ -59,7 +60,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.UPDATE_PROFILE, description = "用户修改个人信息", userIdField = "data.id")
     public ApiResponse<UserPublicVO> updateProfile(@Valid @RequestBody UserProfileUpdateDTO profileUpdateDTO) {
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(userService.updateUserProfile(userId, profileUpdateDTO));
     }
 
@@ -72,7 +73,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.UPDATE_PASSWORD, description = "用户修改密码")
     public ApiResponse<Boolean> updatePassword(@Valid @RequestBody UserPasswordUpdateDTO passwordUpdateDTO) {
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(userService.updatePassword(userId, passwordUpdateDTO));
     }
 
@@ -84,7 +85,7 @@ public class UserController {
     @GetMapping("me/travel-diaries")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<MyDiaryProfileCardVO>> getTravelDiaries(@Valid DiaryQueryDTO queryDTO) {
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryService.listMyDiaries(userId, queryDTO));
     }
 
@@ -96,7 +97,7 @@ public class UserController {
     @GetMapping("me/travel-diaries/{diaryId}")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<MyDiaryDetailVO> getMyDiaryDetail(@PathVariable("diaryId") Long diaryId) {
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryService.getMyDiaryDetail(diaryId, userId));
     }
 
@@ -108,7 +109,7 @@ public class UserController {
     @GetMapping("me/favorite-diaries")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<FavoriteDiaryCardVO>> getFavoriteDiaries(@Valid FavoriteDiaryQueryDTO queryDTO) {
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryFavoriteService.listFavoriteDiaries(userId, queryDTO));
     }
 

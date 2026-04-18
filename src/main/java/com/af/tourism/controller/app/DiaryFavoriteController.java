@@ -5,7 +5,7 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.vo.app.DiaryFavoriteVO;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.DiaryFavoriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,7 +39,7 @@ public class DiaryFavoriteController {
     @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.FAVORITE, description = "收藏旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryFavoriteVO> favoriteDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
         // 查看是否登录，未登录报错
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryFavoriteService.favoriteDiary(diaryId, userId));
     }
 
@@ -51,7 +51,7 @@ public class DiaryFavoriteController {
     @DeleteMapping("/travel-diaries/{diaryId}/favorites")
     @OperationLogRecord(module = OperationLogModule.DIARY, action = OperationLogAction.UNFAVORITE, description = "取消收藏旅行日记", bizIdArgIndex = 0)
     public ApiResponse<DiaryFavoriteVO> unfavoriteDiary(@PathVariable("diaryId") @Min(value = 1, message = "diaryId不能小于1") Long diaryId) {
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(diaryFavoriteService.unfavoriteDiary(diaryId, userId));
     }
 }

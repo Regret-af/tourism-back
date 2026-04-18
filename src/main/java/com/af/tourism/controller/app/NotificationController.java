@@ -6,7 +6,7 @@ import com.af.tourism.pojo.vo.app.NotificationReadVO;
 import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
 import com.af.tourism.pojo.vo.app.NotificationVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.securitylite.AuthContext;
+import com.af.tourism.security.SecurityUtils;
 import com.af.tourism.service.app.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,7 +40,7 @@ public class NotificationController {
     @GetMapping
     public ApiResponse<PageResponse<NotificationVO>> listNotifications(@Valid NotificationQueryDTO queryDTO) {
         // 获取用户id，若 id 为空，直接抛出异常
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(notificationService.listNotifications(userId, queryDTO));
     }
 
@@ -51,7 +51,7 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public ApiResponse<NotificationUnreadCountVO> getUnreadCount() {
         // 获取用户id，若 id 为空，直接抛出异常
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(notificationService.getUnreadCount(userId));
     }
 
@@ -63,7 +63,7 @@ public class NotificationController {
     @PatchMapping("/{notificationId}/read")
     public ApiResponse<NotificationReadVO> markAsRead(@PathVariable("notificationId") @Min(value = 1, message = "notificationId不能小于1") Long notificationId) {
         // 获取用户id，若 id 为空，直接抛出异常
-        Long userId = AuthContext.requireCurrentUserId();
+        Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(notificationService.markAsRead(userId, notificationId));
     }
 }

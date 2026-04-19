@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.enums.AttractionStatus;
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.exception.BusinessException;
@@ -17,10 +18,13 @@ import com.af.tourism.pojo.vo.admin.AttractionCategoryForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionCategoryService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +41,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminAttractionCategoryServiceImpl implements AdminAttractionCategoryService {
 
     private final AttractionMapper attractionMapper;
@@ -44,6 +49,9 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
     private final AttractionCategoryMapper attractionCategoryMapper;
 
     private final AttractionConverter attractionConverter;
+
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     /**
      * 获取管理端景点分类列表
@@ -106,6 +114,9 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
             throw new BusinessException(ErrorCode.CONFLICT, "分类编码已存在");
         }
 
+        // 3.清除景点类别缓存
+        clearAttractionCategoryCache();
+
         return getCategoryDetail(entity.getId());
     }
 
@@ -138,6 +149,9 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         } catch (DuplicateKeyException ex) {
             throw new BusinessException(ErrorCode.CONFLICT, "分类编码已存在");
         }
+
+        // 4.清除景点类别缓存
+        clearAttractionCategoryCache();
 
         return getCategoryDetail(id);
     }
@@ -178,6 +192,10 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         // 4.进行状态的更新
         entity.setStatus(status);
         attractionCategoryMapper.updateById(entity);
+
+        // 5.清除景点类别缓存
+        clearAttractionCategoryCache();
+
         return getCategoryDetail(id);
     }
 
@@ -199,6 +217,10 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         // 2.更新景点分类排序
         entity.setSortOrder(request.getSortOrder());
         attractionCategoryMapper.updateById(entity);
+
+        // 3.清除景点类别缓存
+        clearAttractionCategoryCache();
+
         return getCategoryDetail(id);
     }
 
@@ -232,6 +254,19 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
 
         for (AttractionCategoryForAdminVO item : list) {
             item.setAttractionCount(statsMap.getOrDefault(item.getId(), 0L));
+        }
+    }
+
+    /**
+     * 清除景点类别缓存
+     */
+    private void clearAttractionCategoryCache() {
+        String cacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_CATEGORY_LIST);
+
+        try {
+            cacheClient.delete(cacheKey);
+        } catch (Exception ex) {
+            log.warn("删除景点分类缓存失败，cacheKey={}", cacheKey, ex);
         }
     }
 }

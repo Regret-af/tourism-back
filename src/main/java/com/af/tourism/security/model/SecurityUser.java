@@ -1,4 +1,4 @@
-package com.af.tourism.security;
+package com.af.tourism.security.model;
 
 import com.af.tourism.common.enums.RoleCode;
 import com.af.tourism.common.enums.UserStatus;

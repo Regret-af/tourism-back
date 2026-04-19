@@ -6,7 +6,7 @@ import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.dto.app.FileUploadDTO;
 import com.af.tourism.pojo.vo.app.FileUploadVO;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

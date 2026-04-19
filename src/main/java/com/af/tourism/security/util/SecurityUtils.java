@@ -1,6 +1,7 @@
-package com.af.tourism.security;
+package com.af.tourism.security.util;
 
 import com.af.tourism.exception.UnauthorizedException;
+import com.af.tourism.security.model.SecurityUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 

@@ -2,7 +2,7 @@ package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.enums.OperationLogSource;
 import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.OperationLogService;
 import com.af.tourism.service.helper.OperationLogAsyncService;
 import lombok.RequiredArgsConstructor;

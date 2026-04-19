@@ -14,7 +14,7 @@ import com.af.tourism.pojo.vo.admin.UserForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserOptionForAdminVO;
 import com.af.tourism.pojo.vo.admin.UserStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.admin.AdminUserService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;

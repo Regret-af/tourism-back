@@ -5,7 +5,7 @@ import com.af.tourism.common.ApiResponse;
 import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.DiaryLikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

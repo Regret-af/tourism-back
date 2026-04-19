@@ -6,7 +6,7 @@ import com.af.tourism.pojo.vo.app.NotificationReadVO;
 import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
 import com.af.tourism.pojo.vo.app.NotificationVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

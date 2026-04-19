@@ -1,7 +1,8 @@
-package com.af.tourism.security;
+package com.af.tourism.security.service;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.exception.BusinessException;
+import com.af.tourism.security.model.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;

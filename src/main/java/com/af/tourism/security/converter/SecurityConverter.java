@@ -1,6 +1,7 @@
-package com.af.tourism.security;
+package com.af.tourism.security.converter;
 
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.security.model.SecurityUser;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

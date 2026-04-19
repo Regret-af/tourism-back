@@ -1,9 +1,9 @@
 package com.af.tourism.config;
 
-import com.af.tourism.security.JwtAuthenticationFilter;
-import com.af.tourism.security.RestAccessDeniedHandler;
-import com.af.tourism.security.RestAuthenticationEntryPoint;
-import com.af.tourism.security.SecurityUserDetailsService;
+import com.af.tourism.security.filter.JwtAuthenticationFilter;
+import com.af.tourism.security.handler.RestAccessDeniedHandler;
+import com.af.tourism.security.handler.RestAuthenticationEntryPoint;
+import com.af.tourism.security.service.SecurityUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;

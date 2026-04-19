@@ -9,7 +9,7 @@ import com.af.tourism.pojo.dto.app.DiaryCommentQueryDTO;
 import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
 import com.af.tourism.pojo.vo.app.DiaryCommentVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.DiaryCommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

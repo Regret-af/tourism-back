@@ -1,7 +1,10 @@
-package com.af.tourism.security;
+package com.af.tourism.security.filter;
 
 import com.af.tourism.common.constants.AuthConstants;
 import com.af.tourism.exception.UnauthorizedException;
+import com.af.tourism.security.model.SecurityUser;
+import com.af.tourism.security.service.JwtService;
+import com.af.tourism.security.service.SecurityUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;

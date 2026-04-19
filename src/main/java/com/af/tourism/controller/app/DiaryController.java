@@ -12,7 +12,7 @@ import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.pojo.vo.common.OptionVO;
 import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.DiaryCategoryService;
 import com.af.tourism.service.app.DiaryService;
 import lombok.RequiredArgsConstructor;

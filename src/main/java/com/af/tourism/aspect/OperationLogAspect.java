@@ -3,7 +3,7 @@ package com.af.tourism.aspect;
 import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
-import com.af.tourism.security.SecurityUtils;
+import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.OperationLogService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;

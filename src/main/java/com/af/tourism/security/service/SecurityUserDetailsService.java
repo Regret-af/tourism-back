@@ -1,8 +1,9 @@
-package com.af.tourism.security;
+package com.af.tourism.security.service;
 
 import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.security.model.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

@@ -169,6 +169,9 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         // 3.清除景点列表缓存
         clearAttractionListCache();
 
+        // 4.清除对应景点天气缓存
+        clearAttractionWeatherCache(id);
+
         return getAttractionDetail(id);
     }
 
@@ -176,7 +179,6 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
      * 修改景点状态
      * @param id 景点 id
      * @param request 状态修改请求
-     * @return 修改后的景点详情
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -250,6 +252,20 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
             cacheClient.deleteByPattern(cacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除景点列表缓存失败，cacheKeyPattern={}", cacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清除当前景点天气缓存。
+     * @param attractionId 景点 id
+     */
+    private void clearAttractionWeatherCache(Long attractionId) {
+        String attractionWeatherCacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_WEATHER, attractionId);
+
+        try {
+            cacheClient.delete(attractionWeatherCacheKey);
+        } catch (Exception ex) {
+            log.warn("删除景点天气缓存失败，cacheKey={}", attractionWeatherCacheKey, ex);
         }
     }
 }

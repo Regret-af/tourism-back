@@ -49,6 +49,9 @@ public class AttractionServiceImpl implements AttractionService {
     private static final TypeReference<PageResponse<AttractionCardVO>> ATTRACTION_LIST_PAGE_TYPE =
             new TypeReference<PageResponse<AttractionCardVO>>() {
             };
+    private static final TypeReference<AttractionWeatherVO> ATTRACTION_WEATHER_TYPE =
+            new TypeReference<AttractionWeatherVO>() {
+            };
 
     private final AttractionMapper attractionMapper;
 
@@ -147,7 +150,20 @@ public class AttractionServiceImpl implements AttractionService {
         Attraction attraction = attractionCheckService.requireAttraction(attractionId);
         AttractionWeatherVO weatherVO = new AttractionWeatherVO();
 
-        // 2.获取并校验调用外部API的参数
+        // 2.构建 Redis 中景点分类的 key
+        String cacheKey = buildAttractionWeatherCacheKey(attractionId);
+
+        // 3.查找 Redis 缓存，存在直接返回
+        try {
+            AttractionWeatherVO cachedWeather = cacheClient.get(cacheKey, ATTRACTION_WEATHER_TYPE);
+            if (cachedWeather != null) {
+                return cachedWeather;
+            }
+        } catch (Exception ex) {
+            log.warn("读取景点天气缓存失败，回源第三方接口，cacheKey={}", cacheKey, ex);
+        }
+
+        // 4.获取并校验调用外部API的参数
         BigDecimal longitude = attraction.getLongitude();
         BigDecimal latitude = attraction.getLatitude();
         if (longitude == null || latitude == null) {
@@ -161,10 +177,10 @@ public class AttractionServiceImpl implements AttractionService {
         List<WeatherAlertVO> alertVOList = null;
         LocalDateTime sourceUpdateTime = null;
 
-        // 3.调用外部API并处理各个字段
-        // 3.1.获取实时天气
+        // 5.调用外部API并处理各个字段
+        // 5.1.获取实时天气
         try {
-            // 3.1.1.请求API并将第三方返回实体改为业务实体
+            // 5.1.1.请求API并将第三方返回实体改为业务实体
             QWeatherNowResponse weatherNow = qWeatherClient.getWeatherNow(longitude, latitude);
             currentVO = qWeatherConverter.toWeatherCurrentVO(weatherNow);
             sourceUpdateTime = weatherNow.getUpdateTime().toLocalDateTime();
@@ -172,13 +188,13 @@ public class AttractionServiceImpl implements AttractionService {
             log.warn("获取实时天气失败，attractionId={}", attractionId, ex);
         }
 
-        // 3.2.获取天气预报
+        // 5.2.获取天气预报
         try {
-            // 3.2.1.请求API并将第三方返回实体改为业务实体
+            // 5.2.1.请求API并将第三方返回实体改为业务实体
             QWeatherDailyResponse weatherDaily = qWeatherClient.getWeatherDaily(longitude, latitude);
             forecastVOList = qWeatherConverter.toWeatherForecastVOList(weatherDaily.getDaily());
 
-            // 3.2.2.补充 weekLabel 字段
+            // 5.2.2.补充 weekLabel 字段
             for (int i = 0; i < forecastVOList.size(); i++) {
                 WeatherForecastVO forecast = forecastVOList.get(i);
                 forecast.setWeekLabel(buildWeekLabel(i));
@@ -187,11 +203,11 @@ public class AttractionServiceImpl implements AttractionService {
             log.warn("获取天气预报失败，attractionId={}", attractionId, ex);
         }
 
-        // 3.3.获取天气预警
+        // 5.3.获取天气预警
         try {
             QWeatherWarningResponse weatherWarning = qWeatherClient.getWeatherWarning(longitude, latitude);
 
-            // 3.3.1.查看是否有预警信息，有预警信息进行转换
+            // 5.3.1.查看是否有预警信息，有预警信息进行转换
             if (!weatherWarning.getMetadata().getZeroResult()) {
                 alertVOList = qWeatherConverter.toWeatherAlertVOList(weatherWarning.getAlerts());
             }
@@ -199,10 +215,11 @@ public class AttractionServiceImpl implements AttractionService {
             log.warn("获取天气预警失败，attractionId={}", attractionId, ex);
         }
 
-        // 4.补充业务字段
-        // 4.2.1.补充 isSuitable 字段
+        // 6.补充业务字段
+        // 6.2.1.补充 isSuitable 字段
         if (currentVO != null) {
             currentVO.setIsSuitable(judgeSuitable(currentVO.getTemperature(), alertVOList));
+            currentVO.setTravelTip(buildTravelTip(currentVO.getIsSuitable(), alertVOList));
         }
 
         if (forecastVOList != null) {
@@ -210,12 +227,12 @@ public class AttractionServiceImpl implements AttractionService {
             forecastVOList.forEach(forecastVO -> forecastVO.setIsSuitable(judgeSuitable(forecastVO.getTempMax(), finalAlertVOList)));
         }
 
-        // 4.2.2.补充 travelTip 字段
+        // 6.2.2.补充 travelTip 字段
         if (currentVO != null) {
             currentVO.setTravelTip(buildTravelTip(currentVO.getIsSuitable(), alertVOList));
         }
 
-        // 5. 统一判断是否至少有一部分天气数据成功
+        // 7. 统一判断是否至少有一部分天气数据成功
         boolean hasWeatherData =
                 currentVO != null
                         || (forecastVOList != null && !forecastVOList.isEmpty())
@@ -225,12 +242,19 @@ public class AttractionServiceImpl implements AttractionService {
             throw new ThirdPartyApiException(ErrorCode.THIRD_PARTY_API_ERROR, "获取景点天气失败");
         }
 
-        // 6.进行封装
+        // 8.进行封装
         weatherVO.setAvailable(true);
         weatherVO.setSourceUpdateTime(sourceUpdateTime != null ? sourceUpdateTime : LocalDateTime.now());
         weatherVO.setCurrent(currentVO);
         weatherVO.setForecast(forecastVOList);
         weatherVO.setAlerts(alertVOList);
+
+        // 9.将返回值存入Redis
+        try {
+            cacheClient.set(cacheKey, weatherVO, RedisTtlConstants.ATTRACTION_WEATHER);
+        } catch (Exception ex) {
+            log.warn("写入景点天气缓存失败，cacheKey={}", cacheKey, ex);
+        }
 
         return weatherVO;
     }
@@ -260,7 +284,7 @@ public class AttractionServiceImpl implements AttractionService {
      * @return 旅行建议
      */
     private String buildTravelTip(Boolean isSuitable, List<WeatherAlertVO> alerts) {
-        if (isSuitable) {
+        if (Boolean.TRUE.equals(isSuitable)) {
             return "当前天气较适合游览";
         }
 
@@ -304,6 +328,15 @@ public class AttractionServiceImpl implements AttractionService {
                 "categoryId", queryDTO.getCategoryId() == null ? "_" : queryDTO.getCategoryId(),
                 "sort", normalizeKeyPart(queryDTO.getSortCode())
         );
+    }
+
+    /**
+     * 构建景点天气缓存 key。
+     * @param attractionId 景点 id
+     * @return 缓存 key
+     */
+    private String buildAttractionWeatherCacheKey(Long attractionId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_WEATHER, attractionId);
     }
 
     /**

@@ -150,8 +150,13 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
             throw new BusinessException(ErrorCode.CONFLICT, "分类编码已存在");
         }
 
-        // 4.清除景点类别缓存
+        // 4.清除有可能影响到的缓存数据
+        // 4.1.清除景点分类缓存
         clearAttractionCategoryCache();
+        // 4.2.清除景点列表缓存
+        clearAttractionListCache();
+        // 4.3.清除景点详情缓存
+        clearAttractionDetailCache();
 
         return getCategoryDetail(id);
     }
@@ -269,12 +274,32 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
             log.warn("删除景点分类缓存失败，cacheKey={}", categoryCacheKey, ex);
         }
 
+    }
+
+    /**
+     * 清除景点列表缓存
+     */
+    private void clearAttractionListCache() {
         String attractionListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_LIST) + "*";
 
         try {
             cacheClient.deleteByPattern(attractionListCacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除景点列表缓存失败，cacheKeyPattern={}", attractionListCacheKeyPattern, ex);
+        }
+
+    }
+
+    /**
+     * 清除景点详情缓存
+     */
+    private void clearAttractionDetailCache() {
+        String attractionDetailCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_DETAIL) + "*";
+
+        try {
+            cacheClient.deleteByPattern(attractionDetailCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除景点详情缓存失败，cacheKeyPattern={}", attractionDetailCacheKeyPattern, ex);
         }
     }
 }

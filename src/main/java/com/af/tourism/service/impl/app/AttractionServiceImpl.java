@@ -122,18 +122,45 @@ public class AttractionServiceImpl implements AttractionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AttractionDetailVO getAttractionDetail(Long attractionId) {
-        // 1.查询景点信息
+        // 1.构建 Redis 中景点分类的 key
+        String cacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_DETAIL, attractionId);
+
+        // 2.增加景点浏览量
         attractionMapper.increaseViewCount(attractionId);
+
+        // 3.查找 Redis 缓存，存在直接返回
+        try {
+            // 3.1.查找缓存
+            AttractionDetailVO cachedDetail = cacheClient.get(cacheKey, AttractionDetailVO.class);
+            if (cachedDetail != null) {
+                // 3.2.浏览量+1，回写缓存
+                cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
+                cacheClient.set(cacheKey, cachedDetail, RedisTtlConstants.DEFAULT);
+                return cachedDetail;
+            }
+        } catch (Exception ex) {
+            log.warn("读取景点详情缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
+        }
+
+        // 4.在数据库中查询景点信息
         AttractionDetailVO detailVO = attractionMapper.selectAttractionDetail(attractionId);
-        // 2.若为空，抛出异常
+
+        // 5.若为空，抛出异常
         if (detailVO == null) {
             log.warn("景点不存在，attractionId={}", attractionId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "景点不存在");
         }
 
-        // 3.封装telephoneList，对telephone字段进行数据清洗
+        // 6.封装telephoneList，对telephone字段进行数据清洗
         if (detailVO.getTelephone() != null) {
             detailVO.setTelephoneList(Arrays.asList(detailVO.getTelephone().split(",")));
+        }
+
+        // 7.将返回值存入Redis
+        try {
+            cacheClient.set(cacheKey, detailVO, RedisTtlConstants.DEFAULT);
+        } catch (Exception ex) {
+            log.warn("写入景点详情缓存失败，cacheKey={}", cacheKey, ex);
         }
 
         return detailVO;

@@ -166,10 +166,14 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         updateEntity.setId(id);
         attractionMapper.updateById(updateEntity);
 
-        // 3.清除景点列表缓存
+        // 3.清除Redis中可能受到影响的缓存
+        // 3.1.清除景点列表缓存
         clearAttractionListCache();
 
-        // 4.清除对应景点天气缓存
+        // 3.2.清除对应景点详情缓存
+        clearAttractionDetailCache(id);
+
+        // 3.3.清除对应景点天气缓存
         clearAttractionWeatherCache(id);
 
         return getAttractionDetail(id);
@@ -205,8 +209,11 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         entity.setStatus(status);
         attractionMapper.updateById(entity);
 
-        // 3.清除景点列表缓存
+        // 3.清除Redis中可能受到影响的缓存
+        // 3.1.清除景点列表缓存
         clearAttractionListCache();
+        // 3.2.清除景点详情缓存
+        clearAttractionDetailCache(id);
     }
 
     /**
@@ -252,6 +259,20 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
             cacheClient.deleteByPattern(cacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除景点列表缓存失败，cacheKeyPattern={}", cacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清除当前景点详情缓存。
+     * @param attractionId 景点 id
+     */
+    private void clearAttractionDetailCache(Long attractionId) {
+        String attractionDetailCacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_DETAIL, attractionId);
+
+        try {
+            cacheClient.delete(attractionDetailCacheKey);
+        } catch (Exception ex) {
+            log.warn("删除景点详情缓存失败，cacheKey={}", attractionDetailCacheKey, ex);
         }
     }
 

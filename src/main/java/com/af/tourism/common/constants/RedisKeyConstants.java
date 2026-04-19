@@ -10,6 +10,7 @@ public final class RedisKeyConstants {
     public static final String ATTRACTION_CATEGORY_LIST = "attraction:category:list";
     public static final String DIARY_CATEGORY_OPTIONS = "diary:category:options";
     public static final String ATTRACTION_LIST = "attraction:list";
+    public static final String ATTRACTION_DETAIL = "attraction:detail";
     public static final String ATTRACTION_WEATHER = "attraction:weather";
 
     public static final String DIARY_LIKE = "diary:like";

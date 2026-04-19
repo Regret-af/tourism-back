@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.integration.baidu.map.BaiduMapClient;
@@ -21,6 +22,8 @@ import com.af.tourism.pojo.vo.admin.MapDetailVO;
 import com.af.tourism.pojo.vo.admin.MapSuggestionVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +48,9 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
 
     private final AttractionConverter attractionConverter;
     private final BaiduMapConverter baiduMapConverter;
+
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     private final BaiduMapClient baiduMapClient;
 
@@ -117,6 +123,9 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         Attraction entity = attractionConverter.toAttraction(request);
         attractionMapper.insert(entity);
 
+        // 3.清除景点列表缓存
+        clearAttractionListCache();
+
         return getAttractionDetail(entity.getId());
     }
 
@@ -157,6 +166,9 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         updateEntity.setId(id);
         attractionMapper.updateById(updateEntity);
 
+        // 3.清除景点列表缓存
+        clearAttractionListCache();
+
         return getAttractionDetail(id);
     }
 
@@ -190,6 +202,9 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         // 2.修改景点状态
         entity.setStatus(status);
         attractionMapper.updateById(entity);
+
+        // 3.清除景点列表缓存
+        clearAttractionListCache();
     }
 
     /**
@@ -223,5 +238,18 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         List<MapDetailVO> voList = baiduMapConverter.toMapDetailVOList(response.getResults());
 
         return voList != null && !voList.isEmpty() ? voList.get(0) : null;
+    }
+
+    /**
+     * 清除景点列表缓存
+     */
+    private void clearAttractionListCache() {
+        String cacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(cacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除景点列表缓存失败，cacheKeyPattern={}", cacheKeyPattern, ex);
+        }
     }
 }

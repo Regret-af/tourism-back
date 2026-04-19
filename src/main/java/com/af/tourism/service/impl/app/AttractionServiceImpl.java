@@ -1,6 +1,8 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.RedisKeyConstants;
+import com.af.tourism.common.constants.RedisTtlConstants;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.integration.common.exception.ThirdPartyApiException;
 import com.af.tourism.integration.qweather.QWeatherClient;
@@ -11,14 +13,23 @@ import com.af.tourism.integration.qweather.dto.QWeatherWarningResponse;
 import com.af.tourism.mapper.AttractionMapper;
 import com.af.tourism.pojo.dto.app.AttractionQueryDTO;
 import com.af.tourism.pojo.entity.Attraction;
-import com.af.tourism.pojo.vo.app.*;
+import com.af.tourism.pojo.vo.app.AttractionCardVO;
+import com.af.tourism.pojo.vo.app.AttractionDetailVO;
+import com.af.tourism.pojo.vo.app.AttractionWeatherVO;
+import com.af.tourism.pojo.vo.app.WeatherAlertVO;
+import com.af.tourism.pojo.vo.app.WeatherCurrentVO;
+import com.af.tourism.pojo.vo.app.WeatherForecastVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.AttractionService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.af.tourism.service.helper.AttractionCheckService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,25 +46,45 @@ import java.util.List;
 @Slf4j
 public class AttractionServiceImpl implements AttractionService {
 
+    private static final TypeReference<PageResponse<AttractionCardVO>> ATTRACTION_LIST_PAGE_TYPE =
+            new TypeReference<PageResponse<AttractionCardVO>>() {
+            };
+
     private final AttractionMapper attractionMapper;
 
     private final AttractionCheckService attractionCheckService;
+
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     private final QWeatherClient qWeatherClient;
 
     private final QWeatherConverter qWeatherConverter;
 
     /**
-     * 景点列表，覆盖列表、搜索、分类筛选
+     * 景点列表，覆盖列表、搜索、分类筛选。
      * @param queryDTO 列表、搜索、分类筛选参数
      * @return 景点列表
      */
     @Override
     public PageResponse<AttractionCardVO> listAttractions(AttractionQueryDTO queryDTO) {
-        // 1.开启分页查询
+        // 1.构建 Redis 中景点列表的 key
+        String cacheKey = buildAttractionListCacheKey(queryDTO);
+
+        // 2.在 Redis 中进行查询
+        try {
+            PageResponse<AttractionCardVO> cachedResponse = cacheClient.get(cacheKey, ATTRACTION_LIST_PAGE_TYPE);
+            if (cachedResponse != null) {
+                return cachedResponse;
+            }
+        } catch (Exception ex) {
+            log.warn("读取景点列表缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
+        }
+
+        // 3.开启分页查询
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
-        // 2.查询景点信息
+        // 4.在数据库中查询景点信息
         log.debug("查询景点列表，pageNum={}, pageSize={}, keyword={}, categoryId={}",
                 queryDTO.getPageNum(),
                 queryDTO.getPageSize(),
@@ -63,12 +94,20 @@ public class AttractionServiceImpl implements AttractionService {
         PageInfo<AttractionCardVO> pageInfo = new PageInfo<>(list);
         log.debug("查询景点信息完成，总记录数: {}", pageInfo.getTotal());
 
-        // 3.封装返回信息
+        // 5.封装返回信息
         PageResponse<AttractionCardVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());
         response.setPageSize(pageInfo.getPageSize());
         response.setTotal(pageInfo.getTotal());
+
+        // 6.将返回值存入Redis
+        try {
+            cacheClient.set(cacheKey, response, RedisTtlConstants.ATTRACTION_LIST);
+        } catch (Exception ex) {
+            log.warn("写入景点列表缓存失败，cacheKey={}", cacheKey, ex);
+        }
+
         return response;
     }
 
@@ -90,8 +129,9 @@ public class AttractionServiceImpl implements AttractionService {
         }
 
         // 3.封装telephoneList，对telephone字段进行数据清洗
-        if (detailVO.getTelephone() != null)
+        if (detailVO.getTelephone() != null) {
             detailVO.setTelephoneList(Arrays.asList(detailVO.getTelephone().split(",")));
+        }
 
         return detailVO;
     }
@@ -167,9 +207,7 @@ public class AttractionServiceImpl implements AttractionService {
 
         if (forecastVOList != null) {
             List<WeatherAlertVO> finalAlertVOList = alertVOList;
-            forecastVOList.forEach(forecastVO ->{
-                forecastVO.setIsSuitable(judgeSuitable(forecastVO.getTempMax(), finalAlertVOList));
-            });
+            forecastVOList.forEach(forecastVO -> forecastVO.setIsSuitable(judgeSuitable(forecastVO.getTempMax(), finalAlertVOList)));
         }
 
         // 4.2.2.补充 travelTip 字段
@@ -204,9 +242,13 @@ public class AttractionServiceImpl implements AttractionService {
      * @return 是否舒适
      */
     private Boolean judgeSuitable(Integer temp, List<WeatherAlertVO> alerts) {
-        if (alerts != null && !alerts.isEmpty()) return false;
+        if (alerts != null && !alerts.isEmpty()) {
+            return false;
+        }
 
-        if (temp >= 35) return false;
+        if (temp >= 35) {
+            return false;
+        }
 
         return true;
     }
@@ -246,5 +288,30 @@ public class AttractionServiceImpl implements AttractionService {
         }
 
         return null;
+    }
+
+    /**
+     * 构建 Redis 中景点列表的 key
+     * @param queryDTO 请求体
+     * @return 构建好的 key
+     */
+    private String buildAttractionListCacheKey(AttractionQueryDTO queryDTO) {
+        return cacheKeyBuilder.build(
+                RedisKeyConstants.ATTRACTION_LIST,
+                "pageNum", queryDTO.getPageNum(),
+                "pageSize", queryDTO.getPageSize(),
+                "keyword", normalizeKeyPart(queryDTO.getKeyword()),
+                "categoryId", queryDTO.getCategoryId() == null ? "_" : queryDTO.getCategoryId(),
+                "sort", normalizeKeyPart(queryDTO.getSortCode())
+        );
+    }
+
+    /**
+     * 查看 key 的组成部分，为空返回 _
+     * @param value key的组成部分
+     * @return 结果
+     */
+    private String normalizeKeyPart(String value) {
+        return StringUtils.defaultIfBlank(value, "_").trim();
     }
 }

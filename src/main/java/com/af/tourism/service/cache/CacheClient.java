@@ -12,6 +12,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -109,6 +110,19 @@ public class CacheClient {
      * @return 实际删除的 key 数量
      */
     public Long delete(Collection<String> keys) {
+        if (CollectionUtils.isEmpty(keys)) {
+            return 0L;
+        }
+        return stringRedisTemplate.delete(keys);
+    }
+
+    /**
+     * 根据 pattern 批量删除 Redis key
+     * @param pattern Redis pattern
+     * @return 实际删除的 key 数量
+     */
+    public Long deleteByPattern(String pattern) {
+        Set<String> keys = stringRedisTemplate.keys(pattern);
         if (CollectionUtils.isEmpty(keys)) {
             return 0L;
         }

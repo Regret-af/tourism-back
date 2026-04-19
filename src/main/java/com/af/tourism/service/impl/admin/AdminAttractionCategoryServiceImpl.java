@@ -261,12 +261,20 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
      * 清除景点类别缓存
      */
     private void clearAttractionCategoryCache() {
-        String cacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_CATEGORY_LIST);
+        String categoryCacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_CATEGORY_LIST);
 
         try {
-            cacheClient.delete(cacheKey);
+            cacheClient.delete(categoryCacheKey);
         } catch (Exception ex) {
-            log.warn("删除景点分类缓存失败，cacheKey={}", cacheKey, ex);
+            log.warn("删除景点分类缓存失败，cacheKey={}", categoryCacheKey, ex);
+        }
+
+        String attractionListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(attractionListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除景点列表缓存失败，cacheKeyPattern={}", attractionListCacheKeyPattern, ex);
         }
     }
 }

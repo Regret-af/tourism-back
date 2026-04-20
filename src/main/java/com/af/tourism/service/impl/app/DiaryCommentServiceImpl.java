@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.enums.NotificationType;
 import com.af.tourism.converter.DiaryConverter;
 import com.af.tourism.converter.UserConverter;
@@ -17,6 +18,8 @@ import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
 import com.af.tourism.pojo.vo.app.DiaryCommentVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.DiaryCommentService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
@@ -40,6 +43,9 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
 
     private final DiaryCommentMapper diaryCommentMapper;
     private final DiaryMapper diaryMapper;
+
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     private final UserConverter userConverter;
     private final DiaryConverter diaryConverter;
@@ -107,7 +113,10 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         // 4.执行旅行日记评论数量更新操作
         diaryMapper.updateCommentCount(diaryId, 1);
 
-        // 5.添加通知列表
+        // 5.清除旅行日记列表缓存
+        clearDiaryListCache();
+
+        // 6.添加通知列表
         diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
                 .type(NotificationType.COMMENT)
                 .triggerUserId(userId)
@@ -117,11 +126,24 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
                 .build());
         log.info("发表评论成功，diaryId={}, commentId={}, userId={}", diaryId, comment.getId(), userId);
 
-        // 6.返回评论信息
+        // 7.返回评论信息
         DiaryCommentCreateVO response = diaryConverter.toDiaryCommentCreateVO(comment);
         response.setAuthor(userConverter.toUserPublicVO(user));
 
         return response;
+    }
+
+    /**
+     * 清除旅行日记列表缓存
+     */
+    private void clearDiaryListCache() {
+        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
     }
 
     /**

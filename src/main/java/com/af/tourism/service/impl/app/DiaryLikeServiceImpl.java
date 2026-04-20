@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.enums.NotificationType;
+import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.mapper.DiaryLikeMapper;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.common.DiaryInteractionNotifyCommand;
@@ -8,6 +9,8 @@ import com.af.tourism.pojo.entity.DiaryLike;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.service.app.DiaryLikeService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
@@ -26,6 +29,8 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
     private final DiaryLikeMapper diaryLikeMapper;
     private final DiaryMapper diaryMapper;
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
@@ -56,7 +61,10 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             // 4.执行旅行日记评论数量更新操作
             diaryMapper.updateLikeCount(diaryId, 1);
 
-            // 5.添加通知列表
+            // 5.清除篇旅行日记列表缓存
+            clearDiaryListCache();
+
+            // 6.添加通知列表
             diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
                     .type(NotificationType.LIKE)
                     .triggerUserId(userId)
@@ -91,6 +99,9 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             // 3.若点过赞，则删除点赞记录，并更新点赞量
             diaryLikeMapper.deleteByDiaryIdAndUserId(diaryId, userId);
             diaryMapper.updateLikeCount(diaryId, -1);
+
+            // 4.清除旅行日记列表缓存
+            clearDiaryListCache();
             diary = diaryMapper.selectById(diaryId);
             log.info("取消点赞成功，diaryId={}, userId={}", diaryId, userId);
         } else {
@@ -111,5 +122,18 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
         response.setLiked(liked);
         response.setLikeCount(likeCount == null ? 0 : likeCount);
         return response;
+    }
+
+    /**
+     * 清除旅行日记列表缓存
+     */
+    private void clearDiaryListCache() {
+        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
     }
 }

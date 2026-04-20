@@ -1,6 +1,8 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.RedisKeyConstants;
+import com.af.tourism.common.constants.RedisTtlConstants;
 import com.af.tourism.common.enums.DiaryDeletedStatus;
 import com.af.tourism.common.enums.DiaryVisibility;
 import com.af.tourism.converter.DiaryConverter;
@@ -20,6 +22,9 @@ import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.DiaryService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +44,15 @@ import java.util.Objects;
 @Slf4j
 public class DiaryServiceImpl implements DiaryService {
 
+    private static final TypeReference<PageResponse<DiaryCardVO>> DIARY_LIST_PAGE_TYPE =
+            new TypeReference<PageResponse<DiaryCardVO>>() {
+            };
+
     private final DiaryMapper diaryMapper;
     private final DiaryCategoryMapper diaryCategoryMapper;
     private final DiaryConverter diaryConverter;
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     /**
      * 发布旅行日记
@@ -72,6 +83,11 @@ public class DiaryServiceImpl implements DiaryService {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库插入失败");
         }
         log.info("旅行日记发布成功，diaryId={}, userId={}", diary.getId(), userId);
+
+        // 5.如果是公开日记，清除日记列表缓存
+        if (isPublicDiary(diary.getStatus(), diary.getVisibility(), diary.getIsDeleted())) {
+            clearDiaryListCache();
+        }
 
         return diaryConverter.toTravelDiaryPublishVO(diary);
     }
@@ -125,6 +141,11 @@ public class DiaryServiceImpl implements DiaryService {
             log.error("编辑旅行日记失败，数据库更新失败，diaryId={}, userId={}", diaryId, userId);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库更新失败");
         }
+
+        // 4.如果是公开日记，清除日记列表缓存
+        if (isPublicDiary(diary.getStatus(), diary.getVisibility(), diary.getIsDeleted())) {
+            clearDiaryListCache();
+        }
     }
 
     /**
@@ -135,6 +156,7 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteDiary(Long diaryId, Long userId) {
+        // 1.获取日记实体，并进行校验
         TravelDiary diary = diaryMapper.selectById(diaryId);
         if (diary == null) {
             log.warn("删除旅行日记失败，日记不存在，diaryId={}, userId={}", diaryId, userId);
@@ -150,12 +172,16 @@ public class DiaryServiceImpl implements DiaryService {
             throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
         }
 
+        // 2.删除旅行日记
         diary.setIsDeleted(DiaryDeletedStatus.DELETED.getValue());
         int rows = diaryMapper.updateById(diary);
         if (rows <= 0) {
             log.error("删除旅行日记失败，数据库更新失败，diaryId={}, userId={}", diaryId, userId);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库更新失败");
         }
+
+        // 3.清除旅行日记列表缓存
+        clearDiaryListCache();
     }
 
     /**
@@ -181,20 +207,41 @@ public class DiaryServiceImpl implements DiaryService {
      */
     @Override
     public PageResponse<DiaryCardVO> listDiaries(DiaryQueryDTO queryDTO) {
-        // 1.开启分页查询
-        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-
-        // 2.进行查询操作
+        // 1.获取用户 id
         Long userId = SecurityUtils.getCurrentUserId();
+
+        // 2.构建 Redis 中日记列表的 key
+        String cacheKey = buildDiaryListCacheKey(queryDTO, userId);
+
+        // 3.查找 Redis 缓存，存在直接返回
+        try {
+            PageResponse<DiaryCardVO> cachedResponse = cacheClient.get(cacheKey, DIARY_LIST_PAGE_TYPE);
+            if (cachedResponse != null) {
+                PageHelper.clearPage();
+                return cachedResponse;
+            }
+        } catch (Exception ex) {
+            log.warn("读取日记列表缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
+        }
+
+        // 4.开启分页查询，在数据库中进行查找
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
         List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO, userId);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
-        // 3.填充返回值
+        // 5.填充返回值
         PageResponse<DiaryCardVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());
         response.setPageSize(pageInfo.getPageSize());
         response.setTotal(pageInfo.getTotal());
+
+        // 6.将返回值存入Redis
+        try {
+            cacheClient.set(cacheKey, response, RedisTtlConstants.DIARY_LIST);
+        } catch (Exception ex) {
+            log.warn("写入日记列表缓存失败，cacheKey={}", cacheKey, ex);
+        }
 
         return response;
     }
@@ -304,6 +351,48 @@ public class DiaryServiceImpl implements DiaryService {
         response.setTotal(pageInfo.getTotal());
 
         return response;
+    }
+
+    /**
+     * 构建 Redis 中日记列表的 key
+     * @param queryDTO 请求参数
+     * @param userId 用户 id
+     * @return 日记列表 key
+     */
+    private String buildDiaryListCacheKey(DiaryQueryDTO queryDTO, Long userId) {
+        return cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_LIST,
+                "userId", userId == null ? "_" : userId,
+                "pageNum", queryDTO.getPageNum(),
+                "pageSize", queryDTO.getPageSize(),
+                "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()
+        );
+    }
+
+    /**
+     * 清除日记列表缓存
+     */
+    private void clearDiaryListCache() {
+        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 查看是否为公开日记
+     * @param status 日记状态
+     * @param visibility 日记可见性
+     * @param isDeleted 是否删除
+     * @return
+     */
+    private boolean isPublicDiary(Integer status, Integer visibility, Integer isDeleted) {
+        return Objects.equals(status, 1)
+                && Objects.equals(visibility, DiaryVisibility.PUBLIC.getValue())
+                && Objects.equals(isDeleted, DiaryDeletedStatus.NOT_DELETED.getValue());
     }
 
     /**

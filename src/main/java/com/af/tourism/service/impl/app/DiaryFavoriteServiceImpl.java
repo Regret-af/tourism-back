@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.enums.NotificationType;
+import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.mapper.DiaryFavoriteMapper;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.app.FavoriteDiaryQueryDTO;
@@ -11,6 +12,8 @@ import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryFavoriteVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.DiaryFavoriteService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
@@ -33,6 +36,9 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
 
     private final DiaryFavoriteMapper diaryFavoriteMapper;
     private final DiaryMapper diaryMapper;
+
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
@@ -63,7 +69,10 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             // 4.执行旅行日记收藏数量更新操作
             diaryMapper.updateFavoriteCount(diaryId, 1);
 
-            // 5.添加通知列表
+            // 5.清除旅行日记列表缓存
+            clearDiaryListCache();
+
+            // 6.添加通知列表
             diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
                     .type(NotificationType.FAVORITE)
                     .triggerUserId(userId)
@@ -98,6 +107,9 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             // 3.若已收藏，则删除收藏记录，并更新收藏数量
             diaryFavoriteMapper.deleteByDiaryIdAndUserId(diaryId, userId);
             diaryMapper.updateFavoriteCount(diaryId, -1);
+
+            // 4.清除旅行日记列表缓存
+            clearDiaryListCache();
             diary = diaryMapper.selectById(diaryId);
             log.info("取消收藏成功，diaryId={}, userId={}", diaryId, userId);
         } else {
@@ -143,5 +155,18 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
         response.setFavorited(favorited);
         response.setFavoriteCount(favoriteCount == null ? 0 : favoriteCount);
         return response;
+    }
+
+    /**
+     * 清除旅行日记列表缓存
+     */
+    private void clearDiaryListCache() {
+        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
     }
 }

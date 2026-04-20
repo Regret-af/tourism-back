@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.enums.DiaryDeletedStatus;
 import com.af.tourism.common.enums.DiaryStatus;
 import com.af.tourism.exception.BusinessException;
@@ -13,6 +14,8 @@ import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminDiaryService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,9 @@ import java.util.Objects;
 public class AdminDiaryServiceImpl implements AdminDiaryService {
 
     private final DiaryMapper diaryMapper;
+
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     /**
      * 获取管理端日记列表
@@ -112,6 +118,9 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
         // 4.进行状态修改
         diary.setStatus(targetStatus);
         diaryMapper.updateById(diary);
+
+        // 5.清除旅行日记列表缓存
+        clearDiaryListCache();
     }
 
     /**
@@ -142,5 +151,21 @@ public class AdminDiaryServiceImpl implements AdminDiaryService {
         // 4.进行逻辑删除状态修改
         diary.setIsDeleted(targetDeletedStatus);
         diaryMapper.updateById(diary);
+
+        // 5.清除旅行日记列表缓存
+        clearDiaryListCache();
+    }
+
+    /**
+     * 清除旅行日记列表缓存
+     */
+    private void clearDiaryListCache() {
+        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
     }
 }

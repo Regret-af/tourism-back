@@ -4,6 +4,7 @@ import com.af.tourism.pojo.dto.app.TravelDiaryPublishDTO;
 import com.af.tourism.pojo.entity.DiaryComment;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.DiaryCommentCreateVO;
+import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.app.TravelDiaryPublishVO;
 import org.mapstruct.Mapper;
 
@@ -18,4 +19,6 @@ public interface DiaryConverter {
     TravelDiaryPublishVO toTravelDiaryPublishVO(TravelDiary travelDiary);
 
     DiaryCommentCreateVO toDiaryCommentCreateVO(DiaryComment diaryComment);
+
+    DiaryDetailVO copy(DiaryDetailVO diaryDetailVO);
 }

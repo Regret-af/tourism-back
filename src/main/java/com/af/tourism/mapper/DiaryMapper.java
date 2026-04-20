@@ -10,6 +10,7 @@ import com.af.tourism.pojo.vo.admin.DiaryForAdminVO;
 import com.af.tourism.pojo.vo.admin.DiaryOptionForAdminVO;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
+import com.af.tourism.pojo.vo.app.DiaryInteractStatusVO;
 import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
 import com.af.tourism.pojo.vo.app.MyDiaryDetailVO;
 import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
@@ -41,6 +42,22 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      */
     DiaryDetailVO selectDiaryDetail(@Param("diaryId") Long diaryId,
                                     @Param("currentUserId") Long currentUserId);
+
+    /**
+     * 查询日记基础详情
+     * @param diaryId 日记 id
+     * @return 日记基础详情
+     */
+    DiaryDetailVO selectDiaryBaseDetail(@Param("diaryId") Long diaryId);
+
+    /**
+     * 查询日记互动状态
+     * @param diaryId 日记 id
+     * @param currentUserId 当前用户 id
+     * @return 日记互动状态
+     */
+    DiaryInteractStatusVO selectDiaryInteractStatus(@Param("diaryId") Long diaryId,
+                                                    @Param("currentUserId") Long currentUserId);
 
     /**
      * 查询我自己的单篇日记详情

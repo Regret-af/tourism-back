@@ -149,6 +149,11 @@
         </association>
     </resultMap>
 
+    <resultMap id="DiaryInteractStatusMap" type="com.af.tourism.pojo.vo.app.DiaryInteractStatusVO">
+        <result column="liked" property="liked"/>
+        <result column="favorited" property="favorited"/>
+    </resultMap>
+
     <sql id="BaseDiaryCardColumns">
         d.id,
     d.title,
@@ -275,6 +280,49 @@
         INNER JOIN users u ON d.user_id = u.id
         LEFT JOIN diary_category dc ON d.content_type = dc.id
         <include refid="CurrentUserInteractJoins"/>
+        WHERE d.id = #{diaryId}
+          AND <include refid="PublicDiaryConditions"/>
+        LIMIT 1
+    </select>
+
+    <select id="selectDiaryBaseDetail" resultMap="DiaryDetailMap">
+        SELECT
+            d.id,
+            d.title,
+            d.summary,
+            d.cover_url,
+            d.content,
+            d.view_count,
+            d.like_count,
+            d.favorite_count,
+            d.comment_count,
+            dc.name AS content_type_name,
+            d.published_at,
+            d.created_at,
+            d.updated_at,
+            u.id AS author_id,
+            u.nickname AS author_nickname,
+            u.avatar_url AS author_avatar_url,
+            u.bio AS author_bio
+        FROM travel_diaries d
+        INNER JOIN users u ON d.user_id = u.id
+        LEFT JOIN diary_category dc ON d.content_type = dc.id
+        WHERE d.id = #{diaryId}
+          AND <include refid="PublicDiaryConditions"/>
+        LIMIT 1
+    </select>
+
+    <select id="selectDiaryInteractStatus" resultMap="DiaryInteractStatusMap">
+        SELECT
+            CASE WHEN dl.id IS NULL THEN 0 ELSE 1 END AS liked,
+            CASE WHEN df.id IS NULL THEN 0 ELSE 1 END AS favorited
+        FROM travel_diaries d
+        LEFT JOIN diary_likes dl
+            ON dl.diary_id = d.id
+           AND dl.user_id = #{currentUserId}
+        LEFT JOIN diary_favorites df
+            ON df.diary_id = d.id
+           AND df.user_id = #{currentUserId}
         WHERE d.id = #{diaryId}
           AND <include refid="PublicDiaryConditions"/>
         LIMIT 1

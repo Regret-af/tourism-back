@@ -14,6 +14,7 @@ import com.af.tourism.pojo.dto.app.TravelDiaryUpdateDTO;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
+import com.af.tourism.pojo.vo.app.DiaryInteractStatusVO;
 import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
 import com.af.tourism.pojo.vo.app.MyDiaryDetailVO;
 import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
@@ -289,7 +290,7 @@ public class DiaryServiceImpl implements DiaryService {
         Long userId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中日记详情的 key
-        String cacheKey = cacheKeySupport.buildDiaryDetailKey(diaryId, userId);
+        String cacheKey = cacheKeySupport.buildDiaryDetailKey(diaryId, null);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
@@ -299,14 +300,14 @@ public class DiaryServiceImpl implements DiaryService {
                 // 3.2.增加浏览量，进行回写
                 cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
                 cacheClient.set(cacheKey, cachedDetail, RedisTtlConstants.DEFAULT);
-                return cachedDetail;
+                return mergeDiaryDetailWithInteractStatus(cachedDetail, diaryId, userId);
             }
         } catch (Exception ex) {
             log.warn("读取日记详情缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
         }
 
         // 4.在数据库中查询日记详情
-        DiaryDetailVO detailVO = diaryMapper.selectDiaryDetail(diaryId, userId);
+        DiaryDetailVO detailVO = diaryMapper.selectDiaryBaseDetail(diaryId);
 
         // 5.若为空，抛出异常
         if (detailVO == null) {
@@ -321,7 +322,7 @@ public class DiaryServiceImpl implements DiaryService {
             log.warn("写入日记详情缓存失败，cacheKey={}", cacheKey, ex);
         }
 
-        return detailVO;
+        return mergeDiaryDetailWithInteractStatus(detailVO, diaryId, userId);
     }
 
     /**
@@ -507,5 +508,49 @@ public class DiaryServiceImpl implements DiaryService {
         diary.setIsDeleted(0);
         diary.setIsTop(0);
         diary.setPublishedAt(LocalDateTime.now());
+    }
+
+    /**
+     * 合并日记详情与互动状态
+     * @param baseDetailVO 日记详情
+     * @param diaryId 日记 id
+     * @param userId 用户 id
+     * @return 合并后实体
+     */
+    private DiaryDetailVO mergeDiaryDetailWithInteractStatus(DiaryDetailVO baseDetailVO, Long diaryId, Long userId) {
+        DiaryDetailVO detailVO = diaryConverter.copy(baseDetailVO);
+        DiaryInteractStatusVO interactStatus = getDiaryInteractStatus(diaryId, userId);
+        detailVO.setLiked(interactStatus.getLiked());
+        detailVO.setFavorited(interactStatus.getFavorited());
+        return detailVO;
+    }
+
+    /**
+     * 获取日记互动状态
+     * @param diaryId 日记 id
+     * @param userId 用户 id
+     * @return 日记互动状态
+     */
+    private DiaryInteractStatusVO getDiaryInteractStatus(Long diaryId, Long userId) {
+        DiaryInteractStatusVO interactStatus = new DiaryInteractStatusVO();
+
+        // 1.首先置否，默认为空
+        interactStatus.setLiked(Boolean.FALSE);
+        interactStatus.setFavorited(Boolean.FALSE);
+        if (userId == null) {
+            return interactStatus;
+        }
+
+        // 2.从数据库中获取日记互动状态
+        DiaryInteractStatusVO dbInteractStatus = diaryMapper.selectDiaryInteractStatus(diaryId, userId);
+        if (dbInteractStatus == null) {
+            return interactStatus;
+        }
+
+        // 3.查找成功写入实体并返回
+        interactStatus.setLiked(Boolean.TRUE.equals(dbInteractStatus.getLiked()));
+        interactStatus.setFavorited(Boolean.TRUE.equals(dbInteractStatus.getFavorited()));
+
+        return interactStatus;
     }
 }

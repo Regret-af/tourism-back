@@ -67,13 +67,11 @@ public class CacheKeySupport {
     /**
      * 构建日记列表 key
      * @param queryDTO 请求参数
-     * @param userId 用户 id
      * @return 日记列表 key
      */
-    public String buildDiaryListKey(DiaryQueryDTO queryDTO, Long userId) {
+    public String buildDiaryListKey(DiaryQueryDTO queryDTO) {
         return cacheKeyBuilder.build(
                 RedisKeyConstants.DIARY_LIST,
-                "userId", userId == null ? "_" : userId,
                 "pageNum", queryDTO.getPageNum(),
                 "pageSize", queryDTO.getPageSize(),
                 "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()
@@ -121,7 +119,6 @@ public class CacheKeySupport {
         return cacheKeyBuilder.build(
                 RedisKeyConstants.DIARY_USER_PUBLIC_LIST,
                 "userId", userId,
-                "currentUserId", currentUserId == null ? "_" : currentUserId,
                 "pageNum", queryDTO.getPageNum(),
                 "pageSize", queryDTO.getPageSize(),
                 "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()
@@ -141,7 +138,6 @@ public class CacheKeySupport {
                 RedisKeyConstants.DIARY_MORE_FROM_AUTHOR,
                 "userId", userId,
                 "diaryId", diaryId,
-                "currentUserId", currentUserId == null ? "_" : currentUserId,
                 "pageNum", queryDTO.getPageNum(),
                 "pageSize", queryDTO.getPageSize(),
                 "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()

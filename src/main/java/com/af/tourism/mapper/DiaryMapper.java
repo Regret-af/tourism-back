@@ -20,6 +20,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 旅行日记 Mapper。
@@ -58,6 +59,24 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
      */
     DiaryInteractStatusVO selectDiaryInteractStatus(@Param("diaryId") Long diaryId,
                                                     @Param("currentUserId") Long currentUserId);
+
+    /**
+     * 查询点赞日记列表
+     * @param currentUserId 当前用户 id
+     * @param diaryIds 日记 id 列表
+     * @return 点赞日记列表
+     */
+    Set<Long> selectLikedDiaryIds(@Param("currentUserId") Long currentUserId,
+                                  @Param("diaryIds") List<Long> diaryIds);
+
+    /**
+     * 查询收藏日记列表
+     * @param currentUserId 当前用户 id
+     * @param diaryIds 日记 id 列表
+     * @return 收藏日记列表
+     */
+    Set<Long> selectFavoritedDiaryIds(@Param("currentUserId") Long currentUserId,
+                                      @Param("diaryIds") List<Long> diaryIds);
 
     /**
      * 查询我自己的单篇日记详情

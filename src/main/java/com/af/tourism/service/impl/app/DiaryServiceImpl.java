@@ -33,9 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * 旅行日记服务实现。
@@ -241,14 +244,14 @@ public class DiaryServiceImpl implements DiaryService {
         Long userId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中日记列表的 key
-        String cacheKey = cacheKeySupport.buildDiaryListKey(queryDTO, userId);
+        String cacheKey = cacheKeySupport.buildDiaryListKey(queryDTO);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
             PageResponse<DiaryCardVO> cachedResponse = cacheClient.get(cacheKey, DIARY_LIST_PAGE_TYPE);
             if (cachedResponse != null) {
                 PageHelper.clearPage();
-                return cachedResponse;
+                return fillDiaryCardInteractStatus(cachedResponse, userId);
             }
         } catch (Exception ex) {
             log.warn("读取日记列表缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
@@ -256,7 +259,7 @@ public class DiaryServiceImpl implements DiaryService {
 
         // 4.开启分页查询，在数据库中进行查找
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-        List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO, userId);
+        List<DiaryCardVO> list = diaryMapper.selectDiaryList(queryDTO, null);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
         // 5.填充返回值
@@ -273,7 +276,7 @@ public class DiaryServiceImpl implements DiaryService {
             log.warn("写入日记列表缓存失败，cacheKey={}", cacheKey, ex);
         }
 
-        return response;
+        return fillDiaryCardInteractStatus(response, userId);
     }
 
     /**
@@ -344,7 +347,7 @@ public class DiaryServiceImpl implements DiaryService {
             PageResponse<MyDiaryProfileCardVO> cachedResponse = cacheClient.get(cacheKey, MY_DIARY_LIST_PAGE_TYPE);
             if (cachedResponse != null) {
                 PageHelper.clearPage();
-                return cachedResponse;
+                return fillMyDiaryProfileCardInteractStatus(cachedResponse, userId);
             }
         } catch (Exception ex) {
             log.warn("读取我的日记列表缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
@@ -354,7 +357,7 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 4.进行查询操作
-        List<MyDiaryProfileCardVO> list = diaryMapper.selectMyDiaryProfileList(userId, queryDTO, userId);
+        List<MyDiaryProfileCardVO> list = diaryMapper.selectMyDiaryProfileList(userId, queryDTO, null);
         PageInfo<MyDiaryProfileCardVO> pageInfo = new PageInfo<>(list);
 
         // 5.填充返回值
@@ -371,7 +374,7 @@ public class DiaryServiceImpl implements DiaryService {
             log.warn("写入我的日记列表缓存失败，cacheKey={}", cacheKey, ex);
         }
 
-        return response;
+        return fillMyDiaryProfileCardInteractStatus(response, userId);
     }
 
     /**
@@ -393,7 +396,7 @@ public class DiaryServiceImpl implements DiaryService {
             PageResponse<DiaryProfileCardVO> cachedResponse = cacheClient.get(cacheKey, USER_PUBLIC_DIARY_LIST_PAGE_TYPE);
             if (cachedResponse != null) {
                 PageHelper.clearPage();
-                return cachedResponse;
+                return fillDiaryProfileCardInteractStatus(cachedResponse, currentUserId);
             }
         } catch (Exception ex) {
             log.warn("读取用户主页日记列表缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
@@ -403,7 +406,7 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 5.进行查询操作
-        List<DiaryProfileCardVO> list = diaryMapper.selectUserDiaryProfileList(userId, queryDTO, currentUserId);
+        List<DiaryProfileCardVO> list = diaryMapper.selectUserDiaryProfileList(userId, queryDTO, null);
         PageInfo<DiaryProfileCardVO> pageInfo = new PageInfo<>(list);
 
         // 6.填充返回值
@@ -420,7 +423,7 @@ public class DiaryServiceImpl implements DiaryService {
             log.warn("写入用户主页日记列表缓存失败，cacheKey={}", cacheKey, ex);
         }
 
-        return response;
+        return fillDiaryProfileCardInteractStatus(response, currentUserId);
     }
 
     /**
@@ -447,7 +450,7 @@ public class DiaryServiceImpl implements DiaryService {
             PageResponse<DiaryCardVO> cachedResponse = cacheClient.get(cacheKey, DIARY_LIST_PAGE_TYPE);
             if (cachedResponse != null) {
                 PageHelper.clearPage();
-                return cachedResponse;
+                return fillDiaryCardInteractStatus(cachedResponse, currentUserId);
             }
         } catch (Exception ex) {
             log.warn("读取作者更多创作缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
@@ -457,7 +460,7 @@ public class DiaryServiceImpl implements DiaryService {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         // 5.进行查询
-        List<DiaryCardVO> list = diaryMapper.selectMoreDiariesByAuthor(travelDiary.getUserId(), diaryId, queryDTO, currentUserId);
+        List<DiaryCardVO> list = diaryMapper.selectMoreDiariesByAuthor(travelDiary.getUserId(), diaryId, queryDTO, null);
         PageInfo<DiaryCardVO> pageInfo = new PageInfo<>(list);
 
         // 6.封装返回信息
@@ -474,7 +477,7 @@ public class DiaryServiceImpl implements DiaryService {
             log.warn("写入作者更多创作缓存失败，cacheKey={}", cacheKey, ex);
         }
 
-        return response;
+        return fillDiaryCardInteractStatus(response, currentUserId);
     }
 
     /**
@@ -508,6 +511,157 @@ public class DiaryServiceImpl implements DiaryService {
         diary.setIsDeleted(0);
         diary.setIsTop(0);
         diary.setPublishedAt(LocalDateTime.now());
+    }
+
+    /**
+     * 填充日记卡片的交互状态字段
+     * @param response 分页返回列表
+     * @param userId 查询用户 id
+     * @return 填充后的日记列表
+     */
+    private PageResponse<DiaryCardVO> fillDiaryCardInteractStatus(PageResponse<DiaryCardVO> response, Long userId) {
+        // 1.为空直接返回
+        if (response == null || response.getList() == null || response.getList().isEmpty()) {
+            return response;
+        }
+
+        // 2.获取日记 id 列表
+        List<Long> diaryIds = extractDiaryIdsFromDiaryCards(response.getList());
+        // 3.获取点赞日记 id 集合
+        Set<Long> likedDiaryIds = getLikedDiaryIdSet(diaryIds, userId);
+        // 4.获取收藏日记 id 集合
+        Set<Long> favoritedDiaryIds = getFavoritedDiaryIdSet(diaryIds, userId);
+
+        // 5.进行回写，填充交互状态
+        for (DiaryCardVO diaryCardVO : response.getList()) {
+            diaryCardVO.setLiked(likedDiaryIds.contains(diaryCardVO.getId()));
+            diaryCardVO.setFavorited(favoritedDiaryIds.contains(diaryCardVO.getId()));
+        }
+
+        return response;
+    }
+
+    /**
+     * 填充日记卡片的交互状态字段
+     * @param response 分页返回列表
+     * @param userId 查询用户 id
+     * @return 填充后的日记列表
+     */
+    private PageResponse<DiaryProfileCardVO> fillDiaryProfileCardInteractStatus(PageResponse<DiaryProfileCardVO> response, Long userId) {
+        // 1.为空直接返回
+        if (response == null || response.getList() == null || response.getList().isEmpty()) {
+            return response;
+        }
+
+        // 2.获取日记 id 列表
+        List<Long> diaryIds = extractDiaryIdsFromDiaryProfiles(response.getList());
+        // 3.获取点赞日记 id 集合
+        Set<Long> likedDiaryIds = getLikedDiaryIdSet(diaryIds, userId);
+        // 4.获取收藏日记 id 集合
+        Set<Long> favoritedDiaryIds = getFavoritedDiaryIdSet(diaryIds, userId);
+
+        // 5.进行回写，填充交互状态
+        for (DiaryProfileCardVO diaryProfileCardVO : response.getList()) {
+            diaryProfileCardVO.setLiked(likedDiaryIds.contains(diaryProfileCardVO.getId()));
+            diaryProfileCardVO.setFavorited(favoritedDiaryIds.contains(diaryProfileCardVO.getId()));
+        }
+        return response;
+    }
+
+    /**
+     * 填充日记卡片的交互状态字段
+     * @param response 分页返回列表
+     * @param userId 查询用户 id
+     * @return 填充后的日记列表
+     */
+    private PageResponse<MyDiaryProfileCardVO> fillMyDiaryProfileCardInteractStatus(PageResponse<MyDiaryProfileCardVO> response, Long userId) {
+        // 1.为空直接返回
+        if (response == null || response.getList() == null || response.getList().isEmpty()) {
+            return response;
+        }
+
+        // 2.获取日记 id 列表
+        List<Long> diaryIds = extractDiaryIdsFromMyDiaryProfiles(response.getList());
+        // 3.获取点赞日记 id 集合
+        Set<Long> likedDiaryIds = getLikedDiaryIdSet(diaryIds, userId);
+        // 4.获取收藏日记 id 集合
+        Set<Long> favoritedDiaryIds = getFavoritedDiaryIdSet(diaryIds, userId);
+
+        // 5.进行回写，填充交互状态
+        for (MyDiaryProfileCardVO myDiaryProfileCardVO : response.getList()) {
+            myDiaryProfileCardVO.setLiked(likedDiaryIds.contains(myDiaryProfileCardVO.getId()));
+            myDiaryProfileCardVO.setFavorited(favoritedDiaryIds.contains(myDiaryProfileCardVO.getId()));
+        }
+        return response;
+    }
+
+    /**
+     * 根据日记列表获取日记 id 集合
+     * @param list 日记列表
+     * @return 日记 id 集合
+     */
+    private List<Long> extractDiaryIdsFromDiaryCards(List<DiaryCardVO> list) {
+        List<Long> diaryIds = new ArrayList<>(list.size());
+        for (DiaryCardVO diaryCardVO : list) {
+            diaryIds.add(diaryCardVO.getId());
+        }
+        return diaryIds;
+    }
+
+    /**
+     * 根据日记列表获取日记 id 集合
+     * @param list 日记列表
+     * @return 日记 id 集合
+     */
+    private List<Long> extractDiaryIdsFromDiaryProfiles(List<DiaryProfileCardVO> list) {
+        List<Long> diaryIds = new ArrayList<>(list.size());
+        for (DiaryProfileCardVO diaryProfileCardVO : list) {
+            diaryIds.add(diaryProfileCardVO.getId());
+        }
+        return diaryIds;
+    }
+
+    /**
+     * 根据日记列表获取日记 id 集合
+     * @param list 日记列表
+     * @return 日记 id 集合
+     */
+    private List<Long> extractDiaryIdsFromMyDiaryProfiles(List<MyDiaryProfileCardVO> list) {
+        List<Long> diaryIds = new ArrayList<>(list.size());
+        for (MyDiaryProfileCardVO myDiaryProfileCardVO : list) {
+            diaryIds.add(myDiaryProfileCardVO.getId());
+        }
+        return diaryIds;
+    }
+
+    /**
+     * 获取点赞日记 id 集合
+     * @param diaryIds 日记 id 集合
+     * @param userId 用户 id
+     * @return 点赞日记 id 集合
+     */
+    private Set<Long> getLikedDiaryIdSet(List<Long> diaryIds, Long userId) {
+        if (userId == null || diaryIds == null || diaryIds.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        Set<Long> likedDiaryIds = diaryMapper.selectLikedDiaryIds(userId, diaryIds);
+        return likedDiaryIds == null ? new HashSet<>() : likedDiaryIds;
+    }
+
+    /**
+     * 获取收藏日记 id 集合
+     * @param diaryIds 日记 id 集合
+     * @param userId 用户 id
+     * @return 收藏日记 id 集合
+     */
+    private Set<Long> getFavoritedDiaryIdSet(List<Long> diaryIds, Long userId) {
+        if (userId == null || diaryIds == null || diaryIds.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        Set<Long> favoritedDiaryIds = diaryMapper.selectFavoritedDiaryIds(userId, diaryIds);
+        return favoritedDiaryIds == null ? new HashSet<>() : favoritedDiaryIds;
     }
 
     /**

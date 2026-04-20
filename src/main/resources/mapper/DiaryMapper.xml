@@ -328,6 +328,26 @@
         LIMIT 1
     </select>
 
+    <select id="selectLikedDiaryIds" resultType="java.lang.Long">
+        SELECT diary_id
+        FROM diary_likes
+        WHERE user_id = #{currentUserId}
+          AND diary_id IN
+        <foreach collection="diaryIds" item="diaryId" open="(" separator="," close=")">
+            #{diaryId}
+        </foreach>
+    </select>
+
+    <select id="selectFavoritedDiaryIds" resultType="java.lang.Long">
+        SELECT diary_id
+        FROM diary_favorites
+        WHERE user_id = #{currentUserId}
+          AND diary_id IN
+        <foreach collection="diaryIds" item="diaryId" open="(" separator="," close=")">
+            #{diaryId}
+        </foreach>
+    </select>
+
     <select id="selectMyDiaryDetail" resultMap="MyDiaryDetailMap">
         SELECT
             d.id,

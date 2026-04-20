@@ -305,7 +305,7 @@ public class DiaryServiceImpl implements DiaryService {
                 // 3.2.增加浏览量，进行回写
                 cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
                 cacheClient.set(cacheKey, cachedDetail, RedisTtlConstants.DEFAULT);
-                cacheCounterSupport.syncDiaryViewCount(diaryId, cachedDetail.getViewCount());
+                cacheCounterSupport.incrementDiaryViewCount(diaryId, 1);
                 // 3.3.查找用户交互状态信息
                 DiaryDetailVO detailVO = mergeDiaryDetailWithInteractStatus(cachedDetail, diaryId, userId);
                 // 3.4.填充日记数据统计信息

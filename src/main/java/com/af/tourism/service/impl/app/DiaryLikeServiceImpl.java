@@ -75,8 +75,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
             // 7.更新缓存
             diary = diaryMapper.selectById(diaryId);
-            cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
-                    diary.getFavoriteCount(), diary.getCommentCount());
+            cacheCounterSupport.incrementDiaryLikeCount(diaryId, 1);
             log.info("点赞日记成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("重复点赞，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
@@ -111,8 +110,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
             // 5.更新缓存
             diary = diaryMapper.selectById(diaryId);
-            cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
-                    diary.getFavoriteCount(), diary.getCommentCount());
+            cacheCounterSupport.incrementDiaryLikeCount(diaryId, -1);
             log.info("取消点赞成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("用户本次取消点赞时为未点赞状态，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);

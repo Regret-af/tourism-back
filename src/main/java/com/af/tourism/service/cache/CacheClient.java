@@ -230,6 +230,17 @@ public class CacheClient {
     }
 
     /**
+     * Hash表字段增加指定步长
+     * @param key 缓存 key
+     * @param hashKey Hash key
+     * @param delta 步长
+     * @return 值
+     */
+    public Long incrementHash(String key, String hashKey, long delta) {
+        return stringRedisTemplate.opsForHash().increment(key, hashKey, delta);
+    }
+
+    /**
      * 写入Redis
      * @param key Redis键
      * @param value 要写入的对象

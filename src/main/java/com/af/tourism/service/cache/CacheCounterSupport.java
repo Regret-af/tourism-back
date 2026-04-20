@@ -59,6 +59,42 @@ public class CacheCounterSupport {
     }
 
     /**
+     * 为日记浏览量增加指定步长
+     * @param diaryId 日记 id
+     * @param delta 步长
+     */
+    public void incrementDiaryViewCount(Long diaryId, long delta) {
+        incrementDiaryCounter(diaryId, VIEW_COUNT, delta);
+    }
+
+    /**
+     * 为日记点赞量增加指定步长
+     * @param diaryId 日记 id
+     * @param delta 步长
+     */
+    public void incrementDiaryLikeCount(Long diaryId, long delta) {
+        incrementDiaryCounter(diaryId, LIKE_COUNT, delta);
+    }
+
+    /**
+     * 为日记收藏量增加指定步长
+     * @param diaryId 日记 id
+     * @param delta 步长
+     */
+    public void incrementDiaryFavoriteCount(Long diaryId, long delta) {
+        incrementDiaryCounter(diaryId, FAVORITE_COUNT, delta);
+    }
+
+    /**
+     * 为日记评论量增加指定步长
+     * @param diaryId 日记 id
+     * @param delta 步长
+     */
+    public void incrementDiaryCommentCount(Long diaryId, long delta) {
+        incrementDiaryCounter(diaryId, COMMENT_COUNT, delta);
+    }
+
+    /**
      * 填充日记数据
      * @param detailVO 日记详情实体
      * @param diaryId 日记 id
@@ -105,5 +141,21 @@ public class CacheCounterSupport {
      */
     private Integer defaultCount(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    /**
+     * 更新日记计数（自增/自减）并进行校准
+     * @param diaryId
+     * @param field
+     * @param delta
+     */
+    private void incrementDiaryCounter(Long diaryId, String field, long delta) {
+        String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
+        Long latestCount = cacheClient.incrementHash(cacheKey, field, delta);
+        if (latestCount == null) {
+            return;
+        }
+
+        cacheClient.expire(cacheKey, RedisTtlConstants.DEFAULT);
     }
 }

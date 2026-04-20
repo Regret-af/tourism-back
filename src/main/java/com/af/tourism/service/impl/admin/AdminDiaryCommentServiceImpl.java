@@ -111,8 +111,15 @@ public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
         // 7.将数据统计存入缓存
         TravelDiary diary = diaryMapper.selectById(comment.getDiaryId());
         if (diary != null) {
-            cacheCounterSupport.syncDiaryCounters(comment.getDiaryId(), diary.getViewCount(), diary.getLikeCount(),
-                    diary.getFavoriteCount(), diary.getCommentCount());
+            if (comment.getParentId() == null) {
+                if (Objects.equals(oldStatus, DiaryCommentStatus.NORMAL.getValue())
+                        && Objects.equals(targetStatus, DiaryCommentStatus.HIDDEN.getValue())) {
+                    cacheCounterSupport.incrementDiaryCommentCount(comment.getDiaryId(), -1);
+                } else if (Objects.equals(oldStatus, DiaryCommentStatus.HIDDEN.getValue())
+                        && Objects.equals(targetStatus, DiaryCommentStatus.NORMAL.getValue())) {
+                    cacheCounterSupport.incrementDiaryCommentCount(comment.getDiaryId(), 1);
+                }
+            }
         }
     }
 }

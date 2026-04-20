@@ -82,8 +82,7 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
 
             // 7.更新缓存
             diary = diaryMapper.selectById(diaryId);
-            cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
-                    diary.getFavoriteCount(), diary.getCommentCount());
+            cacheCounterSupport.incrementDiaryFavoriteCount(diaryId, 1);
             log.info("收藏日记成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("重复收藏，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
@@ -118,8 +117,7 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
 
             // 5.更新缓存
             diary = diaryMapper.selectById(diaryId);
-            cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
-                    diary.getFavoriteCount(), diary.getCommentCount());
+            cacheCounterSupport.incrementDiaryFavoriteCount(diaryId, -1);
             log.info("取消收藏成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("用户本次取消收藏时为未收藏状态，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);

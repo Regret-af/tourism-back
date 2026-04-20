@@ -147,8 +147,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
 
         // 6.更新缓存
         diary = diaryMapper.selectById(diaryId);
-        cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
-                diary.getFavoriteCount(), diary.getCommentCount());
+        cacheCounterSupport.incrementDiaryCommentCount(diaryId, 1);
 
         // 7.添加通知列表
         diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()

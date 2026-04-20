@@ -1,6 +1,7 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
+import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.enums.DiaryCommentStatus;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.DiaryCommentMapper;
@@ -10,9 +11,12 @@ import com.af.tourism.pojo.entity.DiaryComment;
 import com.af.tourism.pojo.vo.admin.DiaryCommentForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminDiaryCommentService;
+import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +28,13 @@ import java.util.Objects;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
 
     private final DiaryCommentMapper diaryCommentMapper;
     private final DiaryMapper diaryMapper;
+    private final CacheClient cacheClient;
+    private final CacheKeyBuilder cacheKeyBuilder;
 
     /**
      * 获取评论列表
@@ -92,6 +99,61 @@ public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
                     && Objects.equals(targetStatus, DiaryCommentStatus.NORMAL.getValue())) {
                 diaryMapper.updateCommentCount(comment.getDiaryId(), 1);
             }
+        }
+
+        // 6.清除Redis中可能受到影响的缓存
+        // 6.1.清除出日记列表缓存
+        clearDiaryListCache();
+        // 6.2.清除日记详情缓存
+        clearDiaryDetailCache(comment.getDiaryId());
+        // 6.3.清除日记评论列表缓存
+        clearDiaryCommentListCache(comment.getDiaryId());
+    }
+
+    /**
+     * 清除出日记列表缓存
+     */
+    private void clearDiaryListCache() {
+        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清除日记详情缓存
+     * @param diaryId 日记 id
+     */
+    private void clearDiaryDetailCache(Long diaryId) {
+        String diaryDetailCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_DETAIL,
+                "diaryId", diaryId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryDetailCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记详情缓存失败，cacheKeyPattern={}", diaryDetailCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清除日记评论列表缓存
+     * @param diaryId 日记 id
+     */
+    private void clearDiaryCommentListCache(Long diaryId) {
+        String diaryCommentListCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_COMMENT_LIST,
+                "diaryId", diaryId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryCommentListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记评论列表缓存失败，cacheKeyPattern={}", diaryCommentListCacheKeyPattern, ex);
         }
     }
 }

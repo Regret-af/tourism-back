@@ -12,4 +12,5 @@ public final class RedisTtlConstants {
     public static final Duration ATTRACTION_LIST = Duration.ofMinutes(5);
     public static final Duration ATTRACTION_WEATHER = Duration.ofMinutes(15);
     public static final Duration DIARY_LIST = Duration.ofMinutes(5);
+    public static final Duration DIARY_COMMENT_LIST = Duration.ofMinutes(5);
 }

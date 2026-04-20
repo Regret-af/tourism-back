@@ -2,6 +2,7 @@ package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.common.constants.RedisKeyConstants;
+import com.af.tourism.common.constants.RedisTtlConstants;
 import com.af.tourism.common.enums.NotificationType;
 import com.af.tourism.converter.DiaryConverter;
 import com.af.tourism.converter.UserConverter;
@@ -23,6 +24,7 @@ import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class DiaryCommentServiceImpl implements DiaryCommentService {
+
+    private static final TypeReference<PageResponse<DiaryCommentVO>> DIARY_COMMENT_LIST_PAGE_TYPE =
+            new TypeReference<PageResponse<DiaryCommentVO>>() {
+            };
 
     private final DiaryCommentMapper diaryCommentMapper;
     private final DiaryMapper diaryMapper;
@@ -65,20 +71,37 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         // 1.校验旅行日记是否存在
         diaryCheckService.requirePublicDiary(diaryId);
 
-        // 2.开启分页查询
+        // 2.构建 Redis 中日记评论的 key
+        String cacheKey = buildDiaryCommentListCacheKey(diaryId, queryDTO);
+
+        // 3.查找 Redis 缓存，存在直接返回
+        try {
+            PageResponse<DiaryCommentVO> cachedResponse = cacheClient.get(cacheKey, DIARY_COMMENT_LIST_PAGE_TYPE);
+            if (cachedResponse != null) {
+                return cachedResponse;
+            }
+        } catch (Exception ex) {
+            log.warn("读取日记评论列表缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
+        }
+
+        // 4.分页在数据库中查询评论列表
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-        // 3.开始查询评论列表
-        log.debug("查询日记评论列表，diaryId={}, pageNum={}, pageSize={}",
-                diaryId, queryDTO.getPageNum(), queryDTO.getPageSize());
         List<DiaryCommentVO> list = diaryCommentMapper.selectCommentList(diaryId);
         PageInfo<DiaryCommentVO> pageInfo = new PageInfo<>(list);
 
-        // 4.拼接返回数据
+        // 5.拼接返回数据
         PageResponse<DiaryCommentVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());
         response.setPageSize(pageInfo.getPageSize());
         response.setTotal(pageInfo.getTotal());
+
+        // 6.将返回值存入Redis
+        try {
+            cacheClient.set(cacheKey, response, RedisTtlConstants.DIARY_COMMENT_LIST);
+        } catch (Exception ex) {
+            log.warn("写入日记评论列表缓存失败，cacheKey={}", cacheKey, ex);
+        }
 
         return response;
     }
@@ -118,6 +141,8 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         clearDiaryListCache();
         // 5.2.清除日记详情缓存
         clearDiaryDetailCache(diaryId);
+        // 5.3.清除日记评论列表缓存
+        clearDiaryCommentListCache(diaryId);
 
         // 6.添加通知列表
         diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
@@ -163,6 +188,38 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
             cacheClient.deleteByPattern(diaryDetailCacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除日记详情缓存失败，cacheKeyPattern={}", diaryDetailCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 构建 Redis 中日记评论的 key
+     * @param diaryId 日记 id
+     * @param queryDTO 请求参数
+     * @return 日记评论列表 key
+     */
+    private String buildDiaryCommentListCacheKey(Long diaryId, DiaryCommentQueryDTO queryDTO) {
+        return cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_COMMENT_LIST,
+                "diaryId", diaryId,
+                "pageNum", queryDTO.getPageNum(),
+                "pageSize", queryDTO.getPageSize()
+        );
+    }
+
+    /**
+     * 清除日记评论列表缓存
+     * @param diaryId 日记 id
+     */
+    private void clearDiaryCommentListCache(Long diaryId) {
+        String diaryCommentListCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_COMMENT_LIST,
+                "diaryId", diaryId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryCommentListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记评论列表缓存失败，cacheKeyPattern={}", diaryCommentListCacheKeyPattern, ex);
         }
     }
 

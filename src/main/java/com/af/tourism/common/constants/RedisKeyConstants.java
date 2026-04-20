@@ -14,6 +14,7 @@ public final class RedisKeyConstants {
     public static final String ATTRACTION_WEATHER = "attraction:weather";
     public static final String DIARY_LIST = "diary:list";
     public static final String DIARY_DETAIL = "diary:detail";
+    public static final String DIARY_COMMENT_LIST = "diary:comment:list";
 
     public static final String DIARY_LIKE = "diary:like";
     public static final String DIARY_FAVORITE = "diary:favorite";

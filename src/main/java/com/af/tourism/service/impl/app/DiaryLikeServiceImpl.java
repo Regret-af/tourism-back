@@ -58,7 +58,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             like.setUserId(userId);
             diaryLikeMapper.insert(like);
 
-            // 4.执行旅行日记评论数量更新操作
+            // 4.执行旅行日记点赞数量更新操作
             diaryMapper.updateLikeCount(diaryId, 1);
 
             // 5.清除Redis中可能受到影响的缓存
@@ -74,14 +74,13 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
                     .build());
 
             // 7.更新缓存
-            diary = diaryMapper.selectById(diaryId);
             cacheCounterSupport.incrementDiaryLikeCount(diaryId, 1);
             log.info("点赞日记成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("重复点赞，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
         }
 
-        return buildLikeVO(true, diary.getLikeCount());
+        return buildLikeVO(true, diary.getLikeCount() + 1);
     }
 
     /**
@@ -109,14 +108,13 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             cacheClearSupport.clearDiaryDetail(diaryId);
 
             // 5.更新缓存
-            diary = diaryMapper.selectById(diaryId);
             cacheCounterSupport.incrementDiaryLikeCount(diaryId, -1);
             log.info("取消点赞成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("用户本次取消点赞时为未点赞状态，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
         }
 
-        return buildLikeVO(false, diary.getLikeCount());
+        return buildLikeVO(false, diary.getLikeCount() - 1);
     }
 
     /**

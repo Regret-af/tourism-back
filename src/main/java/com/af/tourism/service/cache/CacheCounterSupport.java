@@ -1,11 +1,15 @@
 package com.af.tourism.service.cache;
 
 import com.af.tourism.common.constants.RedisTtlConstants;
+import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
+import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
+import com.af.tourism.pojo.vo.app.MyDiaryProfileCardVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -120,6 +124,69 @@ public class CacheCounterSupport {
     }
 
     /**
+     * 填充日记数据
+     * @param list 日记列表
+     */
+    public void fillDiaryCardCounters(List<DiaryCardVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        for (DiaryCardVO diaryCardVO : list) {
+            Map<Object, Object> entries = getDiaryCounterEntries(diaryCardVO.getId());
+            if (entries == null || entries.isEmpty()) {
+                continue;
+            }
+            diaryCardVO.setViewCount(readCount(entries, VIEW_COUNT, diaryCardVO.getViewCount()));
+            diaryCardVO.setLikeCount(readCount(entries, LIKE_COUNT, diaryCardVO.getLikeCount()));
+            diaryCardVO.setFavoriteCount(readCount(entries, FAVORITE_COUNT, diaryCardVO.getFavoriteCount()));
+            diaryCardVO.setCommentCount(readCount(entries, COMMENT_COUNT, diaryCardVO.getCommentCount()));
+        }
+    }
+
+    /**
+     * 填充日记数据
+     * @param list 日记列表
+     */
+    public void fillDiaryProfileCardCounters(List<DiaryProfileCardVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        for (DiaryProfileCardVO diaryProfileCardVO : list) {
+            Map<Object, Object> entries = getDiaryCounterEntries(diaryProfileCardVO.getId());
+            if (entries == null || entries.isEmpty()) {
+                continue;
+            }
+            diaryProfileCardVO.setViewCount(readCount(entries, VIEW_COUNT, diaryProfileCardVO.getViewCount()));
+            diaryProfileCardVO.setLikeCount(readCount(entries, LIKE_COUNT, diaryProfileCardVO.getLikeCount()));
+            diaryProfileCardVO.setFavoriteCount(readCount(entries, FAVORITE_COUNT, diaryProfileCardVO.getFavoriteCount()));
+            diaryProfileCardVO.setCommentCount(readCount(entries, COMMENT_COUNT, diaryProfileCardVO.getCommentCount()));
+        }
+    }
+
+    /**
+     * 填充日记数据
+     * @param list 日记列表
+     */
+    public void fillMyDiaryProfileCardCounters(List<MyDiaryProfileCardVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        for (MyDiaryProfileCardVO myDiaryProfileCardVO : list) {
+            Map<Object, Object> entries = getDiaryCounterEntries(myDiaryProfileCardVO.getId());
+            if (entries == null || entries.isEmpty()) {
+                continue;
+            }
+            myDiaryProfileCardVO.setViewCount(readCount(entries, VIEW_COUNT, myDiaryProfileCardVO.getViewCount()));
+            myDiaryProfileCardVO.setLikeCount(readCount(entries, LIKE_COUNT, myDiaryProfileCardVO.getLikeCount()));
+            myDiaryProfileCardVO.setFavoriteCount(readCount(entries, FAVORITE_COUNT, myDiaryProfileCardVO.getFavoriteCount()));
+            myDiaryProfileCardVO.setCommentCount(readCount(entries, COMMENT_COUNT, myDiaryProfileCardVO.getCommentCount()));
+        }
+    }
+
+    /**
      * 从 Hash 查询结果中读取指定字段的计数值
      * @param entries Hash 结果
      * @param field 字段名
@@ -132,6 +199,11 @@ public class CacheCounterSupport {
             return defaultCount(defaultValue);
         }
         return Integer.parseInt(String.valueOf(value));
+    }
+
+    private Map<Object, Object> getDiaryCounterEntries(Long diaryId) {
+        String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
+        return cacheClient.entries(cacheKey);
     }
 
     /**

@@ -536,14 +536,17 @@ public class DiaryServiceImpl implements DiaryService {
             return response;
         }
 
-        // 2.获取日记 id 列表
+        // 2.填充日记数据
+        cacheCounterSupport.fillDiaryCardCounters(response.getList());
+
+        // 3.获取日记 id 列表
         List<Long> diaryIds = extractDiaryIdsFromDiaryCards(response.getList());
-        // 3.获取点赞日记 id 集合
+        // 4.获取点赞日记 id 集合
         Set<Long> likedDiaryIds = getLikedDiaryIdSet(diaryIds, userId);
-        // 4.获取收藏日记 id 集合
+        // 5.获取收藏日记 id 集合
         Set<Long> favoritedDiaryIds = getFavoritedDiaryIdSet(diaryIds, userId);
 
-        // 5.进行回写，填充交互状态
+        // 6.进行回写，填充交互状态
         for (DiaryCardVO diaryCardVO : response.getList()) {
             diaryCardVO.setLiked(likedDiaryIds.contains(diaryCardVO.getId()));
             diaryCardVO.setFavorited(favoritedDiaryIds.contains(diaryCardVO.getId()));
@@ -563,6 +566,8 @@ public class DiaryServiceImpl implements DiaryService {
         if (response == null || response.getList() == null || response.getList().isEmpty()) {
             return response;
         }
+
+        cacheCounterSupport.fillDiaryProfileCardCounters(response.getList());
 
         // 2.获取日记 id 列表
         List<Long> diaryIds = extractDiaryIdsFromDiaryProfiles(response.getList());
@@ -590,6 +595,8 @@ public class DiaryServiceImpl implements DiaryService {
         if (response == null || response.getList() == null || response.getList().isEmpty()) {
             return response;
         }
+
+        cacheCounterSupport.fillMyDiaryProfileCardCounters(response.getList());
 
         // 2.获取日记 id 列表
         List<Long> diaryIds = extractDiaryIdsFromMyDiaryProfiles(response.getList());

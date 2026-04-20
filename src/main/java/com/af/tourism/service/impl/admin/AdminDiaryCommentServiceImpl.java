@@ -12,6 +12,7 @@ import com.af.tourism.pojo.vo.admin.DiaryCommentForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminDiaryCommentService;
 import com.af.tourism.service.cache.CacheClearSupport;
+import com.af.tourism.service.cache.CacheCounterSupport;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
     private final DiaryMapper diaryMapper;
 
     private final CacheClearSupport cacheClearSupport;
+    private final CacheCounterSupport cacheCounterSupport;
 
     /**
      * 获取评论列表
@@ -105,5 +107,12 @@ public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
         cacheClearSupport.clearDiaryDetail(comment.getDiaryId());
         // 6.2.清除日记评论列表缓存
         cacheClearSupport.clearDiaryCommentList(comment.getDiaryId());
+
+        // 7.将数据统计存入缓存
+        TravelDiary diary = diaryMapper.selectById(comment.getDiaryId());
+        if (diary != null) {
+            cacheCounterSupport.syncDiaryCounters(comment.getDiaryId(), diary.getViewCount(), diary.getLikeCount(),
+                    diary.getFavoriteCount(), diary.getCommentCount());
+        }
     }
 }

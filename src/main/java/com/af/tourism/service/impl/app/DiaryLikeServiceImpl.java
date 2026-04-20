@@ -9,6 +9,7 @@ import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.service.app.DiaryLikeService;
 import com.af.tourism.service.cache.CacheClearSupport;
+import com.af.tourism.service.cache.CacheCounterSupport;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
@@ -29,6 +30,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
     private final DiaryMapper diaryMapper;
 
     private final CacheClearSupport cacheClearSupport;
+    private final CacheCounterSupport cacheCounterSupport;
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
@@ -70,7 +72,11 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
                     .recipientUserId(diary.getUserId())
                     .relatedDiaryId(diaryId)
                     .build());
+
+            // 7.更新缓存
             diary = diaryMapper.selectById(diaryId);
+            cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
+                    diary.getFavoriteCount(), diary.getCommentCount());
             log.info("点赞日记成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("重复点赞，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
@@ -102,7 +108,11 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             // 4.清除Redis中可能受到影响的缓存
             // 4.1.清除日记详情缓存
             cacheClearSupport.clearDiaryDetail(diaryId);
+
+            // 5.更新缓存
             diary = diaryMapper.selectById(diaryId);
+            cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
+                    diary.getFavoriteCount(), diary.getCommentCount());
             log.info("取消点赞成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("用户本次取消点赞时为未点赞状态，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);

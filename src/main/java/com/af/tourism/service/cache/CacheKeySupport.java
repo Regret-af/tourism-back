@@ -93,6 +93,15 @@ public class CacheKeySupport {
     }
 
     /**
+     * 构建日记数据 key
+     * @param diaryId 日记 id
+     * @return 日记数据 key
+     */
+    public String buildDiaryCounterKey(Long diaryId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.DIARY_COUNTER, "diaryId", diaryId);
+    }
+
+    /**
      * 构建我的日记列表 key
      * @param userId 用户 id
      * @param queryDTO 请求参数

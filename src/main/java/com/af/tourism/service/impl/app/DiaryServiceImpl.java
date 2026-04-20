@@ -24,6 +24,7 @@ import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.DiaryService;
 import com.af.tourism.service.cache.CacheClient;
 import com.af.tourism.service.cache.CacheClearSupport;
+import com.af.tourism.service.cache.CacheCounterSupport;
 import com.af.tourism.service.cache.CacheKeySupport;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
@@ -66,6 +67,7 @@ public class DiaryServiceImpl implements DiaryService {
     private final CacheClient cacheClient;
     private final CacheKeySupport cacheKeySupport;
     private final CacheClearSupport cacheClearSupport;
+    private final CacheCounterSupport cacheCounterSupport;
 
     /**
      * 发布旅行日记
@@ -303,7 +305,12 @@ public class DiaryServiceImpl implements DiaryService {
                 // 3.2.增加浏览量，进行回写
                 cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
                 cacheClient.set(cacheKey, cachedDetail, RedisTtlConstants.DEFAULT);
-                return mergeDiaryDetailWithInteractStatus(cachedDetail, diaryId, userId);
+                cacheCounterSupport.syncDiaryViewCount(diaryId, cachedDetail.getViewCount());
+                // 3.3.查找用户交互状态信息
+                DiaryDetailVO detailVO = mergeDiaryDetailWithInteractStatus(cachedDetail, diaryId, userId);
+                // 3.4.填充日记数据统计信息
+                cacheCounterSupport.fillDiaryCounters(detailVO, diaryId);
+                return detailVO;
             }
         } catch (Exception ex) {
             log.warn("读取日记详情缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
@@ -325,7 +332,11 @@ public class DiaryServiceImpl implements DiaryService {
             log.warn("写入日记详情缓存失败，cacheKey={}", cacheKey, ex);
         }
 
-        return mergeDiaryDetailWithInteractStatus(detailVO, diaryId, userId);
+        cacheCounterSupport.syncDiaryCounters(diaryId, detailVO.getViewCount(), detailVO.getLikeCount(),
+                detailVO.getFavoriteCount(), detailVO.getCommentCount());
+        DiaryDetailVO mergedDetailVO = mergeDiaryDetailWithInteractStatus(detailVO, diaryId, userId);
+        cacheCounterSupport.fillDiaryCounters(mergedDetailVO, diaryId);
+        return mergedDetailVO;
     }
 
     /**

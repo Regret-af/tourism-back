@@ -20,6 +20,7 @@ import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.DiaryCommentService;
 import com.af.tourism.service.cache.CacheClient;
 import com.af.tourism.service.cache.CacheClearSupport;
+import com.af.tourism.service.cache.CacheCounterSupport;
 import com.af.tourism.service.cache.CacheKeySupport;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
@@ -53,6 +54,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
     private final CacheClient cacheClient;
     private final CacheKeySupport cacheKeySupport;
     private final CacheClearSupport cacheClearSupport;
+    private final CacheCounterSupport cacheCounterSupport;
 
     private final UserConverter userConverter;
     private final DiaryConverter diaryConverter;
@@ -143,7 +145,12 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         // 5.2.清除日记评论列表缓存
         cacheClearSupport.clearDiaryCommentList(diaryId);
 
-        // 6.添加通知列表
+        // 6.更新缓存
+        diary = diaryMapper.selectById(diaryId);
+        cacheCounterSupport.syncDiaryCounters(diaryId, diary.getViewCount(), diary.getLikeCount(),
+                diary.getFavoriteCount(), diary.getCommentCount());
+
+        // 7.添加通知列表
         diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
                 .type(NotificationType.COMMENT)
                 .triggerUserId(userId)
@@ -153,7 +160,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
                 .build());
         log.info("发表评论成功，diaryId={}, commentId={}, userId={}", diaryId, comment.getId(), userId);
 
-        // 7.返回评论信息
+        // 8.返回评论信息
         DiaryCommentCreateVO response = diaryConverter.toDiaryCommentCreateVO(comment);
         response.setAuthor(userConverter.toUserPublicVO(user));
 

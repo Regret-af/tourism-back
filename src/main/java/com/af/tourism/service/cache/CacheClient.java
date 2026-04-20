@@ -12,6 +12,8 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -189,6 +191,42 @@ public class CacheClient {
         }
         String json = toJson(key, value);
         return stringRedisTemplate.opsForValue().setIfAbsent(key, json, ttl);
+    }
+
+    /**
+     * 将 Hash 表数据存入缓存
+     * @param key 缓存 key
+     * @param hashKey Hash key
+     * @param value Hash value
+     */
+    public void putHash(String key, String hashKey, Object value) {
+        stringRedisTemplate.opsForHash().put(key, hashKey, String.valueOf(value));
+    }
+
+    /**
+     * 将 Hash 表数据存入缓存
+     * @param key 缓存 key
+     * @param values Hash 表
+     */
+    public void putAllHash(String key, Map<String, ?> values) {
+        if (values == null || values.isEmpty()) {
+            return;
+        }
+
+        Map<String, String> stringValues = new LinkedHashMap<>(values.size());
+        for (Map.Entry<String, ?> entry : values.entrySet()) {
+            stringValues.put(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+        stringRedisTemplate.opsForHash().putAll(key, stringValues);
+    }
+
+    /**
+     * 获取 Hahs 类型缓存
+     * @param key 缓存 key
+     * @return
+     */
+    public Map<Object, Object> entries(String key) {
+        return stringRedisTemplate.opsForHash().entries(key);
     }
 
     /**

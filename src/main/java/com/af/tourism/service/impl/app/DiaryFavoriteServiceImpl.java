@@ -72,6 +72,9 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             // 5.清除Redis中可能受到影响的缓存
             // 5.1.清除旅行日记列表缓存
             clearDiaryListCache();
+            clearMyDiaryListCache(diary.getUserId());
+            clearUserPublicDiaryListCache(diary.getUserId());
+            clearMoreFromAuthorCache(diary.getUserId());
             // 5.2.清除旅行日记详情缓存
             clearDiaryDetailCache(diaryId);
 
@@ -114,6 +117,9 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             // 4.清除Redis中可能受到影响的缓存
             // 4.1.清除旅行日记列表缓存
             clearDiaryListCache();
+            clearMyDiaryListCache(diary.getUserId());
+            clearUserPublicDiaryListCache(diary.getUserId());
+            clearMoreFromAuthorCache(diary.getUserId());
             // 4.2.清除日记详情缓存
             clearDiaryDetailCache(diaryId);
             diary = diaryMapper.selectById(diaryId);
@@ -190,6 +196,57 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             cacheClient.deleteByPattern(diaryDetailCacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除日记详情缓存失败，cacheKeyPattern={}", diaryDetailCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清理我的日记列表缓存
+     * @param userId 用户 id
+     */
+    private void clearMyDiaryListCache(Long userId) {
+        String myDiaryListCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_MY_LIST,
+                "userId", userId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(myDiaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除我的日记列表缓存失败，cacheKeyPattern={}", myDiaryListCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清理用户公开列表缓存
+     * @param userId 用户 id
+     */
+    private void clearUserPublicDiaryListCache(Long userId) {
+        String userPublicDiaryListCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_USER_PUBLIC_LIST,
+                "userId", userId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(userPublicDiaryListCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除用户主页日记列表缓存失败，cacheKeyPattern={}", userPublicDiaryListCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清理更多创作列表缓存
+     * @param userId 用户 id
+     */
+    private void clearMoreFromAuthorCache(Long userId) {
+        String moreFromAuthorCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_MORE_FROM_AUTHOR,
+                "userId", userId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(moreFromAuthorCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除作者更多创作缓存失败，cacheKeyPattern={}", moreFromAuthorCacheKeyPattern, ex);
         }
     }
 }

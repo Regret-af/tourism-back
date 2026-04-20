@@ -113,8 +113,11 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         // 4.执行旅行日记评论数量更新操作
         diaryMapper.updateCommentCount(diaryId, 1);
 
-        // 5.清除旅行日记列表缓存
+        // 5.清除Redis中可能受到影响的缓存
+        // 5.1.清除旅行日记列表缓存
         clearDiaryListCache();
+        // 5.2.清除日记详情缓存
+        clearDiaryDetailCache(diaryId);
 
         // 6.添加通知列表
         diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
@@ -143,6 +146,23 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
             cacheClient.deleteByPattern(diaryListCacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 清除日记详情缓存
+     * @param diaryId 日记 id
+     */
+    private void clearDiaryDetailCache(Long diaryId) {
+        String diaryDetailCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_DETAIL,
+                "diaryId", diaryId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryDetailCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记详情缓存失败，cacheKeyPattern={}", diaryDetailCacheKeyPattern, ex);
         }
     }
 

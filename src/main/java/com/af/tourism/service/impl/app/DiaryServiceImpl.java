@@ -180,8 +180,11 @@ public class DiaryServiceImpl implements DiaryService {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "数据库更新失败");
         }
 
-        // 3.清除旅行日记列表缓存
+        // 3.清除Redis中可能受到影响的缓存
+        // 3.1.清除旅行日记列表缓存
         clearDiaryListCache();
+        // 3.2.清除日记详情缓存
+        clearDiaryDetailCache(diaryId);
     }
 
     /**
@@ -255,14 +258,40 @@ public class DiaryServiceImpl implements DiaryService {
     @Transactional(rollbackFor = Exception.class)
     public DiaryDetailVO getDiaryDetail(Long diaryId) {
         diaryMapper.increaseViewCount(diaryId);
-        // 1.查询旅行日记详情
+        // 1.获取用户 id
         Long userId = SecurityUtils.getCurrentUserId();
+
+        // 2.构建 Redis 中日记详情的 key
+        String cacheKey = buildDiaryDetailCacheKey(diaryId, userId);
+
+        // 3.查找 Redis 缓存，存在直接返回
+        try {
+            // 3.1.查询日记详情缓存
+            DiaryDetailVO cachedDetail = cacheClient.get(cacheKey, DiaryDetailVO.class);
+            if (cachedDetail != null) {
+                // 3.2.增加浏览量，进行回写
+                cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
+                cacheClient.set(cacheKey, cachedDetail, RedisTtlConstants.DEFAULT);
+                return cachedDetail;
+            }
+        } catch (Exception ex) {
+            log.warn("读取日记详情缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
+        }
+
+        // 4.在数据库中查询日记详情
         DiaryDetailVO detailVO = diaryMapper.selectDiaryDetail(diaryId, userId);
 
-        // 2.若为空，抛出异常
+        // 5.若为空，抛出异常
         if (detailVO == null) {
             log.warn("旅行日记不存在，diaryId={}", diaryId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "旅行日记不存在");
+        }
+
+        // 6.将返回值存入Redis
+        try {
+            cacheClient.set(cacheKey, detailVO, RedisTtlConstants.DEFAULT);
+        } catch (Exception ex) {
+            log.warn("写入日记详情缓存失败，cacheKey={}", cacheKey, ex);
         }
 
         return detailVO;
@@ -379,6 +408,33 @@ public class DiaryServiceImpl implements DiaryService {
             cacheClient.deleteByPattern(diaryListCacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 构建 Redis 中日记详情的 key
+     * @param diaryId 日记 id
+     * @param userId 用户 id
+     * @return 日记详情 key
+     */
+    private String buildDiaryDetailCacheKey(Long diaryId, Long userId) {
+        return cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_DETAIL,
+                "diaryId", diaryId,
+                "userId", userId == null ? "_" : userId
+        );
+    }
+
+    private void clearDiaryDetailCache(Long diaryId) {
+        String diaryDetailCacheKeyPattern = cacheKeyBuilder.build(
+                RedisKeyConstants.DIARY_DETAIL,
+                "diaryId", diaryId
+        ) + "*";
+
+        try {
+            cacheClient.deleteByPattern(diaryDetailCacheKeyPattern);
+        } catch (Exception ex) {
+            log.warn("删除日记详情缓存失败，cacheKeyPattern={}", diaryDetailCacheKeyPattern, ex);
         }
     }
 

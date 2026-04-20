@@ -1,7 +1,6 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
-import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.constants.RedisTtlConstants;
 import com.af.tourism.common.enums.DiaryDeletedStatus;
 import com.af.tourism.common.enums.DiaryVisibility;
@@ -23,7 +22,8 @@ import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.DiaryService;
 import com.af.tourism.service.cache.CacheClient;
-import com.af.tourism.service.cache.CacheKeyBuilder;
+import com.af.tourism.service.cache.CacheClearSupport;
+import com.af.tourism.service.cache.CacheKeySupport;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -56,9 +56,12 @@ public class DiaryServiceImpl implements DiaryService {
 
     private final DiaryMapper diaryMapper;
     private final DiaryCategoryMapper diaryCategoryMapper;
+
     private final DiaryConverter diaryConverter;
+
     private final CacheClient cacheClient;
-    private final CacheKeyBuilder cacheKeyBuilder;
+    private final CacheKeySupport cacheKeySupport;
+    private final CacheClearSupport cacheClearSupport;
 
     /**
      * 发布旅行日记
@@ -92,11 +95,11 @@ public class DiaryServiceImpl implements DiaryService {
 
         // 5.如果是公开日记，清除公开相关缓存
         if (isPublicDiary(diary.getStatus(), diary.getVisibility(), diary.getIsDeleted())) {
-            clearDiaryListCache();
-            clearUserPublicDiaryListCache(userId);
-            clearMoreFromAuthorCache(userId);
+            cacheClearSupport.clearDiaryList();
+            cacheClearSupport.clearUserPublicDiaryList(userId);
+            cacheClearSupport.clearMoreFromAuthor(userId);
         }
-        clearMyDiaryListCache(userId);
+        cacheClearSupport.clearMyDiaryList(userId);
 
         return diaryConverter.toTravelDiaryPublishVO(diary);
     }
@@ -156,14 +159,14 @@ public class DiaryServiceImpl implements DiaryService {
         // 4.清除可能受影响的缓存
         boolean publicDiary = isPublicDiary(diary.getStatus(), diary.getVisibility(), diary.getIsDeleted());
         if (publicDiary) {
-            clearDiaryListCache();
-            clearUserPublicDiaryListCache(userId);
-            clearMoreFromAuthorCache(userId);
+            cacheClearSupport.clearDiaryList();
+            cacheClearSupport.clearUserPublicDiaryList(userId);
+            cacheClearSupport.clearMoreFromAuthor(userId);
         }
         if (wasPublicDiary || publicDiary) {
-            clearDiaryDetailCache(diaryId);
+            cacheClearSupport.clearDiaryDetail(diaryId);
         }
-        clearMyDiaryListCache(userId);
+        cacheClearSupport.clearMyDiaryList(userId);
     }
 
     /**
@@ -202,12 +205,12 @@ public class DiaryServiceImpl implements DiaryService {
 
         // 3.清除 Redis 中可能受到影响的缓存
         if (wasPublicDiary) {
-            clearDiaryListCache();
-            clearUserPublicDiaryListCache(userId);
-            clearMoreFromAuthorCache(userId);
+            cacheClearSupport.clearDiaryList();
+            cacheClearSupport.clearUserPublicDiaryList(userId);
+            cacheClearSupport.clearMoreFromAuthor(userId);
         }
-        clearDiaryDetailCache(diaryId);
-        clearMyDiaryListCache(userId);
+        cacheClearSupport.clearDiaryDetail(diaryId);
+        cacheClearSupport.clearMyDiaryList(userId);
     }
 
     /**
@@ -237,7 +240,7 @@ public class DiaryServiceImpl implements DiaryService {
         Long userId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中日记列表的 key
-        String cacheKey = buildDiaryListCacheKey(queryDTO, userId);
+        String cacheKey = cacheKeySupport.buildDiaryListKey(queryDTO, userId);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
@@ -286,7 +289,7 @@ public class DiaryServiceImpl implements DiaryService {
         Long userId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中日记详情的 key
-        String cacheKey = buildDiaryDetailCacheKey(diaryId, userId);
+        String cacheKey = cacheKeySupport.buildDiaryDetailKey(diaryId, userId);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
@@ -335,7 +338,7 @@ public class DiaryServiceImpl implements DiaryService {
         }
 
         // 2.构建 Redis 中我的日记列表 key
-        String cacheKey = buildMyDiaryListCacheKey(userId, queryDTO);
+        String cacheKey = cacheKeySupport.buildMyDiaryListKey(userId, queryDTO);
         try {
             PageResponse<MyDiaryProfileCardVO> cachedResponse = cacheClient.get(cacheKey, MY_DIARY_LIST_PAGE_TYPE);
             if (cachedResponse != null) {
@@ -382,7 +385,7 @@ public class DiaryServiceImpl implements DiaryService {
         Long currentUserId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中用户公开日记列表的 key
-        String cacheKey = buildUserPublicDiaryListCacheKey(userId, queryDTO, currentUserId);
+        String cacheKey = cacheKeySupport.buildUserPublicDiaryListKey(userId, queryDTO, currentUserId);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
@@ -436,7 +439,7 @@ public class DiaryServiceImpl implements DiaryService {
         Long currentUserId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中作者更多创作列表 key
-        String cacheKey = buildMoreFromAuthorCacheKey(travelDiary.getUserId(), diaryId, queryDTO, currentUserId);
+        String cacheKey = cacheKeySupport.buildMoreFromAuthorKey(travelDiary.getUserId(), diaryId, queryDTO, currentUserId);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
@@ -471,167 +474,6 @@ public class DiaryServiceImpl implements DiaryService {
         }
 
         return response;
-    }
-
-    /**
-     * 构建 Redis 中日记列表的 key
-     * @param queryDTO 请求参数
-     * @param userId 用户 id
-     * @return 日记列表 key
-     */
-    private String buildDiaryListCacheKey(DiaryQueryDTO queryDTO, Long userId) {
-        return cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_LIST,
-                "userId", userId == null ? "_" : userId,
-                "pageNum", queryDTO.getPageNum(),
-                "pageSize", queryDTO.getPageSize(),
-                "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()
-        );
-    }
-
-    /**
-     * 构建 Redis 中我的日记列表 key
-     * @param userId 用户 id
-     * @param queryDTO 请求参数
-     * @return 我的日记列表 key
-     */
-    private String buildMyDiaryListCacheKey(Long userId, DiaryQueryDTO queryDTO) {
-        return cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_MY_LIST,
-                "userId", userId,
-                "pageNum", queryDTO.getPageNum(),
-                "pageSize", queryDTO.getPageSize(),
-                "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()
-        );
-    }
-
-    /**
-     * 构建 Redis 中用户公开日记列表的 key
-     * @param userId 用户 id
-     * @param queryDTO 请求参数
-     * @param currentUserId 当前用户 id
-     * @return 用户公开日记列表 key
-     */
-    private String buildUserPublicDiaryListCacheKey(Long userId, DiaryQueryDTO queryDTO, Long currentUserId) {
-        return cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_USER_PUBLIC_LIST,
-                "userId", userId,
-                "currentUserId", currentUserId == null ? "_" : currentUserId,
-                "pageNum", queryDTO.getPageNum(),
-                "pageSize", queryDTO.getPageSize(),
-                "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()
-        );
-    }
-
-    /**
-     * 构建 Redis 中作者更多创作列表 key
-     * @param userId 用户 id
-     * @param diaryId 日记 id
-     * @param queryDTO 请求参数
-     * @param currentUserId 当前用户 id
-     * @return 作者更多创作列表 key
-     */
-    private String buildMoreFromAuthorCacheKey(Long userId, Long diaryId, DiaryQueryDTO queryDTO, Long currentUserId) {
-        return cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_MORE_FROM_AUTHOR,
-                "userId", userId,
-                "diaryId", diaryId,
-                "currentUserId", currentUserId == null ? "_" : currentUserId,
-                "pageNum", queryDTO.getPageNum(),
-                "pageSize", queryDTO.getPageSize(),
-                "sort", queryDTO.getSortCode() == null ? "_" : queryDTO.getSortCode()
-        );
-    }
-
-    /**
-     * 清除日记列表缓存
-     */
-    private void clearDiaryListCache() {
-        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
-
-        try {
-            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清理我的日记列表缓存
-     * @param userId 用户 id
-     */
-    private void clearMyDiaryListCache(Long userId) {
-        String myDiaryListCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_MY_LIST,
-                "userId", userId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(myDiaryListCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除我的日记列表缓存失败，cacheKeyPattern={}", myDiaryListCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清理用户公开列表缓存
-     * @param userId 用户 id
-     */
-    private void clearUserPublicDiaryListCache(Long userId) {
-        String userPublicDiaryListCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_USER_PUBLIC_LIST,
-                "userId", userId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(userPublicDiaryListCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除用户主页日记列表缓存失败，cacheKeyPattern={}", userPublicDiaryListCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清理更多创作列表缓存
-     * @param userId 用户 id
-     */
-    private void clearMoreFromAuthorCache(Long userId) {
-        String moreFromAuthorCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_MORE_FROM_AUTHOR,
-                "userId", userId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(moreFromAuthorCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除作者更多创作缓存失败，cacheKeyPattern={}", moreFromAuthorCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 构建 Redis 中日记详情的 key
-     * @param diaryId 日记 id
-     * @param userId 用户 id
-     * @return 日记详情 key
-     */
-    private String buildDiaryDetailCacheKey(Long diaryId, Long userId) {
-        return cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_DETAIL,
-                "diaryId", diaryId,
-                "userId", userId == null ? "_" : userId
-        );
-    }
-
-    private void clearDiaryDetailCache(Long diaryId) {
-        String diaryDetailCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_DETAIL,
-                "diaryId", diaryId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(diaryDetailCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除日记详情缓存失败，cacheKeyPattern={}", diaryDetailCacheKeyPattern, ex);
-        }
     }
 
     /**

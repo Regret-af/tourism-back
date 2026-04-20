@@ -1,12 +1,11 @@
 package com.af.tourism.service.impl.app;
 
-import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.constants.RedisTtlConstants;
 import com.af.tourism.mapper.DiaryCategoryMapper;
 import com.af.tourism.pojo.vo.common.OptionVO;
 import com.af.tourism.service.app.DiaryCategoryService;
 import com.af.tourism.service.cache.CacheClient;
-import com.af.tourism.service.cache.CacheKeyBuilder;
+import com.af.tourism.service.cache.CacheKeySupport;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +26,7 @@ public class DiaryCategoryServiceImpl implements DiaryCategoryService {
     private final DiaryCategoryMapper diaryCategoryMapper;
 
     private final CacheClient cacheClient;
-    private final CacheKeyBuilder cacheKeyBuilder;
+    private final CacheKeySupport cacheKeySupport;
 
     /**
      * 日记分类选项
@@ -36,7 +35,7 @@ public class DiaryCategoryServiceImpl implements DiaryCategoryService {
     @Override
     public List<OptionVO<Long>> listCategoryOptions() {
         // 1.构建 Redis 中日记分类的 key
-        String cacheKey = cacheKeyBuilder.build(RedisKeyConstants.DIARY_CATEGORY_OPTIONS);
+        String cacheKey = cacheKeySupport.buildDiaryCategoryOptionsKey();
 
         // 2.查找 Redis 缓存，存在直接返回
         try {

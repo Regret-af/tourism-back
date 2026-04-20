@@ -1,7 +1,6 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
-import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.integration.baidu.map.BaiduMapClient;
@@ -22,8 +21,7 @@ import com.af.tourism.pojo.vo.admin.MapDetailVO;
 import com.af.tourism.pojo.vo.admin.MapSuggestionVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionService;
-import com.af.tourism.service.cache.CacheClient;
-import com.af.tourism.service.cache.CacheKeyBuilder;
+import com.af.tourism.service.cache.CacheClearSupport;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +47,7 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
     private final AttractionConverter attractionConverter;
     private final BaiduMapConverter baiduMapConverter;
 
-    private final CacheClient cacheClient;
-    private final CacheKeyBuilder cacheKeyBuilder;
+    private final CacheClearSupport cacheClearSupport;
 
     private final BaiduMapClient baiduMapClient;
 
@@ -124,7 +121,7 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         attractionMapper.insert(entity);
 
         // 3.清除景点列表缓存
-        clearAttractionListCache();
+        cacheClearSupport.clearAttractionList();
 
         return getAttractionDetail(entity.getId());
     }
@@ -168,13 +165,13 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
 
         // 3.清除Redis中可能受到影响的缓存
         // 3.1.清除景点列表缓存
-        clearAttractionListCache();
+        cacheClearSupport.clearAttractionList();
 
         // 3.2.清除对应景点详情缓存
-        clearAttractionDetailCache(id);
+        cacheClearSupport.clearAttractionDetail(id);
 
         // 3.3.清除对应景点天气缓存
-        clearAttractionWeatherCache(id);
+        cacheClearSupport.clearAttractionWeather(id);
 
         return getAttractionDetail(id);
     }
@@ -211,9 +208,9 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
 
         // 3.清除Redis中可能受到影响的缓存
         // 3.1.清除景点列表缓存
-        clearAttractionListCache();
+        cacheClearSupport.clearAttractionList();
         // 3.2.清除景点详情缓存
-        clearAttractionDetailCache(id);
+        cacheClearSupport.clearAttractionDetail(id);
     }
 
     /**
@@ -249,44 +246,4 @@ public class AdminAttractionServiceImpl implements AdminAttractionService {
         return voList != null && !voList.isEmpty() ? voList.get(0) : null;
     }
 
-    /**
-     * 清除景点列表缓存
-     */
-    private void clearAttractionListCache() {
-        String cacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_LIST) + "*";
-
-        try {
-            cacheClient.deleteByPattern(cacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除景点列表缓存失败，cacheKeyPattern={}", cacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清除当前景点详情缓存。
-     * @param attractionId 景点 id
-     */
-    private void clearAttractionDetailCache(Long attractionId) {
-        String attractionDetailCacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_DETAIL, attractionId);
-
-        try {
-            cacheClient.delete(attractionDetailCacheKey);
-        } catch (Exception ex) {
-            log.warn("删除景点详情缓存失败，cacheKey={}", attractionDetailCacheKey, ex);
-        }
-    }
-
-    /**
-     * 清除当前景点天气缓存。
-     * @param attractionId 景点 id
-     */
-    private void clearAttractionWeatherCache(Long attractionId) {
-        String attractionWeatherCacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_WEATHER, attractionId);
-
-        try {
-            cacheClient.delete(attractionWeatherCacheKey);
-        } catch (Exception ex) {
-            log.warn("删除景点天气缓存失败，cacheKey={}", attractionWeatherCacheKey, ex);
-        }
-    }
 }

@@ -1,7 +1,6 @@
 package com.af.tourism.service.impl.admin;
 
 import com.af.tourism.common.ErrorCode;
-import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.enums.AttractionStatus;
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.exception.BusinessException;
@@ -18,8 +17,7 @@ import com.af.tourism.pojo.vo.admin.AttractionCategoryForAdminVO;
 import com.af.tourism.pojo.vo.admin.AttractionCategoryStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.admin.AdminAttractionCategoryService;
-import com.af.tourism.service.cache.CacheClient;
-import com.af.tourism.service.cache.CacheKeyBuilder;
+import com.af.tourism.service.cache.CacheClearSupport;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -50,8 +48,7 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
 
     private final AttractionConverter attractionConverter;
 
-    private final CacheClient cacheClient;
-    private final CacheKeyBuilder cacheKeyBuilder;
+    private final CacheClearSupport cacheClearSupport;
 
     /**
      * 获取管理端景点分类列表
@@ -115,7 +112,7 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         }
 
         // 3.清除景点类别缓存
-        clearAttractionCategoryCache();
+        cacheClearSupport.clearAttractionCategoryList();
 
         return getCategoryDetail(entity.getId());
     }
@@ -152,11 +149,11 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
 
         // 4.清除有可能影响到的缓存数据
         // 4.1.清除景点分类缓存
-        clearAttractionCategoryCache();
+        cacheClearSupport.clearAttractionCategoryList();
         // 4.2.清除景点列表缓存
-        clearAttractionListCache();
+        cacheClearSupport.clearAttractionList();
         // 4.3.清除景点详情缓存
-        clearAttractionDetailCache();
+        cacheClearSupport.clearAllAttractionDetail();
 
         return getCategoryDetail(id);
     }
@@ -199,7 +196,7 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         attractionCategoryMapper.updateById(entity);
 
         // 5.清除景点类别缓存
-        clearAttractionCategoryCache();
+        cacheClearSupport.clearAttractionCategoryList();
 
         return getCategoryDetail(id);
     }
@@ -224,7 +221,7 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         attractionCategoryMapper.updateById(entity);
 
         // 3.清除景点类别缓存
-        clearAttractionCategoryCache();
+        cacheClearSupport.clearAttractionCategoryList();
 
         return getCategoryDetail(id);
     }
@@ -262,44 +259,4 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
         }
     }
 
-    /**
-     * 清除景点类别缓存
-     */
-    private void clearAttractionCategoryCache() {
-        String categoryCacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_CATEGORY_LIST);
-
-        try {
-            cacheClient.delete(categoryCacheKey);
-        } catch (Exception ex) {
-            log.warn("删除景点分类缓存失败，cacheKey={}", categoryCacheKey, ex);
-        }
-
-    }
-
-    /**
-     * 清除景点列表缓存
-     */
-    private void clearAttractionListCache() {
-        String attractionListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_LIST) + "*";
-
-        try {
-            cacheClient.deleteByPattern(attractionListCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除景点列表缓存失败，cacheKeyPattern={}", attractionListCacheKeyPattern, ex);
-        }
-
-    }
-
-    /**
-     * 清除景点详情缓存
-     */
-    private void clearAttractionDetailCache() {
-        String attractionDetailCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_DETAIL) + "*";
-
-        try {
-            cacheClient.deleteByPattern(attractionDetailCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除景点详情缓存失败，cacheKeyPattern={}", attractionDetailCacheKeyPattern, ex);
-        }
-    }
 }

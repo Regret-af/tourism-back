@@ -1,7 +1,6 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.enums.NotificationType;
-import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.mapper.DiaryLikeMapper;
 import com.af.tourism.mapper.DiaryMapper;
 import com.af.tourism.pojo.dto.common.DiaryInteractionNotifyCommand;
@@ -9,8 +8,7 @@ import com.af.tourism.pojo.entity.DiaryLike;
 import com.af.tourism.pojo.entity.TravelDiary;
 import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.service.app.DiaryLikeService;
-import com.af.tourism.service.cache.CacheClient;
-import com.af.tourism.service.cache.CacheKeyBuilder;
+import com.af.tourism.service.cache.CacheClearSupport;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
 import com.af.tourism.service.helper.UserCheckService;
@@ -29,8 +27,8 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
     private final DiaryLikeMapper diaryLikeMapper;
     private final DiaryMapper diaryMapper;
-    private final CacheClient cacheClient;
-    private final CacheKeyBuilder cacheKeyBuilder;
+
+    private final CacheClearSupport cacheClearSupport;
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
@@ -63,12 +61,12 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
             // 5.清除Redis中可能受到影响的缓存
             // 5.1.清除篇旅行日记列表缓存
-            clearDiaryListCache();
-            clearMyDiaryListCache(diary.getUserId());
-            clearUserPublicDiaryListCache(diary.getUserId());
-            clearMoreFromAuthorCache(diary.getUserId());
+            cacheClearSupport.clearDiaryList();
+            cacheClearSupport.clearMyDiaryList(diary.getUserId());
+            cacheClearSupport.clearUserPublicDiaryList(diary.getUserId());
+            cacheClearSupport.clearMoreFromAuthor(diary.getUserId());
             // 5.2.清除日记详情缓存
-            clearDiaryDetailCache(diaryId);
+            cacheClearSupport.clearDiaryDetail(diaryId);
 
             // 6.添加通知列表
             diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
@@ -108,12 +106,12 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
             // 4.清除Redis中可能受到影响的缓存
             // 4.1.清除旅行日记列表缓存
-            clearDiaryListCache();
-            clearMyDiaryListCache(diary.getUserId());
-            clearUserPublicDiaryListCache(diary.getUserId());
-            clearMoreFromAuthorCache(diary.getUserId());
+            cacheClearSupport.clearDiaryList();
+            cacheClearSupport.clearMyDiaryList(diary.getUserId());
+            cacheClearSupport.clearUserPublicDiaryList(diary.getUserId());
+            cacheClearSupport.clearMoreFromAuthor(diary.getUserId());
             // 4.2.清除日记详情缓存
-            clearDiaryDetailCache(diaryId);
+            cacheClearSupport.clearDiaryDetail(diaryId);
             diary = diaryMapper.selectById(diaryId);
             log.info("取消点赞成功，diaryId={}, userId={}", diaryId, userId);
         } else {
@@ -134,86 +132,5 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
         response.setLiked(liked);
         response.setLikeCount(likeCount == null ? 0 : likeCount);
         return response;
-    }
-
-    /**
-     * 清除旅行日记列表缓存
-     */
-    private void clearDiaryListCache() {
-        String diaryListCacheKeyPattern = cacheKeyBuilder.build(RedisKeyConstants.DIARY_LIST) + "*";
-
-        try {
-            cacheClient.deleteByPattern(diaryListCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除日记列表缓存失败，cacheKeyPattern={}", diaryListCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清除日记详情缓存
-     * @param diaryId 日记 id
-     */
-    private void clearDiaryDetailCache(Long diaryId) {
-        String diaryDetailCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_DETAIL,
-                "diaryId", diaryId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(diaryDetailCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除日记详情缓存失败，cacheKeyPattern={}", diaryDetailCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清理我的日记列表缓存
-     * @param userId 用户 id
-     */
-    private void clearMyDiaryListCache(Long userId) {
-        String myDiaryListCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_MY_LIST,
-                "userId", userId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(myDiaryListCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除我的日记列表缓存失败，cacheKeyPattern={}", myDiaryListCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清理用户公开列表缓存
-     * @param userId 用户 id
-     */
-    private void clearUserPublicDiaryListCache(Long userId) {
-        String userPublicDiaryListCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_USER_PUBLIC_LIST,
-                "userId", userId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(userPublicDiaryListCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除用户主页日记列表缓存失败，cacheKeyPattern={}", userPublicDiaryListCacheKeyPattern, ex);
-        }
-    }
-
-    /**
-     * 清理更多创作列表缓存
-     * @param userId 用户 id
-     */
-    private void clearMoreFromAuthorCache(Long userId) {
-        String moreFromAuthorCacheKeyPattern = cacheKeyBuilder.build(
-                RedisKeyConstants.DIARY_MORE_FROM_AUTHOR,
-                "userId", userId
-        ) + "*";
-
-        try {
-            cacheClient.deleteByPattern(moreFromAuthorCacheKeyPattern);
-        } catch (Exception ex) {
-            log.warn("删除作者更多创作缓存失败，cacheKeyPattern={}", moreFromAuthorCacheKeyPattern, ex);
-        }
     }
 }

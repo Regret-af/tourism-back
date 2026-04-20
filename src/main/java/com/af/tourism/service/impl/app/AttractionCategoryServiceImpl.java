@@ -1,14 +1,13 @@
 package com.af.tourism.service.impl.app;
 
-import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.constants.RedisTtlConstants;
 import com.af.tourism.converter.AttractionConverter;
 import com.af.tourism.mapper.AttractionCategoryMapper;
 import com.af.tourism.pojo.entity.AttractionCategory;
 import com.af.tourism.pojo.vo.app.AttractionCategoryVO;
 import com.af.tourism.service.app.AttractionCategoryService;
+import com.af.tourism.service.cache.CacheKeySupport;
 import com.af.tourism.service.cache.CacheClient;
-import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +30,7 @@ public class AttractionCategoryServiceImpl implements AttractionCategoryService 
     private final AttractionConverter attractionConverter;
 
     private final CacheClient cacheClient;
-    private final CacheKeyBuilder cacheKeyBuilder;
+    private final CacheKeySupport cacheKeySupport;
 
     /**
      * 景点分类列表
@@ -40,7 +39,7 @@ public class AttractionCategoryServiceImpl implements AttractionCategoryService 
     @Override
     public List<AttractionCategoryVO> listCategories() {
         // 1.构建 Redis 中景点分类的 key
-        String cacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_CATEGORY_LIST);
+        String cacheKey = cacheKeySupport.buildAttractionCategoryListKey();
 
         // 2.查找 Redis 缓存，存在直接返回
         try {

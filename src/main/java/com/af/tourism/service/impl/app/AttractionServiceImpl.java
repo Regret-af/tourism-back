@@ -1,7 +1,6 @@
 package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.ErrorCode;
-import com.af.tourism.common.constants.RedisKeyConstants;
 import com.af.tourism.common.constants.RedisTtlConstants;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.integration.common.exception.ThirdPartyApiException;
@@ -21,15 +20,14 @@ import com.af.tourism.pojo.vo.app.WeatherCurrentVO;
 import com.af.tourism.pojo.vo.app.WeatherForecastVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.AttractionService;
+import com.af.tourism.service.cache.CacheKeySupport;
 import com.af.tourism.service.cache.CacheClient;
-import com.af.tourism.service.cache.CacheKeyBuilder;
 import com.af.tourism.service.helper.AttractionCheckService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,7 +56,7 @@ public class AttractionServiceImpl implements AttractionService {
     private final AttractionCheckService attractionCheckService;
 
     private final CacheClient cacheClient;
-    private final CacheKeyBuilder cacheKeyBuilder;
+    private final CacheKeySupport cacheKeySupport;
 
     private final QWeatherClient qWeatherClient;
 
@@ -72,7 +70,7 @@ public class AttractionServiceImpl implements AttractionService {
     @Override
     public PageResponse<AttractionCardVO> listAttractions(AttractionQueryDTO queryDTO) {
         // 1.构建 Redis 中景点列表的 key
-        String cacheKey = buildAttractionListCacheKey(queryDTO);
+        String cacheKey = cacheKeySupport.buildAttractionListKey(queryDTO);
 
         // 2.在 Redis 中进行查询
         try {
@@ -123,7 +121,7 @@ public class AttractionServiceImpl implements AttractionService {
     @Transactional(rollbackFor = Exception.class)
     public AttractionDetailVO getAttractionDetail(Long attractionId) {
         // 1.构建 Redis 中景点分类的 key
-        String cacheKey = cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_DETAIL, attractionId);
+        String cacheKey = cacheKeySupport.buildAttractionDetailKey(attractionId);
 
         // 2.增加景点浏览量
         attractionMapper.increaseViewCount(attractionId);
@@ -178,7 +176,7 @@ public class AttractionServiceImpl implements AttractionService {
         AttractionWeatherVO weatherVO = new AttractionWeatherVO();
 
         // 2.构建 Redis 中景点分类的 key
-        String cacheKey = buildAttractionWeatherCacheKey(attractionId);
+        String cacheKey = cacheKeySupport.buildAttractionWeatherKey(attractionId);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
@@ -341,37 +339,4 @@ public class AttractionServiceImpl implements AttractionService {
         return null;
     }
 
-    /**
-     * 构建 Redis 中景点列表的 key
-     * @param queryDTO 请求体
-     * @return 构建好的 key
-     */
-    private String buildAttractionListCacheKey(AttractionQueryDTO queryDTO) {
-        return cacheKeyBuilder.build(
-                RedisKeyConstants.ATTRACTION_LIST,
-                "pageNum", queryDTO.getPageNum(),
-                "pageSize", queryDTO.getPageSize(),
-                "keyword", normalizeKeyPart(queryDTO.getKeyword()),
-                "categoryId", queryDTO.getCategoryId() == null ? "_" : queryDTO.getCategoryId(),
-                "sort", normalizeKeyPart(queryDTO.getSortCode())
-        );
-    }
-
-    /**
-     * 构建景点天气缓存 key。
-     * @param attractionId 景点 id
-     * @return 缓存 key
-     */
-    private String buildAttractionWeatherCacheKey(Long attractionId) {
-        return cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_WEATHER, attractionId);
-    }
-
-    /**
-     * 查看 key 的组成部分，为空返回 _
-     * @param value key的组成部分
-     * @return 结果
-     */
-    private String normalizeKeyPart(String value) {
-        return StringUtils.defaultIfBlank(value, "_").trim();
-    }
 }

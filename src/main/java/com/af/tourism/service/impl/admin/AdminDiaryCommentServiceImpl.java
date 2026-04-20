@@ -101,17 +101,9 @@ public class AdminDiaryCommentServiceImpl implements AdminDiaryCommentService {
         }
 
         // 6.清除Redis中可能受到影响的缓存
-        // 6.1.清除出日记列表缓存
-        TravelDiary diary = diaryMapper.selectById(comment.getDiaryId());
-        cacheClearSupport.clearDiaryList();
-        if (diary != null) {
-            cacheClearSupport.clearMyDiaryList(diary.getUserId());
-            cacheClearSupport.clearUserPublicDiaryList(diary.getUserId());
-            cacheClearSupport.clearMoreFromAuthor(diary.getUserId());
-        }
-        // 6.2.清除日记详情缓存
+        // 6.1.清除日记详情缓存
         cacheClearSupport.clearDiaryDetail(comment.getDiaryId());
-        // 6.3.清除日记评论列表缓存
+        // 6.2.清除日记评论列表缓存
         cacheClearSupport.clearDiaryCommentList(comment.getDiaryId());
     }
 }

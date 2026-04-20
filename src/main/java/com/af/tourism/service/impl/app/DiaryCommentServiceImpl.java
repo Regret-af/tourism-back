@@ -138,14 +138,9 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         diaryMapper.updateCommentCount(diaryId, 1);
 
         // 5.清除Redis中可能受到影响的缓存
-        // 5.1.清除旅行日记列表缓存
-        cacheClearSupport.clearDiaryList();
-        cacheClearSupport.clearMyDiaryList(diary.getUserId());
-        cacheClearSupport.clearUserPublicDiaryList(diary.getUserId());
-        cacheClearSupport.clearMoreFromAuthor(diary.getUserId());
-        // 5.2.清除日记详情缓存
+        // 5.1.清除日记详情缓存
         cacheClearSupport.clearDiaryDetail(diaryId);
-        // 5.3.清除日记评论列表缓存
+        // 5.2.清除日记评论列表缓存
         cacheClearSupport.clearDiaryCommentList(diaryId);
 
         // 6.添加通知列表

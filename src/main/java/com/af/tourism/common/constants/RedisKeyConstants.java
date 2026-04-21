@@ -12,9 +12,12 @@ public final class RedisKeyConstants {
     public static final String ATTRACTION_LIST = "attraction:list";
     public static final String ATTRACTION_DETAIL = "attraction:detail";
     public static final String ATTRACTION_WEATHER = "attraction:weather";
+    public static final String ATTRACTION_VIEW_COUNT = "attraction:view:count";
+    public static final String ATTRACTION_VIEW_DELTA = "attraction:view:delta";
     public static final String DIARY_LIST = "diary:list";
     public static final String DIARY_DETAIL = "diary:detail";
     public static final String DIARY_COUNTER = "diary:counter";
+    public static final String DIARY_VIEW_DELTA = "diary:view:delta";
     public static final String DIARY_COMMENT_LIST = "diary:comment:list";
     public static final String DIARY_MY_LIST = "diary:my:list";
     public static final String DIARY_USER_PUBLIC_LIST = "diary:user:public:list";

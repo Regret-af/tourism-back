@@ -289,8 +289,6 @@ public class DiaryServiceImpl implements DiaryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DiaryDetailVO getDiaryDetail(Long diaryId) {
-        diaryMapper.increaseViewCount(diaryId);
-
         // 1.获取用户 id
         Long userId = SecurityUtils.getCurrentUserId();
 
@@ -302,10 +300,9 @@ public class DiaryServiceImpl implements DiaryService {
             // 3.1.查询日记详情缓存
             DiaryDetailVO cachedDetail = cacheClient.get(cacheKey, DiaryDetailVO.class);
             if (cachedDetail != null) {
-                // 3.2.增加浏览量，进行回写
-                cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
-                cacheClient.set(cacheKey, cachedDetail, RedisTtlConstants.DEFAULT);
+                // 3.2.增加浏览量，写入缓存
                 cacheCounterSupport.incrementDiaryViewCount(diaryId, 1);
+                cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
                 // 3.3.查找用户交互状态信息
                 DiaryDetailVO detailVO = mergeDiaryDetailWithInteractStatus(cachedDetail, diaryId, userId);
                 // 3.4.填充日记数据统计信息
@@ -334,8 +331,9 @@ public class DiaryServiceImpl implements DiaryService {
 
         cacheCounterSupport.syncDiaryCounters(diaryId, detailVO.getViewCount(), detailVO.getLikeCount(),
                 detailVO.getFavoriteCount(), detailVO.getCommentCount());
+        cacheCounterSupport.incrementDiaryViewCount(diaryId, 1);
+        cacheCounterSupport.fillDiaryCounters(detailVO, diaryId);
         DiaryDetailVO mergedDetailVO = mergeDiaryDetailWithInteractStatus(detailVO, diaryId, userId);
-        cacheCounterSupport.fillDiaryCounters(mergedDetailVO, diaryId);
         return mergedDetailVO;
     }
 
@@ -400,7 +398,7 @@ public class DiaryServiceImpl implements DiaryService {
         Long currentUserId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中用户公开日记列表的 key
-        String cacheKey = cacheKeySupport.buildUserPublicDiaryListKey(userId, queryDTO, currentUserId);
+        String cacheKey = cacheKeySupport.buildUserPublicDiaryListKey(userId, queryDTO);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {
@@ -454,7 +452,7 @@ public class DiaryServiceImpl implements DiaryService {
         Long currentUserId = SecurityUtils.getCurrentUserId();
 
         // 2.构建 Redis 中作者更多创作列表 key
-        String cacheKey = cacheKeySupport.buildMoreFromAuthorKey(travelDiary.getUserId(), diaryId, queryDTO, currentUserId);
+        String cacheKey = cacheKeySupport.buildMoreFromAuthorKey(travelDiary.getUserId(), diaryId, queryDTO);
 
         // 3.查找 Redis 缓存，存在直接返回
         try {

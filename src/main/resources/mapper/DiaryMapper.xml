@@ -382,6 +382,12 @@
           AND is_deleted = 0
     </update>
 
+    <update id="increaseViewCountByDelta">
+        UPDATE travel_diaries
+        SET view_count = COALESCE(view_count, 0) + #{delta}
+        WHERE id = #{diaryId}
+    </update>
+
     <select id="selectAdminDiaryList" resultMap="AdminDiaryListMap">
         SELECT
             d.id,

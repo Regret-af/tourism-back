@@ -162,6 +162,12 @@
           AND c.status = 1
     </update>
 
+    <update id="increaseViewCountByDelta">
+        UPDATE attractions
+        SET view_count = COALESCE(view_count, 0) + #{delta}
+        WHERE id = #{attractionId}
+    </update>
+
     <select id="selectAdminAttractions" resultMap="AdminAttractionMap">
         SELECT a.id,
                a.name,

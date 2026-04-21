@@ -38,6 +38,14 @@ public interface AttractionMapper extends BaseMapper<Attraction> {
     int increaseViewCount(@Param("attractionId") Long attractionId);
 
     /**
+     * 景点浏览量增加指定步长
+     * @param attractionId 景点 id
+     * @param delta 步长
+     * @return 影响行数
+     */
+    int increaseViewCountByDelta(@Param("attractionId") Long attractionId, @Param("delta") Long delta);
+
+    /**
      * 管理端景点列表
      * @param queryDTO 查询参数
      * @return 景点列表

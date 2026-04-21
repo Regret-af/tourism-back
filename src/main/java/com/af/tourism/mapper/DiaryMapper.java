@@ -95,6 +95,14 @@ public interface DiaryMapper extends BaseMapper<TravelDiary> {
     int increaseViewCount(@Param("diaryId") Long diaryId);
 
     /**
+     * 日记浏览量增加指定步长
+     * @param diaryId 景点 id
+     * @param delta 步长
+     * @return 影响行数
+     */
+    int increaseViewCountByDelta(@Param("diaryId") Long diaryId, @Param("delta") Long delta);
+
+    /**
      * 更新旅行日记评论数量
      * @param diaryId 旅行日记 id
      * @param delta 评论数量差值

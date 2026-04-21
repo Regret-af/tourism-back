@@ -1,6 +1,8 @@
 package com.af.tourism.service.cache;
 
 import com.af.tourism.common.constants.RedisTtlConstants;
+import com.af.tourism.pojo.vo.app.AttractionCardVO;
+import com.af.tourism.pojo.vo.app.AttractionDetailVO;
 import com.af.tourism.pojo.vo.app.DiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryDetailVO;
 import com.af.tourism.pojo.vo.app.DiaryProfileCardVO;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -33,6 +36,11 @@ public class CacheCounterSupport {
      * @param commentCount 评论量
      */
     public void syncDiaryCounters(Long diaryId, Integer viewCount, Integer likeCount, Integer favoriteCount, Integer commentCount) {
+        // 已存在时不覆盖，避免把 Redis 中的实时计数回退成数据库旧值
+        if (hasDiaryCounters(diaryId)) {
+            return;
+        }
+
         // 1.构建日记数据 key
         String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
 
@@ -49,26 +57,13 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 将浏览量同步到缓存
-     * @param diaryId 日记 id
-     * @param viewCount 浏览量
-     */
-    public void syncDiaryViewCount(Long diaryId, Integer viewCount) {
-        // 1.构建日记数据 key
-        String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
-
-        // 2.将数据统计存入缓存并设置过期时间
-        cacheClient.putHash(cacheKey, VIEW_COUNT, defaultCount(viewCount));
-        cacheClient.expire(cacheKey, RedisTtlConstants.DEFAULT);
-    }
-
-    /**
-     * 为日记浏览量增加指定步长
+     * 为日记浏览量增加指定步长，同时记录待回写的增量。
      * @param diaryId 日记 id
      * @param delta 步长
      */
     public void incrementDiaryViewCount(Long diaryId, long delta) {
         incrementDiaryCounter(diaryId, VIEW_COUNT, delta);
+        incrementViewDelta(cacheKeySupport.buildDiaryViewDeltaKey(diaryId), delta);
     }
 
     /**
@@ -99,8 +94,8 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 填充日记数据
-     * @param detailVO 日记详情实体
+     * 将 Redis 中的日记计数填充到详情对象。
+     * @param detailVO 日记详情
      * @param diaryId 日记 id
      */
     public void fillDiaryCounters(DiaryDetailVO detailVO, Long diaryId) {
@@ -109,10 +104,7 @@ public class CacheCounterSupport {
             return;
         }
 
-        // 2.构建日记数据 key
-        String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
-        // 3.查找缓存并存入实体
-        Map<Object, Object> entries = cacheClient.entries(cacheKey);
+        Map<Object, Object> entries = getDiaryCounterEntries(diaryId);
         if (entries == null || entries.isEmpty()) {
             return;
         }
@@ -187,6 +179,103 @@ public class CacheCounterSupport {
     }
 
     /**
+     * 初始化景点浏览量总量缓存。
+     * @param attractionId 景点 id
+     * @param viewCount 数据库中的浏览量
+     */
+    public void syncAttractionViewCount(Long attractionId, Integer viewCount) {
+        cacheClient.setIfAbsent(
+                cacheKeySupport.buildAttractionViewCountKey(attractionId),
+                defaultCount(viewCount),
+                RedisTtlConstants.DEFAULT
+        );
+    }
+
+    /**
+     * 为景点浏览量增加指定步长，同时记录待回写的增量。
+     * @param attractionId 景点 id
+     * @param delta 步长
+     */
+    public void incrementAttractionViewCount(Long attractionId, long delta) {
+        String viewCountKey = cacheKeySupport.buildAttractionViewCountKey(attractionId);
+        Long latestViewCount = cacheClient.increment(viewCountKey, delta);
+        if (latestViewCount != null) {
+            cacheClient.expire(viewCountKey, RedisTtlConstants.DEFAULT);
+        }
+
+        incrementViewDelta(cacheKeySupport.buildAttractionViewDeltaKey(attractionId), delta);
+    }
+
+    /**
+     * 用 Redis 中的景点浏览量总量覆盖详情对象。
+     * @param detailVO 景点详情
+     * @param attractionId 景点 id
+     */
+    public void fillAttractionViewCount(AttractionDetailVO detailVO, Long attractionId) {
+        if (detailVO == null) {
+            return;
+        }
+        detailVO.setViewCount(readAttractionViewCount(attractionId, detailVO.getViewCount()));
+    }
+
+    /**
+     * 为景点卡片列表填充浏览量总量。
+     * @param list 景点列表
+     */
+    public void fillAttractionCardViewCounts(List<AttractionCardVO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        for (AttractionCardVO attractionCardVO : list) {
+            attractionCardVO.setViewCount(readAttractionViewCount(attractionCardVO.getId(), attractionCardVO.getViewCount()));
+        }
+    }
+
+    /**
+     * 获取日记浏览量增量 key 列表。
+     * @return 增量 key 集合
+     */
+    public Set<String> listDiaryViewDeltaKeys() {
+        return cacheClient.keys(cacheKeySupport.buildDiaryViewDeltaPattern());
+    }
+
+    /**
+     * 获取景点浏览量增量 key 列表。
+     * @return 增量 key 集合
+     */
+    public Set<String> listAttractionViewDeltaKeys() {
+        return cacheClient.keys(cacheKeySupport.buildAttractionViewDeltaPattern());
+    }
+
+    /**
+     * 读取待回写的浏览量增量。
+     * @param key Redis key
+     * @return 增量值
+     */
+    public Long getPendingViewDelta(String key) {
+        return cacheClient.get(key, Long.class);
+    }
+
+    /**
+     * 扣减已经回写成功的浏览量增量。
+     * @param key Redis key
+     * @param delta 已回写增量
+     * @return 剩余增量
+     */
+    public Long consumePendingViewDelta(String key, long delta) {
+        return cacheClient.increment(key, -delta);
+    }
+
+    /**
+     * 清理待回写的浏览量增量。
+     * @param key Redis key
+     */
+    public void clearPendingViewDelta(String key) {
+        cacheClient.delete(key);
+    }
+
+    /**
      * 从 Hash 查询结果中读取指定字段的计数值
      * @param entries Hash 结果
      * @param field 字段名
@@ -201,13 +290,27 @@ public class CacheCounterSupport {
         return Integer.parseInt(String.valueOf(value));
     }
 
+    /**
+     * 读取日记计数 Hash。
+     * @param diaryId 日记 id
+     * @return Hash 数据
+     */
     private Map<Object, Object> getDiaryCounterEntries(Long diaryId) {
-        String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
-        return cacheClient.entries(cacheKey);
+        return cacheClient.entries(cacheKeySupport.buildDiaryCounterKey(diaryId));
     }
 
     /**
-     * 获取默认计数值
+     * 判断日记计数缓存是否已存在。
+     * @param diaryId 日记 id
+     * @return 是否存在
+     */
+    private boolean hasDiaryCounters(Long diaryId) {
+        Map<Object, Object> entries = getDiaryCounterEntries(diaryId);
+        return entries != null && !entries.isEmpty();
+    }
+
+    /**
+     * 获取非 null 的计数值。
      * @param value 原始值
      * @return 非 null 计数值
      */
@@ -216,10 +319,21 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 更新日记计数（自增/自减）并进行校准
-     * @param diaryId
-     * @param field
-     * @param delta
+     * 读取景点浏览量总量缓存。
+     * @param attractionId 景点 id
+     * @param defaultValue 默认值
+     * @return 浏览量
+     */
+    private Integer readAttractionViewCount(Long attractionId, Integer defaultValue) {
+        Long viewCount = cacheClient.get(cacheKeySupport.buildAttractionViewCountKey(attractionId), Long.class);
+        return viewCount == null ? defaultCount(defaultValue) : viewCount.intValue();
+    }
+
+    /**
+     * 更新日记计数并刷新过期时间。
+     * @param diaryId 日记 id
+     * @param field 字段名
+     * @param delta 步长
      */
     private void incrementDiaryCounter(Long diaryId, String field, long delta) {
         String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
@@ -229,5 +343,19 @@ public class CacheCounterSupport {
         }
 
         cacheClient.expire(cacheKey, RedisTtlConstants.DEFAULT);
+    }
+
+    /**
+     * 更新待回写增量并刷新过期时间。
+     * @param deltaKey 增量 key
+     * @param delta 步长
+     */
+    private void incrementViewDelta(String deltaKey, long delta) {
+        Long latestDelta = cacheClient.increment(deltaKey, delta);
+        if (latestDelta == null) {
+            return;
+        }
+
+        cacheClient.expire(deltaKey, RedisTtlConstants.VIEW_COUNT_DELTA);
     }
 }

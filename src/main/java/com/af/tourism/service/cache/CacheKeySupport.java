@@ -56,6 +56,18 @@ public class CacheKeySupport {
         return cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_WEATHER, attractionId);
     }
 
+    public String buildAttractionViewCountKey(Long attractionId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_VIEW_COUNT, attractionId);
+    }
+
+    public String buildAttractionViewDeltaKey(Long attractionId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_VIEW_DELTA, attractionId);
+    }
+
+    public String buildAttractionViewDeltaPattern() {
+        return cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_VIEW_DELTA) + ":*";
+    }
+
     /**
      * 构建日记类别 key
      * @return 日记类别 key
@@ -101,6 +113,14 @@ public class CacheKeySupport {
         return cacheKeyBuilder.build(RedisKeyConstants.DIARY_COUNTER, "diaryId", diaryId);
     }
 
+    public String buildDiaryViewDeltaKey(Long diaryId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.DIARY_VIEW_DELTA, diaryId);
+    }
+
+    public String buildDiaryViewDeltaPattern() {
+        return cacheKeyBuilder.build(RedisKeyConstants.DIARY_VIEW_DELTA) + ":*";
+    }
+
     /**
      * 构建我的日记列表 key
      * @param userId 用户 id
@@ -121,10 +141,9 @@ public class CacheKeySupport {
      * 构建用户公开日记列表 key
      * @param userId 用户 id
      * @param queryDTO 请求参数
-     * @param currentUserId 当前用户 id
      * @return 用户公开日记列表 key
      */
-    public String buildUserPublicDiaryListKey(Long userId, DiaryQueryDTO queryDTO, Long currentUserId) {
+    public String buildUserPublicDiaryListKey(Long userId, DiaryQueryDTO queryDTO) {
         return cacheKeyBuilder.build(
                 RedisKeyConstants.DIARY_USER_PUBLIC_LIST,
                 "userId", userId,
@@ -139,10 +158,9 @@ public class CacheKeySupport {
      * @param userId 用户 id
      * @param diaryId 日记 id
      * @param queryDTO 请求参数
-     * @param currentUserId 当前用户 id
      * @return 作者更多作品 key
      */
-    public String buildMoreFromAuthorKey(Long userId, Long diaryId, DiaryQueryDTO queryDTO, Long currentUserId) {
+    public String buildMoreFromAuthorKey(Long userId, Long diaryId, DiaryQueryDTO queryDTO) {
         return cacheKeyBuilder.build(
                 RedisKeyConstants.DIARY_MORE_FROM_AUTHOR,
                 "userId", userId,

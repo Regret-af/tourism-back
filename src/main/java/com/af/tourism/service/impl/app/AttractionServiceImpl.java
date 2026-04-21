@@ -20,8 +20,9 @@ import com.af.tourism.pojo.vo.app.WeatherCurrentVO;
 import com.af.tourism.pojo.vo.app.WeatherForecastVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.AttractionService;
-import com.af.tourism.service.cache.CacheKeySupport;
 import com.af.tourism.service.cache.CacheClient;
+import com.af.tourism.service.cache.CacheCounterSupport;
+import com.af.tourism.service.cache.CacheKeySupport;
 import com.af.tourism.service.helper.AttractionCheckService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
@@ -57,9 +58,9 @@ public class AttractionServiceImpl implements AttractionService {
 
     private final CacheClient cacheClient;
     private final CacheKeySupport cacheKeySupport;
+    private final CacheCounterSupport cacheCounterSupport;
 
     private final QWeatherClient qWeatherClient;
-
     private final QWeatherConverter qWeatherConverter;
 
     /**
@@ -72,67 +73,62 @@ public class AttractionServiceImpl implements AttractionService {
         // 1.构建 Redis 中景点列表的 key
         String cacheKey = cacheKeySupport.buildAttractionListKey(queryDTO);
 
-        // 2.在 Redis 中进行查询
+        // 2.优先查询缓存，命中后补齐 Redis 中的实时浏览量
         try {
             PageResponse<AttractionCardVO> cachedResponse = cacheClient.get(cacheKey, ATTRACTION_LIST_PAGE_TYPE);
             if (cachedResponse != null) {
+                cacheCounterSupport.fillAttractionCardViewCounts(cachedResponse.getList());
                 return cachedResponse;
             }
         } catch (Exception ex) {
             log.warn("读取景点列表缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
         }
 
-        // 3.开启分页查询
+        // 3.缓存未命中时回源数据库
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-
-        // 4.在数据库中查询景点信息
-        log.debug("查询景点列表，pageNum={}, pageSize={}, keyword={}, categoryId={}",
-                queryDTO.getPageNum(),
-                queryDTO.getPageSize(),
-                queryDTO.getKeyword(),
-                queryDTO.getCategoryId());
         List<AttractionCardVO> list = attractionMapper.selectAttractions(queryDTO);
         PageInfo<AttractionCardVO> pageInfo = new PageInfo<>(list);
-        log.debug("查询景点信息完成，总记录数: {}", pageInfo.getTotal());
 
-        // 5.封装返回信息
+        // 4.封装返回结果
         PageResponse<AttractionCardVO> response = new PageResponse<>();
         response.setList(list);
         response.setPageNum(pageInfo.getPageNum());
         response.setPageSize(pageInfo.getPageSize());
         response.setTotal(pageInfo.getTotal());
 
-        // 6.将返回值存入Redis
+        // 5.写入列表缓存，浏览量展示仍以 Redis 总量为准
         try {
             cacheClient.set(cacheKey, response, RedisTtlConstants.ATTRACTION_LIST);
         } catch (Exception ex) {
             log.warn("写入景点列表缓存失败，cacheKey={}", cacheKey, ex);
         }
 
+        cacheCounterSupport.fillAttractionCardViewCounts(response.getList());
         return response;
     }
 
     /**
      * 景点详情
-     * @param attractionId 景点id
+     * @param attractionId 景点 id
      * @return 景点详情信息
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AttractionDetailVO getAttractionDetail(Long attractionId) {
-        // 1.构建 Redis 中景点分类的 key
+        // 1.构建 Redis 中景点详情的 key
         String cacheKey = cacheKeySupport.buildAttractionDetailKey(attractionId);
 
-        // 2.增加景点浏览量
-        attractionMapper.increaseViewCount(attractionId);
-
-        // 3.查找 Redis 缓存，存在直接返回
+        // 2.优先读取详情缓存，命中后同步总量 key 并做浏览量双写
         try {
-            // 3.1.查找缓存
             AttractionDetailVO cachedDetail = cacheClient.get(cacheKey, AttractionDetailVO.class);
             if (cachedDetail != null) {
-                // 3.2.浏览量+1，回写缓存
-                cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
+                // 2.1.将浏览量总量写入缓存
+                cacheCounterSupport.syncAttractionViewCount(attractionId, cachedDetail.getViewCount());
+                // 2.2.将浏览量增量写入缓存
+                cacheCounterSupport.incrementAttractionViewCount(attractionId, 1);
+                // 2.3.填充浏览量数据
+                cacheCounterSupport.fillAttractionViewCount(cachedDetail, attractionId);
+                // 2.4.将景点详情基础信息写入缓存
                 cacheClient.set(cacheKey, cachedDetail, RedisTtlConstants.DEFAULT);
                 return cachedDetail;
             }
@@ -140,22 +136,23 @@ public class AttractionServiceImpl implements AttractionService {
             log.warn("读取景点详情缓存失败，回源数据库，cacheKey={}", cacheKey, ex);
         }
 
-        // 4.在数据库中查询景点信息
+        // 3.缓存未命中时查询数据库
         AttractionDetailVO detailVO = attractionMapper.selectAttractionDetail(attractionId);
-
-        // 5.若为空，抛出异常
         if (detailVO == null) {
             log.warn("景点不存在，attractionId={}", attractionId);
             throw new BusinessException(ErrorCode.NOT_FOUND, "景点不存在");
         }
 
-        // 6.封装telephoneList，对telephone字段进行数据清洗
+        // 4.清洗联系方式字段
         if (detailVO.getTelephone() != null) {
             detailVO.setTelephoneList(Arrays.asList(detailVO.getTelephone().split(",")));
         }
 
-        // 7.将返回值存入Redis
+        // 5.初始化 Redis 总量并追加本次浏览，再回写详情缓存
         try {
+            cacheCounterSupport.syncAttractionViewCount(attractionId, detailVO.getViewCount());
+            cacheCounterSupport.incrementAttractionViewCount(attractionId, 1);
+            cacheCounterSupport.fillAttractionViewCount(detailVO, attractionId);
             cacheClient.set(cacheKey, detailVO, RedisTtlConstants.DEFAULT);
         } catch (Exception ex) {
             log.warn("写入景点详情缓存失败，cacheKey={}", cacheKey, ex);
@@ -175,10 +172,10 @@ public class AttractionServiceImpl implements AttractionService {
         Attraction attraction = attractionCheckService.requireAttraction(attractionId);
         AttractionWeatherVO weatherVO = new AttractionWeatherVO();
 
-        // 2.构建 Redis 中景点分类的 key
+        // 2.构建 Redis 中天气缓存 key
         String cacheKey = cacheKeySupport.buildAttractionWeatherKey(attractionId);
 
-        // 3.查找 Redis 缓存，存在直接返回
+        // 3.优先读取天气缓存
         try {
             AttractionWeatherVO cachedWeather = cacheClient.get(cacheKey, ATTRACTION_WEATHER_TYPE);
             if (cachedWeather != null) {
@@ -188,7 +185,7 @@ public class AttractionServiceImpl implements AttractionService {
             log.warn("读取景点天气缓存失败，回源第三方接口，cacheKey={}", cacheKey, ex);
         }
 
-        // 4.获取并校验调用外部API的参数
+        // 4.获取并校验调用外部 API 的参数
         BigDecimal longitude = attraction.getLongitude();
         BigDecimal latitude = attraction.getLatitude();
         if (longitude == null || latitude == null) {
@@ -202,10 +199,8 @@ public class AttractionServiceImpl implements AttractionService {
         List<WeatherAlertVO> alertVOList = null;
         LocalDateTime sourceUpdateTime = null;
 
-        // 5.调用外部API并处理各个字段
-        // 5.1.获取实时天气
+        // 5.调用外部 API 并转换为业务对象
         try {
-            // 5.1.1.请求API并将第三方返回实体改为业务实体
             QWeatherNowResponse weatherNow = qWeatherClient.getWeatherNow(longitude, latitude);
             currentVO = qWeatherConverter.toWeatherCurrentVO(weatherNow);
             sourceUpdateTime = weatherNow.getUpdateTime().toLocalDateTime();
@@ -257,7 +252,7 @@ public class AttractionServiceImpl implements AttractionService {
             currentVO.setTravelTip(buildTravelTip(currentVO.getIsSuitable(), alertVOList));
         }
 
-        // 7. 统一判断是否至少有一部分天气数据成功
+        // 7.至少有一部分天气数据成功时才返回成功结果
         boolean hasWeatherData =
                 currentVO != null
                         || (forecastVOList != null && !forecastVOList.isEmpty())
@@ -267,14 +262,14 @@ public class AttractionServiceImpl implements AttractionService {
             throw new ThirdPartyApiException(ErrorCode.THIRD_PARTY_API_ERROR, "获取景点天气失败");
         }
 
-        // 8.进行封装
+        // 8.封装结果
         weatherVO.setAvailable(true);
         weatherVO.setSourceUpdateTime(sourceUpdateTime != null ? sourceUpdateTime : LocalDateTime.now());
         weatherVO.setCurrent(currentVO);
         weatherVO.setForecast(forecastVOList);
         weatherVO.setAlerts(alertVOList);
 
-        // 9.将返回值存入Redis
+        // 9.写入天气缓存
         try {
             cacheClient.set(cacheKey, weatherVO, RedisTtlConstants.ATTRACTION_WEATHER);
         } catch (Exception ex) {
@@ -303,7 +298,7 @@ public class AttractionServiceImpl implements AttractionService {
     }
 
     /**
-     * 构建旅行建议
+     * 构建旅行建议。
      * @param isSuitable 是否舒适
      * @param alerts 预警信息
      * @return 旅行建议
@@ -321,7 +316,7 @@ public class AttractionServiceImpl implements AttractionService {
     }
 
     /**
-     * 构建日期标签
+     * 构建日期标签。
      * @param index 下标
      * @return 日期标签
      */
@@ -338,5 +333,4 @@ public class AttractionServiceImpl implements AttractionService {
 
         return null;
     }
-
 }

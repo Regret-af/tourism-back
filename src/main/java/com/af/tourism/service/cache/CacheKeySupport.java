@@ -68,6 +68,14 @@ public class CacheKeySupport {
         return cacheKeyBuilder.build(RedisKeyConstants.ATTRACTION_VIEW_DELTA) + ":*";
     }
 
+    public String buildAuthUserKey(Long userId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.AUTH, "user", "userId", userId);
+    }
+
+    public String buildAuthRoleCodesKey(Long userId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.AUTH, "roleCodes", "userId", userId);
+    }
+
     /**
      * 构建日记类别 key
      * @return 日记类别 key

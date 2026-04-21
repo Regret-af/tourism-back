@@ -6,19 +6,15 @@ import com.af.tourism.converter.UserConverter;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
-import com.af.tourism.pojo.dto.admin.UserQueryDTO;
 import com.af.tourism.pojo.dto.app.UserPasswordUpdateDTO;
 import com.af.tourism.pojo.dto.app.UserProfileUpdateDTO;
 import com.af.tourism.pojo.entity.User;
-import com.af.tourism.pojo.vo.admin.UserDetailForAdminVO;
-import com.af.tourism.pojo.vo.admin.UserForAdminVO;
 import com.af.tourism.pojo.vo.app.UserPublicVO;
-import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.pojo.vo.common.UserVO;
 import com.af.tourism.service.app.UserService;
+import com.af.tourism.service.cache.AuthCacheSupport;
+import com.af.tourism.service.cache.CacheClearSupport;
 import com.af.tourism.service.helper.UserCheckService;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +39,9 @@ public class UserServiceImpl implements UserService {
     private final AuthConverter authConverter;
     private final UserConverter userConverter;
 
+    private final AuthCacheSupport authCacheSupport;
+    private final CacheClearSupport cacheClearSupport;
+
     /**
      * 通过用户id进行查询
      * @param id 用户id
@@ -50,7 +49,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User findById(Long id) {
-        return userMapper.selectById(id);
+        return authCacheSupport.getUser(id, () -> userMapper.selectById(id));
     }
 
     /**
@@ -75,7 +74,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public List<String> listRoleCodes(Long userId) {
-        return roleMapper.selectRoleCodesByUserId(userId);
+        return authCacheSupport.getRoleCodes(userId, () -> roleMapper.selectRoleCodesByUserId(userId));
     }
 
     /**
@@ -93,6 +92,8 @@ public class UserServiceImpl implements UserService {
         user.setNickname(profileUpdateDTO.getNickname());
         user.setAvatarUrl(profileUpdateDTO.getAvatarUrl());
         userMapper.updateById(user);
+
+        cacheClearSupport.clearAuthUserContext(userId);
 
         return userConverter.toUserPublicVO(user);
     }
@@ -129,6 +130,8 @@ public class UserServiceImpl implements UserService {
         // 5.修改新密码
         user.setPasswordHash(passwordEncoder.encode(passwordUpdateDTO.getNewPassword()));
         userMapper.updateById(user);
+
+        cacheClearSupport.clearAuthUserContext(userId);
 
         return true;
     }

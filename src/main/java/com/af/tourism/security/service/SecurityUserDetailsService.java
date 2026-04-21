@@ -4,6 +4,7 @@ import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.security.model.SecurityUser;
+import com.af.tourism.service.cache.AuthCacheSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,6 +23,8 @@ public class SecurityUserDetailsService implements UserDetailsService {
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+
+    private final AuthCacheSupport authCacheSupport;
 
     /**
      * 按登录标识加载用户。
@@ -60,7 +63,7 @@ public class SecurityUserDetailsService implements UserDetailsService {
         }
 
         // 2.查询用户实体
-        User user = userMapper.selectById(userId);
+        User user = authCacheSupport.getUser(userId, () -> userMapper.selectById(userId));
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在");
         }
@@ -75,7 +78,7 @@ public class SecurityUserDetailsService implements UserDetailsService {
      * @return 安全用户对象
      */
     private SecurityUser buildSecurityUser(User user) {
-        List<String> roleCodes = roleMapper.selectRoleCodesByUserId(user.getId());
+        List<String> roleCodes = authCacheSupport.getRoleCodes(user.getId(), () -> roleMapper.selectRoleCodesByUserId(user.getId()));
         return SecurityUser.from(user, roleCodes);
     }
 }

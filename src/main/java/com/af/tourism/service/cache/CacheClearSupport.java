@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -161,6 +163,21 @@ public class CacheClearSupport {
             cacheClient.deleteByPattern(cacheKeyPattern);
         } catch (Exception ex) {
             log.warn("删除更多作者作品缓存失败，cacheKeyPattern={}", cacheKeyPattern, ex);
+        }
+    }
+
+    /**
+     * 删除用户资料与角色缓存
+     * @param userId 用户 id
+     */
+    public void clearAuthUserContext(Long userId) {
+        String userKey = cacheKeySupport.buildAuthUserKey(userId);
+        String roleCodesKey = cacheKeySupport.buildAuthRoleCodesKey(userId);
+
+        try {
+            cacheClient.delete(Arrays.asList(userKey, roleCodesKey));
+        } catch (Exception ex) {
+            log.warn("删除用户资料与角色缓存失败，userId={}", userId, ex);
         }
     }
 

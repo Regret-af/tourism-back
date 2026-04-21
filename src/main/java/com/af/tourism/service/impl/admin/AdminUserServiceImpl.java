@@ -16,6 +16,7 @@ import com.af.tourism.pojo.vo.admin.UserStatsForAdminVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.admin.AdminUserService;
+import com.af.tourism.service.cache.CacheClearSupport;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,8 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+
+    private final CacheClearSupport cacheClearSupport;
 
     /**
      * 获取用户列表
@@ -139,6 +142,9 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 6.更新状态
         targetUser.setStatus(targetStatus);
         userMapper.updateById(targetUser);
+
+        // 7.清除缓存中对应用户的信息
+        cacheClearSupport.clearAuthUserContext(userId);
     }
 
     /**

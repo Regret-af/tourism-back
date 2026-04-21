@@ -2,17 +2,20 @@ package com.af.tourism.controller.app;
 
 import com.af.tourism.annotation.OperationLogRecord;
 import com.af.tourism.common.ApiResponse;
+import com.af.tourism.common.constants.AuthConstants;
 import com.af.tourism.common.enums.OperationLogAction;
 import com.af.tourism.common.enums.OperationLogModule;
-import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.dto.app.RegisterDTO;
-import com.af.tourism.pojo.vo.common.LoginVO;
+import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.vo.app.RegisterVO;
+import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.service.app.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,7 +35,12 @@ public class AuthController {
      * @return 登录响应
      */
     @PostMapping("/login")
-    @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.LOGIN, description = "用户登录", userIdField = "data.user.id")
+    @OperationLogRecord(
+            module = OperationLogModule.USER,
+            action = OperationLogAction.LOGIN,
+            description = "用户登录",
+            userIdField = "data.user.id"
+    )
     public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO request) {
         return ApiResponse.ok(authService.login(request));
     }
@@ -43,8 +51,26 @@ public class AuthController {
      * @return 注册响应
      */
     @PostMapping("/register")
-    @OperationLogRecord(module = OperationLogModule.USER, action = OperationLogAction.REGISTER, description = "用户注册", userIdField = "data.id", bizIdField = "data.id")
+    @OperationLogRecord(
+            module = OperationLogModule.USER,
+            action = OperationLogAction.REGISTER,
+            description = "用户注册",
+            userIdField = "data.id",
+            bizIdField = "data.id"
+    )
     public ApiResponse<RegisterVO> register(@Valid @RequestBody RegisterDTO request) {
         return ApiResponse.ok(authService.register(request));
+    }
+
+    /**
+     * 用户登出，将当前 token 加入 Redis 黑名单。
+     * @param authorizationHeader Authorization 请求头
+     * @return 通用响应
+     */
+    @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> logout(@RequestHeader(AuthConstants.AUTHORIZATION_HEADER) String authorizationHeader) {
+        authService.logout(authorizationHeader);
+        return ApiResponse.ok();
     }
 }

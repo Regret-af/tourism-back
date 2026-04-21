@@ -10,13 +10,13 @@ import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.RoleMapper;
 import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.mapper.UserRoleMapper;
-import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.dto.app.RegisterDTO;
+import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.entity.Role;
 import com.af.tourism.pojo.entity.User;
 import com.af.tourism.pojo.entity.UserRole;
-import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.pojo.vo.app.RegisterVO;
+import com.af.tourism.pojo.vo.common.LoginVO;
 import com.af.tourism.security.converter.SecurityConverter;
 import com.af.tourism.security.model.SecurityUser;
 import com.af.tourism.security.service.JwtService;
@@ -79,7 +79,22 @@ public class AuthServiceImpl implements AuthService {
         List<String> roles = securityUser.getRoleCodes();
         String token = jwtService.generateToken(securityUser.getUserId());
 
-        return authConverter.toLoginVO(securityConverter.toUser(securityUser), roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
+        return authConverter.toLoginVO(
+                securityConverter.toUser(securityUser),
+                roles,
+                token,
+                AuthConstants.TOKEN_TYPE,
+                jwtService.getExpireSeconds()
+        );
+    }
+
+    /**
+     * 用户登出
+     * @param authorizationHeader Authorization 请求头
+     */
+    @Override
+    public void logout(String authorizationHeader) {
+        jwtService.blacklist(authorizationHeader);
     }
 
     /**
@@ -146,8 +161,7 @@ public class AuthServiceImpl implements AuthService {
         if (!StringUtils.hasText(request.getEmail())
                 || !StringUtils.hasText(request.getUsername())
                 || !StringUtils.hasText(request.getPassword())) {
-            log.warn("注册失败，参数错误，email={}, username={}", request.getEmail(), request.getUsername()
-            );
+            log.warn("注册失败，参数错误，email={}, username={}", request.getEmail(), request.getUsername());
             throw new BusinessException(ErrorCode.PARAM_INVALID, "参数错误");
         }
         if (!EMAIL_PATTERN.matcher(request.getEmail()).matches()) {

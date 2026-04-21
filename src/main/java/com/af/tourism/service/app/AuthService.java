@@ -1,10 +1,9 @@
 package com.af.tourism.service.app;
 
-import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.dto.app.RegisterDTO;
-import com.af.tourism.pojo.vo.common.LoginVO;
+import com.af.tourism.pojo.dto.common.LoginDTO;
 import com.af.tourism.pojo.vo.app.RegisterVO;
-import com.af.tourism.pojo.vo.common.UserVO;
+import com.af.tourism.pojo.vo.common.LoginVO;
 
 public interface AuthService {
 
@@ -21,4 +20,10 @@ public interface AuthService {
      * @return 注册响应
      */
     RegisterVO register(RegisterDTO request);
+
+    /**
+     * 用户登出
+     * @param authorizationHeader Authorization 请求头
+     */
+    void logout(String authorizationHeader);
 }

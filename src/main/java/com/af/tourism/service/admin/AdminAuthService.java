@@ -19,4 +19,10 @@ public interface AdminAuthService {
      * @return 当前管理员信息
      */
     UserVO getCurrentAdminProfile(Long userId);
+
+    /**
+     * 管理员登出
+     * @param authorizationHeader Authorization 请求头
+     */
+    void logout(String authorizationHeader);
 }

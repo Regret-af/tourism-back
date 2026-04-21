@@ -64,7 +64,13 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         // 5.为该用户生成 token 令牌
         String token = jwtService.generateToken(securityUser.getUserId());
 
-        return authConverter.toLoginVO(securityConverter.toUser(securityUser), roles, token, AuthConstants.TOKEN_TYPE, jwtService.getExpireSeconds());
+        return authConverter.toLoginVO(
+                securityConverter.toUser(securityUser),
+                roles,
+                token,
+                AuthConstants.TOKEN_TYPE,
+                jwtService.getExpireSeconds()
+        );
     }
 
     /**
@@ -84,6 +90,15 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         requireAdminRole(userId, roles);
 
         return authConverter.toUserVO(user, roles);
+    }
+
+    /**
+     * 管理员登出
+     * @param authorizationHeader Authorization 请求头
+     */
+    @Override
+    public void logout(String authorizationHeader) {
+        jwtService.blacklist(authorizationHeader);
     }
 
     /**

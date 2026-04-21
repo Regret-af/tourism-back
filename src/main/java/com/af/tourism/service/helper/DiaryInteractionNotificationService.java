@@ -7,12 +7,12 @@ import com.af.tourism.mapper.UserMapper;
 import com.af.tourism.pojo.dto.common.DiaryInteractionNotifyCommand;
 import com.af.tourism.pojo.entity.Notification;
 import com.af.tourism.pojo.entity.User;
+import com.af.tourism.service.cache.NotificationUnreadCacheSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -27,6 +27,7 @@ public class DiaryInteractionNotificationService {
     private final UserMapper userMapper;
 
     private final NotificationConverter notificationConverter;
+    private final NotificationUnreadCacheSupport notificationUnreadCacheSupport;
 
     /**
      * 统一处理日记互动通知
@@ -54,8 +55,14 @@ public class DiaryInteractionNotificationService {
         String content = resolveContent(command.getType(), senderNickname);
         Notification notification = notificationConverter.toNotification(command, title, content);
 
-        // 3.插入数据库
+        // 3.插入数据库，并同步未读数缓存
         notificationMapper.insert(notification);
+
+        // 4.写入缓存，未读通知数 +1
+        notificationUnreadCacheSupport.increaseUnreadCountAfterInsert(
+                command.getRecipientUserId(),
+                () -> notificationMapper.countUnreadByRecipientUserId(command.getRecipientUserId())
+        );
     }
 
     /**

@@ -76,6 +76,26 @@ public class CacheKeySupport {
         return cacheKeyBuilder.build(RedisKeyConstants.AUTH, "roleCodes", "userId", userId);
     }
 
+    public String buildNotificationUnreadCountKey(Long userId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.NOTIFICATION_UNREAD_COUNT, "userId", userId);
+    }
+
+    public String buildNotificationReadPendingKey(Long userId, Long notificationId) {
+        return cacheKeyBuilder.build(
+                RedisKeyConstants.NOTIFICATION_READ_PENDING,
+                "userId", userId,
+                "notificationId", notificationId
+        );
+    }
+
+    public String buildNotificationReadPendingPattern() {
+        return cacheKeyBuilder.build(RedisKeyConstants.NOTIFICATION_READ_PENDING) + ":*";
+    }
+
+    public String buildNotificationReadPendingPattern(Long userId) {
+        return cacheKeyBuilder.build(RedisKeyConstants.NOTIFICATION_READ_PENDING, "userId", userId) + ":*";
+    }
+
     /**
      * 构建日记类别 key
      * @return 日记类别 key

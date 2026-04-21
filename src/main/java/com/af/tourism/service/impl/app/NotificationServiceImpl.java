@@ -10,6 +10,7 @@ import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
 import com.af.tourism.pojo.vo.app.NotificationVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.NotificationService;
+import com.af.tourism.service.cache.NotificationUnreadCacheSupport;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
+    private final NotificationUnreadCacheSupport notificationUnreadCacheSupport;
 
     /**
      * 查询用户通知列表
@@ -60,8 +62,10 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public NotificationUnreadCountVO getUnreadCount(Long userId) {
         NotificationUnreadCountVO response = new NotificationUnreadCountVO();
-        Long unreadCount = notificationMapper.countUnreadByRecipientUserId(userId);
-        response.setUnreadCount(unreadCount == null ? 0L : unreadCount);
+        response.setUnreadCount(notificationUnreadCacheSupport.getUnreadCount(
+                userId,
+                () -> notificationMapper.countUnreadByRecipientUserId(userId)
+        ));
 
         return response;
     }
@@ -89,7 +93,12 @@ public class NotificationServiceImpl implements NotificationService {
         LocalDateTime readTime = notification.getReadTime();
         if (!Boolean.TRUE.equals(notification.getIsRead())) {
             readTime = LocalDateTime.now();
-            notificationMapper.markAsRead(notificationId, userId, readTime);
+            notificationUnreadCacheSupport.markAsRead(
+                    userId,
+                    notificationId,
+                    readTime,
+                    () -> notificationMapper.countUnreadByRecipientUserId(userId)
+            );
         }
 
         NotificationReadVO response = new NotificationReadVO();

@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 管理端景点分类服务实现
+ * 管理端景点分类服务实现。
  */
 @Service
 @RequiredArgsConstructor
@@ -197,6 +197,8 @@ public class AdminAttractionCategoryServiceImpl implements AdminAttractionCatego
 
         // 5.清除景点类别缓存
         cacheClearSupport.clearAttractionCategoryList();
+        cacheClearSupport.clearAttractionList();
+        cacheClearSupport.clearAllAttractionDetail();
 
         return getCategoryDetail(id);
     }

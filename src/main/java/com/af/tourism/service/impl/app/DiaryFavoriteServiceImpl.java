@@ -11,7 +11,6 @@ import com.af.tourism.pojo.vo.app.FavoriteDiaryCardVO;
 import com.af.tourism.pojo.vo.app.DiaryFavoriteVO;
 import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.DiaryFavoriteService;
-import com.af.tourism.service.cache.CacheClearSupport;
 import com.af.tourism.service.cache.CacheCounterSupport;
 import com.af.tourism.service.helper.DiaryCheckService;
 import com.af.tourism.service.helper.DiaryInteractionNotificationService;
@@ -36,7 +35,6 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
     private final DiaryFavoriteMapper diaryFavoriteMapper;
     private final DiaryMapper diaryMapper;
 
-    private final CacheClearSupport cacheClearSupport;
     private final CacheCounterSupport cacheCounterSupport;
 
     private final UserCheckService userCheckService;
@@ -70,7 +68,6 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
 
             // 5.清除Redis中可能受到影响的缓存
             // 5.1.清除旅行日记详情缓存
-            cacheClearSupport.clearDiaryDetail(diaryId);
 
             // 6.添加通知列表
             diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
@@ -81,13 +78,17 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
                     .build());
 
             // 7.更新缓存
-            cacheCounterSupport.incrementDiaryFavoriteCount(diaryId, 1);
+            try {
+                cacheCounterSupport.incrementDiaryFavoriteCount(diaryId, 1);
+            } catch (Exception ex) {
+                log.warn("更新日记收藏缓存失败，diaryId={}, userId={}", diaryId, userId, ex);
+            }
             log.info("收藏日记成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("重复收藏，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
         }
 
-        return buildFavoriteVO(true, diary.getFavoriteCount() + 1);
+        return buildFavoriteVO(true, existed == null ? diary.getFavoriteCount() + 1 : diary.getFavoriteCount());
     }
 
     /**
@@ -112,16 +113,19 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
 
             // 4.清除Redis中可能受到影响的缓存
             // 4.1.清除日记详情缓存
-            cacheClearSupport.clearDiaryDetail(diaryId);
 
             // 5.更新缓存
-            cacheCounterSupport.incrementDiaryFavoriteCount(diaryId, -1);
+            try {
+                cacheCounterSupport.incrementDiaryFavoriteCount(diaryId, -1);
+            } catch (Exception ex) {
+                log.warn("更新日记收藏缓存失败，diaryId={}, userId={}", diaryId, userId, ex);
+            }
             log.info("取消收藏成功，diaryId={}, userId={}", diaryId, userId);
         } else {
             log.info("用户本次取消收藏时为未收藏状态，直接返回当前状态，diaryId={}, userId={}", diaryId, userId);
         }
 
-        return buildFavoriteVO(false, diary.getFavoriteCount() - 1);
+        return buildFavoriteVO(false, existed != null ? diary.getFavoriteCount() - 1 : diary.getFavoriteCount());
     }
 
     /**

@@ -10,7 +10,7 @@
     username: root
     password: ${mysql.password}
   redis:
-    host: ${server.host}
+    host: ${redis.host}
     port: 6379
     password: ${redis.password}
     database: 0

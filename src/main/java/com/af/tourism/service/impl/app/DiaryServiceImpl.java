@@ -302,7 +302,6 @@ public class DiaryServiceImpl implements DiaryService {
             if (cachedDetail != null) {
                 // 3.2.增加浏览量，写入缓存
                 cacheCounterSupport.incrementDiaryViewCount(diaryId, 1);
-                cachedDetail.setViewCount((cachedDetail.getViewCount() == null ? 0 : cachedDetail.getViewCount()) + 1);
                 // 3.3.查找用户交互状态信息
                 DiaryDetailVO detailVO = mergeDiaryDetailWithInteractStatus(cachedDetail, diaryId, userId);
                 // 3.4.填充日记数据统计信息

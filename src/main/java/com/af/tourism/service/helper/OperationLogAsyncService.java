@@ -24,24 +24,29 @@ public class OperationLogAsyncService {
     private final OperationLogConverter operationLogConverter;
 
     /**
-     * 异步填充日志到数据库
-     * @param request 日志DTO对象
+     * 异步写入操作日志，作为 RabbitMQ 发送失败时的降级方案。
+     * @param request 日志 DTO 对象
      */
     @Async("operationLogExecutor")
     public void recordAsync(OperationLogRecordDTO request) {
         try {
-            // 1.填充映射字段
-            OperationLog logEntity = operationLogConverter.toOperationLog(request);
-            // 2.填充默认字段
-            logEntity.setCreatedAt(LocalDateTime.now());
-            // 3.执行插入操作
-            operationLogMapper.insert(logEntity);
+            record(request);
         } catch (Exception ex) {
-            log.error("操作日志异步落库失败, module={}, action={}, bizId={}",
-                    request.getModule(),
-                    request.getAction(),
-                    request.getBizId(),
+            log.error("操作日志落库失败, module={}, action={}, bizId={}",
+                    request == null ? null : request.getModule(),
+                    request == null ? null : request.getAction(),
+                    request == null ? null : request.getBizId(),
                     ex);
         }
+    }
+
+    /**
+     * 同步写入操作日志，供 RabbitMQ 消费者复用。
+     * @param request 日志 DTO 对象
+     */
+    public void record(OperationLogRecordDTO request) {
+        OperationLog logEntity = operationLogConverter.toOperationLog(request);
+        logEntity.setCreatedAt(LocalDateTime.now());
+        operationLogMapper.insert(logEntity);
     }
 }

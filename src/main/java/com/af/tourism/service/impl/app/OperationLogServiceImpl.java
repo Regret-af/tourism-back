@@ -2,10 +2,12 @@ package com.af.tourism.service.impl.app;
 
 import com.af.tourism.common.enums.OperationLogSource;
 import com.af.tourism.pojo.dto.common.OperationLogRecordDTO;
+import com.af.tourism.mq.producer.OperationLogMessageProducer;
 import com.af.tourism.security.util.SecurityUtils;
 import com.af.tourism.service.app.OperationLogService;
 import com.af.tourism.service.helper.OperationLogAsyncService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -18,7 +20,10 @@ import javax.servlet.http.HttpServletRequest;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OperationLogServiceImpl implements OperationLogService {
+
+    private final OperationLogMessageProducer operationLogMessageProducer;
 
     private final OperationLogAsyncService operationLogAsyncService;
 
@@ -37,7 +42,17 @@ public class OperationLogServiceImpl implements OperationLogService {
         }
 
         fillRequestMeta(request);
-        operationLogAsyncService.recordAsync(request);
+
+        try {
+            operationLogMessageProducer.send(request);
+        } catch (Exception ex) {
+            log.warn("发送操作日志 MQ 消息失败，降级为本地异步落库, module={}, action={}, bizId={}",
+                    request.getModule(),
+                    request.getAction(),
+                    request.getBizId(),
+                    ex);
+            operationLogAsyncService.recordAsync(request);
+        }
     }
 
     /**

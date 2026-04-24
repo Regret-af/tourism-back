@@ -13,7 +13,7 @@ import com.af.tourism.pojo.vo.common.PageResponse;
 import com.af.tourism.service.app.DiaryFavoriteService;
 import com.af.tourism.service.cache.CacheCounterSupport;
 import com.af.tourism.service.helper.DiaryCheckService;
-import com.af.tourism.service.helper.DiaryInteractionNotificationService;
+import com.af.tourism.service.helper.DiaryInteractionNotificationPublishService;
 import com.af.tourism.service.helper.UserCheckService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -39,7 +39,7 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
-    private final DiaryInteractionNotificationService diaryInteractionNotificationService;
+    private final DiaryInteractionNotificationPublishService diaryInteractionNotificationPublishService;
 
     /**
      * 收藏旅行日记
@@ -70,7 +70,7 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             // 5.1.清除旅行日记详情缓存
 
             // 6.添加通知列表
-            diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
+            diaryInteractionNotificationPublishService.publishAfterCommit(DiaryInteractionNotifyCommand.builder()
                     .type(NotificationType.FAVORITE)
                     .triggerUserId(userId)
                     .recipientUserId(diary.getUserId())

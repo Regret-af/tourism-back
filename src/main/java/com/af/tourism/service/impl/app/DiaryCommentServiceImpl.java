@@ -23,7 +23,7 @@ import com.af.tourism.service.cache.CacheClearSupport;
 import com.af.tourism.service.cache.CacheCounterSupport;
 import com.af.tourism.service.cache.CacheKeySupport;
 import com.af.tourism.service.helper.DiaryCheckService;
-import com.af.tourism.service.helper.DiaryInteractionNotificationService;
+import com.af.tourism.service.helper.DiaryInteractionNotificationPublishService;
 import com.af.tourism.service.helper.UserCheckService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.PageHelper;
@@ -61,7 +61,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
-    private final DiaryInteractionNotificationService diaryInteractionNotificationService;
+    private final DiaryInteractionNotificationPublishService diaryInteractionNotificationPublishService;
 
     /**
      * 查询旅行日记评论列表
@@ -149,7 +149,7 @@ public class DiaryCommentServiceImpl implements DiaryCommentService {
         cacheCounterSupport.incrementDiaryCommentCount(diaryId, 1);
 
         // 7.添加通知列表
-        diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
+        diaryInteractionNotificationPublishService.publishAfterCommit(DiaryInteractionNotifyCommand.builder()
                 .type(NotificationType.COMMENT)
                 .triggerUserId(userId)
                 .recipientUserId(diary.getUserId())

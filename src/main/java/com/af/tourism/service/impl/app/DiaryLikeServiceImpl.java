@@ -10,7 +10,7 @@ import com.af.tourism.pojo.vo.app.DiaryLikeVO;
 import com.af.tourism.service.app.DiaryLikeService;
 import com.af.tourism.service.cache.CacheCounterSupport;
 import com.af.tourism.service.helper.DiaryCheckService;
-import com.af.tourism.service.helper.DiaryInteractionNotificationService;
+import com.af.tourism.service.helper.DiaryInteractionNotificationPublishService;
 import com.af.tourism.service.helper.UserCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
 
     private final UserCheckService userCheckService;
     private final DiaryCheckService diaryCheckService;
-    private final DiaryInteractionNotificationService diaryInteractionNotificationService;
+    private final DiaryInteractionNotificationPublishService diaryInteractionNotificationPublishService;
 
     /**
      * 点赞旅行日记
@@ -63,7 +63,7 @@ public class DiaryLikeServiceImpl implements DiaryLikeService {
             // 5.1.清除日记详情缓存
 
             // 6.添加通知列表
-            diaryInteractionNotificationService.notifyInteraction(DiaryInteractionNotifyCommand.builder()
+            diaryInteractionNotificationPublishService.publishAfterCommit(DiaryInteractionNotifyCommand.builder()
                     .type(NotificationType.LIKE)
                     .triggerUserId(userId)
                     .recipientUserId(diary.getUserId())

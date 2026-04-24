@@ -14,6 +14,24 @@
     port: 6379
     password: ${redis.password}
     database: 0
+  rabbitmq:
+    host: ${rabbitmq.host}
+    port: ${rabbitmq.port:5672}
+    username: ${rabbitmq.username}
+    password: ${rabbitmq.password}
+    virtual-host: ${rabbitmq.virtual-host:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
+          multiplier: 2
+          max-interval: 10000ms
   servlet:
     multipart:
       max-file-size: 50MB
@@ -71,3 +89,12 @@ app:
 logging:
   level:
     com.af.tourism: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,httpexchanges
+  endpoint:
+    httpexchanges:
+      enabled: true

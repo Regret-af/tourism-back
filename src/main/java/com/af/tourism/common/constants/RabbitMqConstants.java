@@ -12,4 +12,7 @@ public final class RabbitMqConstants {
 
     public static final String DIARY_INTERACTION_NOTIFICATION_QUEUE = "tourism.diary-interaction-notification.queue";
     public static final String DIARY_INTERACTION_NOTIFICATION_ROUTING_KEY = "tourism.diary-interaction-notification";
+
+    public static final String NOTIFICATION_READ_QUEUE = "tourism.notification-read.queue";
+    public static final String NOTIFICATION_READ_ROUTING_KEY = "tourism.notification-read";
 }

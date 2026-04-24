@@ -33,6 +33,11 @@ public class RabbitMqConfig {
     }
 
     @Bean
+    public Queue notificationReadQueue() {
+        return new Queue(RabbitMqConstants.NOTIFICATION_READ_QUEUE, true);
+    }
+
+    @Bean
     public Binding operationLogBinding(Queue operationLogQueue, DirectExchange tourismExchange) {
         return BindingBuilder.bind(operationLogQueue)
                 .to(tourismExchange)
@@ -45,6 +50,13 @@ public class RabbitMqConfig {
         return BindingBuilder.bind(diaryInteractionNotificationQueue)
                 .to(tourismExchange)
                 .with(RabbitMqConstants.DIARY_INTERACTION_NOTIFICATION_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding notificationReadBinding(Queue notificationReadQueue, DirectExchange tourismExchange) {
+        return BindingBuilder.bind(notificationReadQueue)
+                .to(tourismExchange)
+                .with(RabbitMqConstants.NOTIFICATION_READ_ROUTING_KEY);
     }
 
     @Bean

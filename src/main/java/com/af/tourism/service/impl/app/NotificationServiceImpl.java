@@ -3,7 +3,9 @@ package com.af.tourism.service.impl.app;
 import com.af.tourism.common.ErrorCode;
 import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.NotificationMapper;
+import com.af.tourism.mq.producer.NotificationReadMessageProducer;
 import com.af.tourism.pojo.dto.app.NotificationQueryDTO;
+import com.af.tourism.pojo.dto.common.NotificationReadSyncCommand;
 import com.af.tourism.pojo.entity.Notification;
 import com.af.tourism.pojo.vo.app.NotificationReadVO;
 import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
@@ -30,6 +32,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
     private final NotificationUnreadCacheSupport notificationUnreadCacheSupport;
+    private final NotificationReadMessageProducer notificationReadMessageProducer;
 
     /**
      * 查询用户通知列表
@@ -99,6 +102,7 @@ public class NotificationServiceImpl implements NotificationService {
                     readTime,
                     () -> notificationMapper.countUnreadByRecipientUserId(userId)
             );
+            sendReadSyncMessage(userId, notificationId, readTime);
         }
 
         NotificationReadVO response = new NotificationReadVO();
@@ -106,5 +110,20 @@ public class NotificationServiceImpl implements NotificationService {
         response.setIsRead(Boolean.TRUE);
         response.setReadTime(readTime);
         return response;
+    }
+
+    private void sendReadSyncMessage(Long userId, Long notificationId, LocalDateTime readTime) {
+        try {
+            notificationReadMessageProducer.send(NotificationReadSyncCommand.builder()
+                    .userId(userId)
+                    .notificationId(notificationId)
+                    .readTime(readTime)
+                    .build());
+        } catch (Exception ex) {
+            log.warn("发送通知已读回写 MQ 消息失败，将由定时任务兜底，userId={}, notificationId={}",
+                    userId,
+                    notificationId,
+                    ex);
+        }
     }
 }

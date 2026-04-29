@@ -91,6 +91,7 @@ public class UserServiceImpl implements UserService {
         // 2.更新用户资料
         user.setNickname(profileUpdateDTO.getNickname());
         user.setAvatarUrl(profileUpdateDTO.getAvatarUrl());
+        user.setBio(profileUpdateDTO.getBio());
         userMapper.updateById(user);
 
         cacheClearSupport.clearAuthUserContext(userId);

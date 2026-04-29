@@ -42,4 +42,7 @@ public interface NotificationMapper extends BaseMapper<Notification> {
     int markAsRead(@Param("notificationId") Long notificationId,
                    @Param("recipientUserId") Long recipientUserId,
                    @Param("readTime") LocalDateTime readTime);
+
+    int markAllAsRead(@Param("recipientUserId") Long recipientUserId,
+                      @Param("readTime") LocalDateTime readTime);
 }

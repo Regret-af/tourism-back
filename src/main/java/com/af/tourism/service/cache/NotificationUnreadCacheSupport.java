@@ -72,6 +72,10 @@ public class NotificationUnreadCacheSupport {
         writeUnreadCount(unreadCountKey, unreadCount);
     }
 
+    public void setUnreadCount(Long userId, long unreadCount) {
+        writeUnreadCount(cacheKeySupport.buildNotificationUnreadCountKey(userId), unreadCount);
+    }
+
     /**
      * 标记已读
      * @param userId 用户 id

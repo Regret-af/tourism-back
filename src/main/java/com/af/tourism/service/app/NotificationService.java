@@ -1,6 +1,7 @@
 package com.af.tourism.service.app;
 
 import com.af.tourism.pojo.dto.app.NotificationQueryDTO;
+import com.af.tourism.pojo.vo.app.NotificationReadAllVO;
 import com.af.tourism.pojo.vo.app.NotificationReadVO;
 import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
 import com.af.tourism.pojo.vo.app.NotificationVO;
@@ -30,4 +31,6 @@ public interface NotificationService {
      * @return 已读信息
      */
     NotificationReadVO markAsRead(Long userId, Long notificationId);
+
+    NotificationReadAllVO markAllAsRead(Long userId);
 }

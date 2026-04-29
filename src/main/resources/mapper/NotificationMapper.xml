@@ -61,4 +61,13 @@
           AND recipient_user_id = #{recipientUserId}
           AND is_read = 0
     </update>
+
+    <update id="markAllAsRead">
+        UPDATE notifications
+        SET is_read = 1,
+            read_time = #{readTime}
+        WHERE recipient_user_id = #{recipientUserId}
+          AND is_read = 0
+          AND created_at &lt;= #{readTime}
+    </update>
 </mapper>

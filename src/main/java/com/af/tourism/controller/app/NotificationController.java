@@ -2,6 +2,7 @@ package com.af.tourism.controller.app;
 
 import com.af.tourism.common.ApiResponse;
 import com.af.tourism.pojo.dto.app.NotificationQueryDTO;
+import com.af.tourism.pojo.vo.app.NotificationReadAllVO;
 import com.af.tourism.pojo.vo.app.NotificationReadVO;
 import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
 import com.af.tourism.pojo.vo.app.NotificationVO;
@@ -53,6 +54,12 @@ public class NotificationController {
         // 获取用户id，若 id 为空，直接抛出异常
         Long userId = SecurityUtils.requireCurrentUserId();
         return ApiResponse.ok(notificationService.getUnreadCount(userId));
+    }
+
+    @PatchMapping("/read-all")
+    public ApiResponse<NotificationReadAllVO> markAllAsRead() {
+        Long userId = SecurityUtils.requireCurrentUserId();
+        return ApiResponse.ok(notificationService.markAllAsRead(userId));
     }
 
     /**

@@ -5,6 +5,7 @@ import com.af.tourism.exception.BusinessException;
 import com.af.tourism.mapper.NotificationMapper;
 import com.af.tourism.pojo.dto.app.NotificationQueryDTO;
 import com.af.tourism.pojo.entity.Notification;
+import com.af.tourism.pojo.vo.app.NotificationReadAllVO;
 import com.af.tourism.pojo.vo.app.NotificationReadVO;
 import com.af.tourism.pojo.vo.app.NotificationUnreadCountVO;
 import com.af.tourism.pojo.vo.app.NotificationVO;
@@ -93,17 +94,30 @@ public class NotificationServiceImpl implements NotificationService {
         LocalDateTime readTime = notification.getReadTime();
         if (!Boolean.TRUE.equals(notification.getIsRead())) {
             readTime = LocalDateTime.now();
-            notificationUnreadCacheSupport.markAsRead(
-                    userId,
-                    notificationId,
-                    readTime,
-                    () -> notificationMapper.countUnreadByRecipientUserId(userId)
-            );
+            notificationMapper.markAsRead(notificationId, userId, readTime);
+            notificationUnreadCacheSupport.setUnreadCount(userId, notificationMapper.countUnreadByRecipientUserId(userId));
         }
 
         NotificationReadVO response = new NotificationReadVO();
         response.setId(notificationId);
         response.setIsRead(Boolean.TRUE);
+        response.setReadTime(readTime);
+        return response;
+    }
+
+    @Override
+    public NotificationReadAllVO markAllAsRead(Long userId) {
+        long unreadCount = notificationUnreadCacheSupport.getUnreadCount(
+                userId,
+                () -> notificationMapper.countUnreadByRecipientUserId(userId)
+        );
+        LocalDateTime readTime = LocalDateTime.now();
+        notificationMapper.markAllAsRead(userId, readTime);
+        notificationUnreadCacheSupport.setUnreadCount(userId, 0L);
+
+        NotificationReadAllVO response = new NotificationReadAllVO();
+        response.setReadCount(unreadCount);
+        response.setUnreadCount(0L);
         response.setReadTime(readTime);
         return response;
     }

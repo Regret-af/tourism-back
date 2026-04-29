@@ -146,6 +146,10 @@ public class NotificationUnreadCacheSupport {
         cacheClient.delete(pendingReadKey);
     }
 
+    public void clearPendingReads(Long userId) {
+        cacheClient.deleteByPattern(cacheKeySupport.buildNotificationReadPendingPattern(userId));
+    }
+
     /**
      * 真实未读数量
      * @param userId 用户 id

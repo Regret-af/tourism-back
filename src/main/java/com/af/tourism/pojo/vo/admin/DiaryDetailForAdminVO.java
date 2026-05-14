@@ -20,8 +20,6 @@ public class DiaryDetailForAdminVO {
 
     private String coverUrl;
 
-    private String content;
-
     private Integer status;
 
     private Integer isDeleted;

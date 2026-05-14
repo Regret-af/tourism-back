@@ -32,6 +32,8 @@ public class SecurityUser implements UserDetails {
 
     private String nickname;
 
+    private String avatarUrl;
+
     private Integer status;
 
     private List<String> roleCodes = Collections.emptyList();
@@ -45,6 +47,7 @@ public class SecurityUser implements UserDetails {
         securityUser.setUsername(user.getUsername());
         securityUser.setPasswordHash(user.getPasswordHash());
         securityUser.setNickname(user.getNickname());
+        securityUser.setAvatarUrl(user.getAvatarUrl());
         securityUser.setStatus(user.getStatus());
 
         List<String> safeRoleCodes = roleCodes == null ? Collections.emptyList() : roleCodes;

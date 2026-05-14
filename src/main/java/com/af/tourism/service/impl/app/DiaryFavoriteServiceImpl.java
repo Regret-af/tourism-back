@@ -101,7 +101,7 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
     @Transactional(rollbackFor = Exception.class)
     public DiaryFavoriteVO unfavoriteDiary(Long diaryId, Long userId) {
         // 1.校验参数是否存在
-        TravelDiary diary = diaryCheckService.requirePublicDiary(diaryId);
+        TravelDiary diary = diaryMapper.selectById(diaryId);
         userCheckService.requireActiveUser(userId);
 
         // 2.查看是否已经收藏
@@ -111,10 +111,7 @@ public class DiaryFavoriteServiceImpl implements DiaryFavoriteService {
             diaryFavoriteMapper.deleteByDiaryIdAndUserId(diaryId, userId);
             diaryMapper.updateFavoriteCount(diaryId, -1);
 
-            // 4.清除Redis中可能受到影响的缓存
-            // 4.1.清除日记详情缓存
-
-            // 5.更新缓存
+            // 4.更新缓存
             try {
                 cacheCounterSupport.incrementDiaryFavoriteCount(diaryId, -1);
             } catch (Exception ex) {

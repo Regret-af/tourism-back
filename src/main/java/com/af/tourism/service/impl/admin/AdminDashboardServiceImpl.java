@@ -219,6 +219,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         LambdaQueryWrapper<TravelDiary> wrapper = new LambdaQueryWrapper<>();
         if (status != null) {
             wrapper.eq(TravelDiary::getStatus, status);
+            wrapper.eq(TravelDiary::getIsDeleted, 0);
         }
         return diaryMapper.selectCount(wrapper);
     }

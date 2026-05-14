@@ -231,7 +231,7 @@
         FROM travel_diaries d
         INNER JOIN users u ON d.user_id = u.id
         <include refid="CurrentUserInteractJoins"/>
-        WHERE d.user_id = #{userId}
+        WHERE d.user_id = #{userId} and is_deleted = 0
         <include refid="ProfileDiaryOrderBy"/>
     </select>
 
@@ -452,7 +452,6 @@
             d.title,
             d.summary,
             d.cover_url,
-            d.content,
             d.status,
             d.is_deleted,
             dc.name AS content_type_name,

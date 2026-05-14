@@ -11,7 +11,8 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public enum FileBizType {
     AVATAR("avatar"),
-    DIARY_IMAGE("diary_image");
+    DIARY_IMAGE("diary_image"),
+    ATTRACTION_COVER("attraction_cover");
 
     private final String code;
 
@@ -30,7 +31,7 @@ public enum FileBizType {
         }
 
         for (FileBizType value : values()) {
-            if (value.code.equals(code)) {
+            if (value.code.equals(code.toLowerCase())) {
                 return value;
             }
         }

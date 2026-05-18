@@ -28,7 +28,7 @@ public class CacheCounterSupport {
     private final CacheKeySupport cacheKeySupport;
 
     /**
-     * 将数据统计同步到缓存
+     * 初始化日记计数缓存。已存在时不覆盖，避免 Redis 中较新的实时计数被数据库旧值回退。
      * @param diaryId 日记 id
      * @param viewCount 浏览量
      * @param likeCount 点赞量
@@ -57,9 +57,9 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 为日记浏览量增加指定步长，同时记录待回写的增量。
+     * 增加日记浏览量，并记录待回写数据库的浏览量增量。
      * @param diaryId 日记 id
-     * @param delta 步长
+     * @param delta 增量
      */
     public void incrementDiaryViewCount(Long diaryId, long delta) {
         incrementDiaryCounter(diaryId, VIEW_COUNT, delta);
@@ -67,34 +67,34 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 为日记点赞量增加指定步长
+     * 增加日记点赞量。
      * @param diaryId 日记 id
-     * @param delta 步长
+     * @param delta 增量
      */
     public void incrementDiaryLikeCount(Long diaryId, long delta) {
         incrementDiaryCounter(diaryId, LIKE_COUNT, delta);
     }
 
     /**
-     * 为日记收藏量增加指定步长
+     * 增加日记收藏量。
      * @param diaryId 日记 id
-     * @param delta 步长
+     * @param delta 增量
      */
     public void incrementDiaryFavoriteCount(Long diaryId, long delta) {
         incrementDiaryCounter(diaryId, FAVORITE_COUNT, delta);
     }
 
     /**
-     * 为日记评论量增加指定步长
+     * 增加日记评论量。
      * @param diaryId 日记 id
-     * @param delta 步长
+     * @param delta 增量
      */
     public void incrementDiaryCommentCount(Long diaryId, long delta) {
         incrementDiaryCounter(diaryId, COMMENT_COUNT, delta);
     }
 
     /**
-     * 将 Redis 中的日记计数填充到详情对象。
+     * 使用 Redis 中的实时计数覆盖日记详情中的计数字段。
      * @param detailVO 日记详情
      * @param diaryId 日记 id
      */
@@ -116,70 +116,70 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 填充日记数据
-     * @param list 日记列表
+     * 为日记卡片列表填充实时计数。
+     * @param list 日记卡片列表
      */
     public void fillDiaryCardCounters(List<DiaryCardVO> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
 
-        for (DiaryCardVO diaryCardVO : list) {
-            Map<Object, Object> entries = getDiaryCounterEntries(diaryCardVO.getId());
+        for (DiaryCardVO item : list) {
+            Map<Object, Object> entries = getDiaryCounterEntries(item.getId());
             if (entries == null || entries.isEmpty()) {
                 continue;
             }
-            diaryCardVO.setViewCount(readCount(entries, VIEW_COUNT, diaryCardVO.getViewCount()));
-            diaryCardVO.setLikeCount(readCount(entries, LIKE_COUNT, diaryCardVO.getLikeCount()));
-            diaryCardVO.setFavoriteCount(readCount(entries, FAVORITE_COUNT, diaryCardVO.getFavoriteCount()));
-            diaryCardVO.setCommentCount(readCount(entries, COMMENT_COUNT, diaryCardVO.getCommentCount()));
+            item.setViewCount(readCount(entries, VIEW_COUNT, item.getViewCount()));
+            item.setLikeCount(readCount(entries, LIKE_COUNT, item.getLikeCount()));
+            item.setFavoriteCount(readCount(entries, FAVORITE_COUNT, item.getFavoriteCount()));
+            item.setCommentCount(readCount(entries, COMMENT_COUNT, item.getCommentCount()));
         }
     }
 
     /**
-     * 填充日记数据
-     * @param list 日记列表
+     * 为用户主页日记卡片列表填充实时计数。
+     * @param list 用户主页日记卡片列表
      */
     public void fillDiaryProfileCardCounters(List<DiaryProfileCardVO> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
 
-        for (DiaryProfileCardVO diaryProfileCardVO : list) {
-            Map<Object, Object> entries = getDiaryCounterEntries(diaryProfileCardVO.getId());
+        for (DiaryProfileCardVO item : list) {
+            Map<Object, Object> entries = getDiaryCounterEntries(item.getId());
             if (entries == null || entries.isEmpty()) {
                 continue;
             }
-            diaryProfileCardVO.setViewCount(readCount(entries, VIEW_COUNT, diaryProfileCardVO.getViewCount()));
-            diaryProfileCardVO.setLikeCount(readCount(entries, LIKE_COUNT, diaryProfileCardVO.getLikeCount()));
-            diaryProfileCardVO.setFavoriteCount(readCount(entries, FAVORITE_COUNT, diaryProfileCardVO.getFavoriteCount()));
-            diaryProfileCardVO.setCommentCount(readCount(entries, COMMENT_COUNT, diaryProfileCardVO.getCommentCount()));
+            item.setViewCount(readCount(entries, VIEW_COUNT, item.getViewCount()));
+            item.setLikeCount(readCount(entries, LIKE_COUNT, item.getLikeCount()));
+            item.setFavoriteCount(readCount(entries, FAVORITE_COUNT, item.getFavoriteCount()));
+            item.setCommentCount(readCount(entries, COMMENT_COUNT, item.getCommentCount()));
         }
     }
 
     /**
-     * 填充日记数据
-     * @param list 日记列表
+     * 为我的日记卡片列表填充实时计数。
+     * @param list 我的日记卡片列表
      */
     public void fillMyDiaryProfileCardCounters(List<MyDiaryProfileCardVO> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
 
-        for (MyDiaryProfileCardVO myDiaryProfileCardVO : list) {
-            Map<Object, Object> entries = getDiaryCounterEntries(myDiaryProfileCardVO.getId());
+        for (MyDiaryProfileCardVO item : list) {
+            Map<Object, Object> entries = getDiaryCounterEntries(item.getId());
             if (entries == null || entries.isEmpty()) {
                 continue;
             }
-            myDiaryProfileCardVO.setViewCount(readCount(entries, VIEW_COUNT, myDiaryProfileCardVO.getViewCount()));
-            myDiaryProfileCardVO.setLikeCount(readCount(entries, LIKE_COUNT, myDiaryProfileCardVO.getLikeCount()));
-            myDiaryProfileCardVO.setFavoriteCount(readCount(entries, FAVORITE_COUNT, myDiaryProfileCardVO.getFavoriteCount()));
-            myDiaryProfileCardVO.setCommentCount(readCount(entries, COMMENT_COUNT, myDiaryProfileCardVO.getCommentCount()));
+            item.setViewCount(readCount(entries, VIEW_COUNT, item.getViewCount()));
+            item.setLikeCount(readCount(entries, LIKE_COUNT, item.getLikeCount()));
+            item.setFavoriteCount(readCount(entries, FAVORITE_COUNT, item.getFavoriteCount()));
+            item.setCommentCount(readCount(entries, COMMENT_COUNT, item.getCommentCount()));
         }
     }
 
     /**
-     * 初始化景点浏览量总量缓存。
+     * 初始化景点浏览量缓存。已存在时不覆盖。
      * @param attractionId 景点 id
      * @param viewCount 数据库中的浏览量
      */
@@ -192,9 +192,9 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 为景点浏览量增加指定步长，同时记录待回写的增量。
+     * 增加景点浏览量，并记录待回写数据库的浏览量增量。
      * @param attractionId 景点 id
-     * @param delta 步长
+     * @param delta 增量
      */
     public void incrementAttractionViewCount(Long attractionId, long delta) {
         String viewCountKey = cacheKeySupport.buildAttractionViewCountKey(attractionId);
@@ -207,7 +207,7 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 用 Redis 中的景点浏览量总量覆盖详情对象。
+     * 使用 Redis 中的实时浏览量覆盖景点详情中的浏览量。
      * @param detailVO 景点详情
      * @param attractionId 景点 id
      */
@@ -219,32 +219,32 @@ public class CacheCounterSupport {
     }
 
     /**
-     * 为景点卡片列表填充浏览量总量。
-     * @param list 景点列表
+     * 为景点卡片列表填充实时浏览量。
+     * @param list 景点卡片列表
      */
     public void fillAttractionCardViewCounts(List<AttractionCardVO> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
 
-        for (AttractionCardVO attractionCardVO : list) {
-            attractionCardVO.setViewCount(readAttractionViewCount(attractionCardVO.getId(), attractionCardVO.getViewCount()));
+        for (AttractionCardVO item : list) {
+            item.setViewCount(readAttractionViewCount(item.getId(), item.getViewCount()));
         }
     }
 
     /**
-     * 获取日记浏览量增量 key 列表。
+     * 获取待回写的日记浏览量增量 key。
      * @return 增量 key 集合
      */
-    public Set<String> listDiaryViewDeltaKeys() {
+    public Set<String> listPendingDiaryViewDeltaKeys() {
         return cacheClient.keys(cacheKeySupport.buildDiaryViewDeltaPattern());
     }
 
     /**
-     * 获取景点浏览量增量 key 列表。
+     * 获取待回写的景点浏览量增量 key。
      * @return 增量 key 集合
      */
-    public Set<String> listAttractionViewDeltaKeys() {
+    public Set<String> listPendingAttractionViewDeltaKeys() {
         return cacheClient.keys(cacheKeySupport.buildAttractionViewDeltaPattern());
     }
 
@@ -253,7 +253,7 @@ public class CacheCounterSupport {
      * @param key Redis key
      * @return 增量值
      */
-    public Long getPendingViewDelta(String key) {
+    public Long getViewDelta(String key) {
         return cacheClient.get(key, Long.class);
     }
 
@@ -263,7 +263,7 @@ public class CacheCounterSupport {
      * @param delta 已回写增量
      * @return 剩余增量
      */
-    public Long consumePendingViewDelta(String key, long delta) {
+    public Long consumeViewDelta(String key, long delta) {
         return cacheClient.increment(key, -delta);
     }
 
@@ -271,30 +271,25 @@ public class CacheCounterSupport {
      * 清理待回写的浏览量增量。
      * @param key Redis key
      */
-    public void clearPendingViewDelta(String key) {
+    public void clearViewDelta(String key) {
         cacheClient.delete(key);
     }
 
-    /**
-     * 从 Hash 查询结果中读取指定字段的计数值
-     * @param entries Hash 结果
-     * @param field 字段名
-     * @param defaultValue 默认值
-     * @return 读取的计数值
-     */
-    private Integer readCount(Map<Object, Object> entries, String field, Integer defaultValue) {
-        Object value = entries.get(field);
-        if (value == null) {
-            return defaultCount(defaultValue);
+    private void incrementDiaryCounter(Long diaryId, String field, long delta) {
+        String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
+        Long latestCount = cacheClient.incrementHash(cacheKey, field, delta);
+        if (latestCount != null) {
+            cacheClient.expire(cacheKey, RedisTtlConstants.DEFAULT);
         }
-        return Integer.parseInt(String.valueOf(value));
     }
 
-    /**
-     * 读取日记计数 Hash。
-     * @param diaryId 日记 id
-     * @return Hash 数据
-     */
+    private void incrementViewDelta(String deltaKey, long delta) {
+        Long latestDelta = cacheClient.increment(deltaKey, delta);
+        if (latestDelta != null) {
+            cacheClient.expire(deltaKey, RedisTtlConstants.VIEW_COUNT_DELTA);
+        }
+    }
+
     private Map<Object, Object> getDiaryCounterEntries(Long diaryId) {
         return cacheClient.entries(cacheKeySupport.buildDiaryCounterKey(diaryId));
     }
@@ -309,13 +304,12 @@ public class CacheCounterSupport {
         return entries != null && !entries.isEmpty();
     }
 
-    /**
-     * 获取非 null 的计数值。
-     * @param value 原始值
-     * @return 非 null 计数值
-     */
-    private Integer defaultCount(Integer value) {
-        return value == null ? 0 : value;
+    private Integer readCount(Map<Object, Object> entries, String field, Integer defaultValue) {
+        Object value = entries.get(field);
+        if (value == null) {
+            return defaultCount(defaultValue);
+        }
+        return Integer.parseInt(String.valueOf(value));
     }
 
     /**
@@ -329,33 +323,7 @@ public class CacheCounterSupport {
         return viewCount == null ? defaultCount(defaultValue) : viewCount.intValue();
     }
 
-    /**
-     * 更新日记计数并刷新过期时间。
-     * @param diaryId 日记 id
-     * @param field 字段名
-     * @param delta 步长
-     */
-    private void incrementDiaryCounter(Long diaryId, String field, long delta) {
-        String cacheKey = cacheKeySupport.buildDiaryCounterKey(diaryId);
-        Long latestCount = cacheClient.incrementHash(cacheKey, field, delta);
-        if (latestCount == null) {
-            return;
-        }
-
-        cacheClient.expire(cacheKey, RedisTtlConstants.DEFAULT);
-    }
-
-    /**
-     * 更新待回写增量并刷新过期时间。
-     * @param deltaKey 增量 key
-     * @param delta 步长
-     */
-    private void incrementViewDelta(String deltaKey, long delta) {
-        Long latestDelta = cacheClient.increment(deltaKey, delta);
-        if (latestDelta == null) {
-            return;
-        }
-
-        cacheClient.expire(deltaKey, RedisTtlConstants.VIEW_COUNT_DELTA);
+    private Integer defaultCount(Integer value) {
+        return value == null ? 0 : value;
     }
 }

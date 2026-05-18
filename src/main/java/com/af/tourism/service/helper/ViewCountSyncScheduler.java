@@ -18,7 +18,7 @@ public class ViewCountSyncScheduler {
     private final AttractionMapper attractionMapper;
 
     /**
-     * 定时将浏览量回写数据库
+     * 定时将浏览量增量回写数据库。
      */
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     public void syncViewCounts() {
@@ -30,7 +30,7 @@ public class ViewCountSyncScheduler {
      * 同步日记浏览量
      */
     private void syncDiaryViewCounts() {
-        for (String key : cacheCounterSupport.listDiaryViewDeltaKeys()) {
+        for (String key : cacheCounterSupport.listPendingDiaryViewDeltaKeys()) {
             syncDiaryViewDelta(key);
         }
     }
@@ -39,7 +39,7 @@ public class ViewCountSyncScheduler {
      * 同步景点浏览量
      */
     private void syncAttractionViewCounts() {
-        for (String key : cacheCounterSupport.listAttractionViewDeltaKeys()) {
+        for (String key : cacheCounterSupport.listPendingAttractionViewDeltaKeys()) {
             syncAttractionViewDelta(key);
         }
     }
@@ -49,9 +49,9 @@ public class ViewCountSyncScheduler {
      * @param key redis key
      */
     private void syncDiaryViewDelta(String key) {
-        Long delta = cacheCounterSupport.getPendingViewDelta(key);
+        Long delta = cacheCounterSupport.getViewDelta(key);
         if (delta == null || delta <= 0) {
-            cacheCounterSupport.clearPendingViewDelta(key);
+            cacheCounterSupport.clearViewDelta(key);
             return;
         }
 
@@ -59,7 +59,7 @@ public class ViewCountSyncScheduler {
         int rows = diaryMapper.increaseViewCountByDelta(diaryId, delta);
         if (rows <= 0) {
             log.warn("回写日记浏览量失败，日记不存在，diaryId={}, key={}", diaryId, key);
-            cacheCounterSupport.clearPendingViewDelta(key);
+            cacheCounterSupport.clearViewDelta(key);
             return;
         }
 
@@ -71,9 +71,9 @@ public class ViewCountSyncScheduler {
      * @param key redis key
      */
     private void syncAttractionViewDelta(String key) {
-        Long delta = cacheCounterSupport.getPendingViewDelta(key);
+        Long delta = cacheCounterSupport.getViewDelta(key);
         if (delta == null || delta <= 0) {
-            cacheCounterSupport.clearPendingViewDelta(key);
+            cacheCounterSupport.clearViewDelta(key);
             return;
         }
 
@@ -81,7 +81,7 @@ public class ViewCountSyncScheduler {
         int rows = attractionMapper.increaseViewCountByDelta(attractionId, delta);
         if (rows <= 0) {
             log.warn("回写景点浏览量失败，景点不存在，attractionId={}, key={}", attractionId, key);
-            cacheCounterSupport.clearPendingViewDelta(key);
+            cacheCounterSupport.clearViewDelta(key);
             return;
         }
 
@@ -94,9 +94,9 @@ public class ViewCountSyncScheduler {
      * @param delta 增量
      */
     private void clearFlushedDelta(String key, long delta) {
-        Long remain = cacheCounterSupport.consumePendingViewDelta(key, delta);
+        Long remain = cacheCounterSupport.consumeViewDelta(key, delta);
         if (remain != null && remain <= 0) {
-            cacheCounterSupport.clearPendingViewDelta(key);
+            cacheCounterSupport.clearViewDelta(key);
         }
     }
 

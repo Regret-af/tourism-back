@@ -14,7 +14,6 @@ public final class RedisTtlConstants {
     public static final Duration DIARY_LIST = Duration.ofMinutes(5);
     public static final Duration DIARY_COMMENT_LIST = Duration.ofMinutes(5);
     public static final Duration NOTIFICATION_UNREAD = Duration.ofMinutes(10);
-    public static final Duration NOTIFICATION_PENDING = Duration.ofDays(1);
     public static final Duration AUTH = Duration.ofMinutes(10);
     public static final Duration VIEW_COUNT_DELTA = Duration.ofDays(1);
 }

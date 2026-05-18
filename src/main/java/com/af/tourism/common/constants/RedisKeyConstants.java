@@ -28,7 +28,6 @@ public final class RedisKeyConstants {
     public static final String DIARY_COMMENT = "diary:comment";
     public static final String NOTIFICATION = "notification";
     public static final String NOTIFICATION_UNREAD_COUNT = "notification:unread:count";
-    public static final String NOTIFICATION_READ_PENDING = "notification:read:pending";
     public static final String AUTH = "auth";
     public static final String AUTH_TOKEN_BLACKLIST = "auth:token:blacklist";
 }

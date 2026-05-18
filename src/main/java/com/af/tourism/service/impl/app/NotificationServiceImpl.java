@@ -113,7 +113,6 @@ public class NotificationServiceImpl implements NotificationService {
         );
         LocalDateTime readTime = LocalDateTime.now();
         notificationMapper.markAllAsRead(userId, readTime);
-        notificationUnreadCacheSupport.clearPendingReads(userId);
         notificationUnreadCacheSupport.setUnreadCount(userId, 0L);
 
         NotificationReadAllVO response = new NotificationReadAllVO();
